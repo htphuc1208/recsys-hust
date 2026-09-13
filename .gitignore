@@ -61,7 +61,14 @@ mlruns/
 lightning_logs/
 *.log
 
-# Large data files (keep directory structure via .gitkeep)
+# Dataset archives and generated data (keep directory structure via .gitkeep)
+# Raw archives stay local; users restore them by following README.md.
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+
 data/raw/*
 !data/raw/.gitkeep
 !data/raw/README.md

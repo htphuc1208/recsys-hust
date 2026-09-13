@@ -1,0 +1,4 @@
+split,news_rows,unique_news,behavior_rows,unique_users,timestamp_min,timestamp_max,empty_history_pct,history_median,history_p95,candidate_median,candidate_p95,click_through_rate
+train,101527,101527,2232748,711222,2019-11-09T00:00:00,2019-11-14T23:59:59,2.063,19.0,111,25.0,118,0.040519
+dev,72023,72023,376471,255990,2019-11-15T00:00:00,2019-11-15T23:59:43,2.994,19.0,109,23.0,119,0.040811
+test,120961,120961,2370727,702005,2019-11-16T00:00:05,2019-11-22T23:59:58,1.228,24.0,137,25.0,123,

@@ -2,6 +2,31 @@
 
 This directory houses datasets across different lifecycle stages. All data files (except `.gitkeep` and documentation) are ignored by git to avoid committing large binary files.
 
+## Restoring MINDlarge from ZIP files
+
+Keep the original archives in `raw/mind_large/archives/` and extract each one
+into a directory with the same name (without `.zip`):
+
+```text
+raw/mind_large/
+├── archives/MINDlarge_train.zip
+├── archives/MINDlarge_dev.zip
+├── archives/MINDlarge_test.zip
+├── MINDlarge_train/{news.tsv,behaviors.tsv,...}
+├── MINDlarge_dev/{news.tsv,behaviors.tsv,...}
+└── MINDlarge_test/{news.tsv,behaviors.tsv,...}
+```
+
+From the repository root, run `python -m src.ingest.mind --split all` to create
+the Parquet datasets under `interim/mind_large/`. See the root
+[`README.md`](../README.md#2-prepare-the-mindlarge-data-from-zip-files) for
+platform-specific extraction commands and single-split usage.
+
+After ingestion, run `python -m src.features.prepare_mind --split all` to build
+train-fitted user mappings, global catalog item mappings with `seen_in_train`
+flags, encoded histories/candidates, positive interactions, and
+negative-sampled pointwise examples under `processed/mind_large/`.
+
 ## Subdirectories
 
 - **`raw/`**: Unmodified, immutable source data (e.g., downloaded zip/tar files, raw CSVs/JSONs). Never edit files in this folder manually.

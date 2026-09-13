@@ -1,0 +1,342 @@
+{
+  "splits": [
+    {
+      "split": "train",
+      "sampled": false,
+      "max_rows_per_table": null,
+      "news": {
+        "rows": 101527,
+        "unique_news": 101527,
+        "duplicate_news_rows": 0,
+        "categories": 18,
+        "missing_title_pct": 0.0,
+        "missing_abstract_pct": 5.334,
+        "avg_title_chars": 66.006,
+        "avg_abstract_chars": 216.489,
+        "avg_title_entities": 1.192,
+        "avg_abstract_entities": 1.966
+      },
+      "behaviors": {
+        "rows": 2232748,
+        "unique_users": 711222,
+        "timestamp_min": "2019-11-09T00:00:00",
+        "timestamp_max": "2019-11-14T23:59:59",
+        "empty_history_pct": 2.063,
+        "history_length": {
+          "mean": 32.977,
+          "median": 19.0,
+          "p95": 111,
+          "max": 801
+        },
+        "candidate_count": {
+          "mean": 37.401,
+          "median": 25.0,
+          "p95": 118,
+          "max": 300
+        },
+        "total_candidates": 83507374,
+        "labeled": true,
+        "total_clicks": 3383656,
+        "click_through_rate": 0.040519,
+        "avg_clicks_per_impression": 1.515,
+        "no_click_impressions_pct": 0.0,
+        "quantile_sample_size": 100000,
+        "quantiles_approximate": true
+      },
+      "top_categories": [
+        {
+          "category": "sports",
+          "news_count": 32020
+        },
+        {
+          "category": "news",
+          "news_count": 30478
+        },
+        {
+          "category": "finance",
+          "news_count": 5916
+        },
+        {
+          "category": "travel",
+          "news_count": 4955
+        },
+        {
+          "category": "lifestyle",
+          "news_count": 4570
+        },
+        {
+          "category": "video",
+          "news_count": 4569
+        },
+        {
+          "category": "foodanddrink",
+          "news_count": 4418
+        },
+        {
+          "category": "weather",
+          "news_count": 4255
+        },
+        {
+          "category": "autos",
+          "news_count": 3071
+        },
+        {
+          "category": "health",
+          "news_count": 2929
+        },
+        {
+          "category": "tv",
+          "news_count": 1323
+        },
+        {
+          "category": "music",
+          "news_count": 1263
+        },
+        {
+          "category": "entertainment",
+          "news_count": 837
+        },
+        {
+          "category": "movies",
+          "news_count": 815
+        },
+        {
+          "category": "kids",
+          "news_count": 104
+        }
+      ],
+      "daily_impressions": {
+        "2019-11-09": 192552,
+        "2019-11-10": 212343,
+        "2019-11-11": 464467,
+        "2019-11-12": 478375,
+        "2019-11-13": 453494,
+        "2019-11-14": 431517
+      }
+    },
+    {
+      "split": "dev",
+      "sampled": false,
+      "max_rows_per_table": null,
+      "news": {
+        "rows": 72023,
+        "unique_news": 72023,
+        "duplicate_news_rows": 0,
+        "categories": 17,
+        "missing_title_pct": 0.0,
+        "missing_abstract_pct": 5.03,
+        "avg_title_chars": 66.218,
+        "avg_abstract_chars": 210.412,
+        "avg_title_entities": 1.187,
+        "avg_abstract_entities": 1.908
+      },
+      "behaviors": {
+        "rows": 376471,
+        "unique_users": 255990,
+        "timestamp_min": "2019-11-15T00:00:00",
+        "timestamp_max": "2019-11-15T23:59:43",
+        "empty_history_pct": 2.994,
+        "history_length": {
+          "mean": 32.624,
+          "median": 19.0,
+          "p95": 109,
+          "max": 801
+        },
+        "candidate_count": {
+          "mean": 37.415,
+          "median": 23.0,
+          "p95": 119,
+          "max": 299
+        },
+        "total_candidates": 14085557,
+        "labeled": true,
+        "total_clicks": 574845,
+        "click_through_rate": 0.040811,
+        "avg_clicks_per_impression": 1.527,
+        "no_click_impressions_pct": 0.0,
+        "quantile_sample_size": 100000,
+        "quantiles_approximate": true
+      },
+      "top_categories": [
+        {
+          "category": "news",
+          "news_count": 21826
+        },
+        {
+          "category": "sports",
+          "news_count": 21579
+        },
+        {
+          "category": "finance",
+          "news_count": 4331
+        },
+        {
+          "category": "foodanddrink",
+          "news_count": 3458
+        },
+        {
+          "category": "lifestyle",
+          "news_count": 3445
+        },
+        {
+          "category": "travel",
+          "news_count": 3381
+        },
+        {
+          "category": "video",
+          "news_count": 2967
+        },
+        {
+          "category": "weather",
+          "news_count": 2791
+        },
+        {
+          "category": "autos",
+          "news_count": 2448
+        },
+        {
+          "category": "health",
+          "news_count": 2377
+        },
+        {
+          "category": "tv",
+          "news_count": 1079
+        },
+        {
+          "category": "music",
+          "news_count": 916
+        },
+        {
+          "category": "entertainment",
+          "news_count": 724
+        },
+        {
+          "category": "movies",
+          "news_count": 677
+        },
+        {
+          "category": "kids",
+          "news_count": 21
+        }
+      ],
+      "daily_impressions": {
+        "2019-11-15": 376471
+      }
+    },
+    {
+      "split": "test",
+      "sampled": false,
+      "max_rows_per_table": null,
+      "news": {
+        "rows": 120961,
+        "unique_news": 120961,
+        "duplicate_news_rows": 0,
+        "categories": 18,
+        "missing_title_pct": 0.0,
+        "missing_abstract_pct": 5.541,
+        "avg_title_chars": 66.271,
+        "avg_abstract_chars": 216.993,
+        "avg_title_entities": 1.195,
+        "avg_abstract_entities": 1.965
+      },
+      "behaviors": {
+        "rows": 2370727,
+        "unique_users": 702005,
+        "timestamp_min": "2019-11-16T00:00:05",
+        "timestamp_max": "2019-11-22T23:59:58",
+        "empty_history_pct": 1.228,
+        "history_length": {
+          "mean": 41.599,
+          "median": 24.0,
+          "p95": 137,
+          "max": 1021
+        },
+        "candidate_count": {
+          "mean": 39.277,
+          "median": 25.0,
+          "p95": 123,
+          "max": 300
+        },
+        "total_candidates": 93115001,
+        "labeled": false,
+        "total_clicks": null,
+        "click_through_rate": null,
+        "avg_clicks_per_impression": null,
+        "no_click_impressions_pct": null,
+        "quantile_sample_size": 100000,
+        "quantiles_approximate": true
+      },
+      "top_categories": [
+        {
+          "category": "sports",
+          "news_count": 38006
+        },
+        {
+          "category": "news",
+          "news_count": 36918
+        },
+        {
+          "category": "finance",
+          "news_count": 7034
+        },
+        {
+          "category": "travel",
+          "news_count": 5952
+        },
+        {
+          "category": "video",
+          "news_count": 5462
+        },
+        {
+          "category": "lifestyle",
+          "news_count": 5292
+        },
+        {
+          "category": "foodanddrink",
+          "news_count": 5261
+        },
+        {
+          "category": "weather",
+          "news_count": 4848
+        },
+        {
+          "category": "autos",
+          "news_count": 3612
+        },
+        {
+          "category": "health",
+          "news_count": 3448
+        },
+        {
+          "category": "music",
+          "news_count": 1561
+        },
+        {
+          "category": "tv",
+          "news_count": 1558
+        },
+        {
+          "category": "entertainment",
+          "news_count": 970
+        },
+        {
+          "category": "movies",
+          "news_count": 969
+        },
+        {
+          "category": "kids",
+          "news_count": 66
+        }
+      ],
+      "daily_impressions": {
+        "2019-11-16": 83700,
+        "2019-11-17": 168742,
+        "2019-11-18": 447628,
+        "2019-11-19": 412708,
+        "2019-11-20": 439238,
+        "2019-11-21": 420965,
+        "2019-11-22": 397746
+      }
+    }
+  ]
+}
