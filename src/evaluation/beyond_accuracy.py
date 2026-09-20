@@ -1,8 +1,9 @@
-from typing import Dict, List, Set
 import numpy as np
 
 
-def catalog_coverage(recommendations: Dict[int, List[int]], all_items: Set[int], k: int = 10) -> float:
+def catalog_coverage(
+    recommendations: dict[int, list[int]], all_items: set[int], k: int = 10
+) -> float:
     """Proportion of all unique items recommended at least once in top-K."""
     if not all_items:
         return 0.0
@@ -12,11 +13,11 @@ def catalog_coverage(recommendations: Dict[int, List[int]], all_items: Set[int],
     return len(recommended_items.intersection(all_items)) / len(all_items)
 
 
-def gini_index(recommendations: Dict[int, List[int]], all_items: Set[int], k: int = 10) -> float:
+def gini_index(recommendations: dict[int, list[int]], all_items: set[int], k: int = 10) -> float:
     """Gini coefficient of recommendation distribution across all items.
     0 = absolute equality, 1 = maximum inequality.
     """
-    item_counts: Dict[int, int] = {item: 0 for item in all_items}
+    item_counts: dict[int, int] = dict.fromkeys(all_items, 0)
     for recs in recommendations.values():
         for item in recs[:k]:
             if item in item_counts:
@@ -32,8 +33,8 @@ def gini_index(recommendations: Dict[int, List[int]], all_items: Set[int], k: in
 
 
 def novelty_at_k(
-    recommendations: Dict[int, List[int]],
-    item_frequencies: Dict[int, int],
+    recommendations: dict[int, list[int]],
+    item_frequencies: dict[int, int],
     total_interactions: int,
     k: int = 10,
 ) -> float:

@@ -1,10 +1,11 @@
 import pytest
+
 from src.evaluation.ranking_metrics import (
+    compute_ranking_metrics,
     hit_rate_at_k,
-    recall_at_k,
     mrr_at_k,
     ndcg_at_k,
-    compute_ranking_metrics,
+    recall_at_k,
 )
 
 
@@ -42,6 +43,7 @@ def test_ndcg_at_k():
     # ground truth is item 2 only. At rank 2, DCG = 1 / log2(3), IDCG = 1 / log2(2) = 1.0
     ground_truth_single = {2}
     import numpy as np
+
     expected_ndcg = (1.0 / np.log2(3)) / (1.0 / np.log2(2))
     assert ndcg_at_k(recs, ground_truth_single, k=5) == pytest.approx(expected_ndcg)
 

@@ -20,9 +20,11 @@ MODEL_REGISTRY: dict[str, type[BaseRecommender]] = {
 
 def register_model(name: str):
     """Decorator to register a new model class."""
+
     def decorator(cls: type[BaseRecommender]):
         MODEL_REGISTRY[name.lower()] = cls
         return cls
+
     return decorator
 
 

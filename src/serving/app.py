@@ -1,13 +1,15 @@
 import time
+
 import numpy as np
 from fastapi import FastAPI, HTTPException
+
+from src.models.registry import get_model
 from src.serving.schemas import (
     HealthResponse,
     RecommendationRequest,
     RecommendationResponse,
     RecommendedItem,
 )
-from src.models.registry import get_model
 
 app = FastAPI(
     title="RecSys HUST Recommendation API",
@@ -33,13 +35,12 @@ def recommend(req: RecommendationRequest):
         if not _model.is_fitted:
             recs = [101, 102, 103, 104, 105][: req.top_k]
         else:
-            res_dict = _model.recommend(np.array([req.user_id]), top_k=req.top_k, filter_seen=req.filter_seen)
+            res_dict = _model.recommend(
+                np.array([req.user_id]), top_k=req.top_k, filter_seen=req.filter_seen
+            )
             recs = res_dict.get(req.user_id, [])
 
-        items = [
-            RecommendedItem(item_id=item_id, rank=idx + 1)
-            for idx, item_id in enumerate(recs)
-        ]
+        items = [RecommendedItem(item_id=item_id, rank=idx + 1) for idx, item_id in enumerate(recs)]
         latency_ms = (time.perf_counter() - start_time) * 1000.0
 
         return RecommendationResponse(
@@ -49,4 +50,4 @@ def recommend(req: RecommendationRequest):
             latency_ms=round(latency_ms, 3),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

@@ -1,9 +1,10 @@
 import argparse
-from pathlib import Path
 import time
-import yaml
-import pyarrow.dataset as ds
+from pathlib import Path
+
 import pandas as pd
+import pyarrow.dataset as ds
+import yaml
 
 from src.common.logger import setup_logger
 from src.common.seed import set_seed
@@ -26,7 +27,7 @@ def train(config_path: str | Path) -> Path:
     logger = setup_logger("train")
     logger.info(f"Loading configuration from {config_path}")
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
 
     seed = cfg.get("seed", 42)

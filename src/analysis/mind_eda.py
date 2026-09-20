@@ -83,9 +83,7 @@ def _iter_batches(
     pq = _load_parquet()
     rows_read = 0
     for path in _parquet_files(directory):
-        for batch in pq.ParquetFile(path).iter_batches(
-            batch_size=batch_size, columns=columns
-        ):
+        for batch in pq.ParquetFile(path).iter_batches(batch_size=batch_size, columns=columns):
             if max_rows is not None:
                 remaining = max_rows - rows_read
                 if remaining <= 0:
@@ -112,9 +110,7 @@ def _analyze_news(
         "title_entity_ids",
         "abstract_entity_ids",
     ]
-    for batch in _iter_batches(
-        directory, columns, batch_size=batch_size, max_rows=max_rows
-    ):
+    for batch in _iter_batches(directory, columns, batch_size=batch_size, max_rows=max_rows):
         data = batch.to_pydict()
         rows += batch.num_rows
         news_ids.update(value for value in data["news_id"] if value)
@@ -177,9 +173,7 @@ def _analyze_behaviors(
         "history_length",
         "candidate_count",
     ]
-    for batch in _iter_batches(
-        directory, columns, batch_size=batch_size, max_rows=max_rows
-    ):
+    for batch in _iter_batches(directory, columns, batch_size=batch_size, max_rows=max_rows):
         data = batch.to_pydict()
         rows += batch.num_rows
         users.update(value for value in data["user_id"] if value)
@@ -213,12 +207,8 @@ def _analyze_behaviors(
     labeled_denominator = labeled_rows or 1
     history_distribution = _distribution(history_sample.values)
     candidate_distribution = _distribution(candidate_sample.values)
-    history_distribution.update(
-        mean=round(history_total / denominator, 3), max=history_max
-    )
-    candidate_distribution.update(
-        mean=round(total_candidates / denominator, 3), max=candidate_max
-    )
+    history_distribution.update(mean=round(history_total / denominator, 3), max=history_max)
+    candidate_distribution.update(mean=round(total_candidates / denominator, 3), max=candidate_max)
     stats = {
         "rows": rows,
         "unique_users": len(users),
@@ -237,9 +227,7 @@ def _analyze_behaviors(
             round(total_clicks / labeled_denominator, 3) if labeled_rows else None
         ),
         "no_click_impressions_pct": (
-            round(100 * no_click_rows / labeled_denominator, 3)
-            if labeled_rows
-            else None
+            round(100 * no_click_rows / labeled_denominator, 3) if labeled_rows else None
         ),
         "quantile_sample_size": len(history_sample.values),
         "quantiles_approximate": rows > sample_size,
@@ -265,9 +253,7 @@ def analyze_split(
     if not split_root.is_dir():
         raise FileNotFoundError(f"Processed split does not exist: {split_root}")
 
-    news, categories = _analyze_news(
-        split_root / "news", batch_size=batch_size, max_rows=max_rows
-    )
+    news, categories = _analyze_news(split_root / "news", batch_size=batch_size, max_rows=max_rows)
     behaviors, daily, samples = _analyze_behaviors(
         split_root / "behaviors",
         batch_size=batch_size,

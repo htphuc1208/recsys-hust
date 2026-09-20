@@ -55,9 +55,7 @@ class BPRRecommender(PyTorchRecommenderBase):
         self.num_items = num_items or 0
         self.torch_model: BPR | None = None
 
-    def fit(
-        self, train_df: pd.DataFrame, val_df: pd.DataFrame | None = None
-    ) -> "BPRRecommender":
+    def fit(self, train_df: pd.DataFrame, val_df: pd.DataFrame | None = None) -> "BPRRecommender":
         """Fit BPR model using pairwise positive-negative triplets."""
         set_seed(self.seed)
 
@@ -76,9 +74,7 @@ class BPRRecommender(PyTorchRecommenderBase):
 
         # Track seen items for filtering in recommend()
         self.user_seen_items = (
-            df.groupby(self.user_col)[self.item_col]
-            .apply(lambda s: {int(x) for x in s})
-            .to_dict()
+            df.groupby(self.user_col)[self.item_col].apply(lambda s: {int(x) for x in s}).to_dict()
         )
 
         # Prepare triplets (user, pos_item, neg_item)
@@ -121,7 +117,6 @@ class BPRRecommender(PyTorchRecommenderBase):
             u_arr = df[self.user_col].to_numpy(dtype=np.int64, copy=True)
             p_arr = df[self.item_col].to_numpy(dtype=np.int64, copy=True)
             n_arr = np.random.randint(0, self.num_items, size=len(p_arr), dtype=np.int64)
-
 
         if len(u_arr) == 0:
             raise ValueError("No valid training pairs found for BPR.")

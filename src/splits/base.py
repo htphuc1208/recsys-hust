@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
+
 import pandas as pd
 
 
@@ -7,9 +7,7 @@ class BaseSplitter(ABC):
     """Abstract base class for dataset splitters."""
 
     @abstractmethod
-    def split(
-        self, df: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def split(self, df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """Split dataframe into train, validation, and test sets.
 
         Args:

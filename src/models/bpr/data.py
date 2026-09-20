@@ -9,9 +9,7 @@ def get_parquet_files(data_dir: Path) -> list[Path]:
     files = sorted(data_dir.glob("*.parquet"))
 
     if not files:
-        raise FileNotFoundError(
-            f"Không tìm thấy file Parquet trong: {data_dir}"
-        )
+        raise FileNotFoundError(f"Không tìm thấy file Parquet trong: {data_dir}")
 
     return files
 
@@ -30,12 +28,12 @@ def build_bpr_pairs(
 
     positive_items = [
         item_id
-        for item_id, label in zip(item_ids, labels)
+        for item_id, label in zip(item_ids, labels, strict=True)
         if label == 1 and item_id >= 0
     ]
     negative_items = [
         item_id
-        for item_id, label in zip(item_ids, labels)
+        for item_id, label in zip(item_ids, labels, strict=True)
         if label == 0 and item_id >= 0
     ]
 
@@ -46,9 +44,7 @@ def build_bpr_pairs(
 
     # Mỗi negative được dùng đúng một lần và chia đều cho các positive.
     for negative_index, negative_item in enumerate(negative_items):
-        positive_item = positive_items[
-            negative_index % len(positive_items)
-        ]
+        positive_item = positive_items[negative_index % len(positive_items)]
         pairs.append(
             (
                 user_idx,
@@ -95,6 +91,7 @@ def iter_impression_rows(
                 data["user_idx"],
                 data["item_idx"],
                 data["label"],
+                strict=False,
             ):
                 if current_impression_id is None:
                     current_impression_id = impression_id
@@ -113,9 +110,7 @@ def iter_impression_rows(
                     current_labels = []
 
                 if user_idx != current_user_idx:
-                    raise ValueError(
-                        "Một impression chứa nhiều user_idx khác nhau."
-                    )
+                    raise ValueError("Một impression chứa nhiều user_idx khác nhau.")
 
                 current_item_ids.append(int(item_idx))
                 current_labels.append(int(label))
@@ -175,9 +170,7 @@ def yield_pair_batches(
     """Chia danh sách BPR pair thành các lô tensor."""
     for start in range(0, len(pairs), batch_size):
         end = min(start + batch_size, len(pairs))
-        yield convert_pairs_to_tensors(
-            pairs[start:end]
-        )
+        yield convert_pairs_to_tensors(pairs[start:end])
 
 
 def iter_bpr_batches(
@@ -193,9 +186,7 @@ def iter_bpr_batches(
         raise ValueError("batch_size phải lớn hơn 0.")
 
     if shuffle_buffer_size < batch_size:
-        raise ValueError(
-            "shuffle_buffer_size phải lớn hơn hoặc bằng batch_size."
-        )
+        raise ValueError("shuffle_buffer_size phải lớn hơn hoặc bằng batch_size.")
 
     if read_batch_size <= 0:
         raise ValueError("read_batch_size phải lớn hơn 0.")
@@ -217,11 +208,7 @@ def iter_bpr_batches(
             )
         )
 
-        target_size = (
-            shuffle_buffer_size
-            if shuffle
-            else batch_size
-        )
+        target_size = shuffle_buffer_size if shuffle else batch_size
 
         while len(pair_buffer) >= target_size:
             current_pairs = pair_buffer[:target_size]

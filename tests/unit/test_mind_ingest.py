@@ -28,18 +28,13 @@ def test_parse_unlabeled_test_impressions() -> None:
     ("raw_impressions", "require_labels"),
     [("N1 N2", True), ("N1-0 N2-1", False), ("N1-0 N2", True)],
 )
-def test_parse_impressions_rejects_wrong_schema(
-    raw_impressions: str, require_labels: bool
-) -> None:
+def test_parse_impressions_rejects_wrong_schema(raw_impressions: str, require_labels: bool) -> None:
     with pytest.raises(ValueError):
         parse_impressions(raw_impressions, require_labels=require_labels)
 
 
 def test_parse_entity_ids() -> None:
-    raw = (
-        '[{"Label":"A","WikidataId":"Q1"},'
-        '{"Label":"missing id"},{"Label":"B","WikidataId":"Q2"}]'
-    )
+    raw = '[{"Label":"A","WikidataId":"Q1"},{"Label":"missing id"},{"Label":"B","WikidataId":"Q2"}]'
 
     assert parse_entity_ids(raw) == ["Q1", "Q2"]
 

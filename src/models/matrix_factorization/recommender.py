@@ -77,9 +77,7 @@ class MatrixFactorizationRecommender(PyTorchRecommenderBase):
 
         # Track seen items for recommendation filtering
         self.user_seen_items = (
-            df.groupby(self.user_col)[self.item_col]
-            .apply(lambda s: {int(x) for x in s})
-            .to_dict()
+            df.groupby(self.user_col)[self.item_col].apply(lambda s: {int(x) for x in s}).to_dict()
         )
 
         user_arr = df[self.user_col].to_numpy(dtype=np.int64, copy=True)
@@ -94,7 +92,6 @@ class MatrixFactorizationRecommender(PyTorchRecommenderBase):
         item_t = torch.from_numpy(item_arr)
         label_t = torch.from_numpy(label_arr)
 
-
         self.torch_model = MatrixFactorization(
             num_users=self.num_users,
             num_items=self.num_items,
@@ -108,11 +105,7 @@ class MatrixFactorizationRecommender(PyTorchRecommenderBase):
             weight_decay=self.weight_decay,
         )
 
-        criterion = (
-            nn.BCEWithLogitsLoss()
-            if self.loss_type == "bce"
-            else nn.MSELoss()
-        )
+        criterion = nn.BCEWithLogitsLoss() if self.loss_type == "bce" else nn.MSELoss()
 
         n_samples = len(user_t)
         indices = np.arange(n_samples)

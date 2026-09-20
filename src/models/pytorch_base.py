@@ -79,9 +79,7 @@ class PyTorchRecommenderBase(BaseRecommender):
         else:
             self.item_biases = None
 
-    def predict(
-        self, user_ids: np.ndarray, item_ids: np.ndarray, **kwargs: Any
-    ) -> np.ndarray:
+    def predict(self, user_ids: np.ndarray, item_ids: np.ndarray, **kwargs: Any) -> np.ndarray:
         """Compute recommendation score for user-item pairs using cached embeddings."""
         if not self.is_fitted or self.user_factors is None or self.item_factors is None:
             raise RuntimeError("Model must be fitted before calling predict().")

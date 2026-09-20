@@ -35,9 +35,7 @@ def _parquet_files(directory: Path) -> list[Path]:
     return files
 
 
-def _iter_batches(
-    directory: Path, columns: list[str], batch_size: int
-) -> Iterable[Any]:
+def _iter_batches(directory: Path, columns: list[str], batch_size: int) -> Iterable[Any]:
     _, pq = _load_pyarrow()
     for path in _parquet_files(directory):
         parquet_file = pq.ParquetFile(path)
@@ -85,9 +83,7 @@ def build_mappings(
 def _schemas() -> dict[str, Any]:
     pa, _ = _load_pyarrow()
     return {
-        "user_mapping": pa.schema(
-            [("user_id", pa.string()), ("user_idx", pa.int64())]
-        ),
+        "user_mapping": pa.schema([("user_id", pa.string()), ("user_idx", pa.int64())]),
         "item_mapping": pa.schema(
             [
                 ("news_id", pa.string()),
@@ -223,9 +219,7 @@ def _prepare_news(
     return {"news_rows": rows, "unknown_news_rows": unknown_items}
 
 
-def _sample_positions(
-    labels: list[int], negative_ratio: int, rng: random.Random
-) -> list[int]:
+def _sample_positions(labels: list[int], negative_ratio: int, rng: random.Random) -> list[int]:
     positive_positions = [index for index, label in enumerate(labels) if label == 1]
     negative_positions = [index for index, label in enumerate(labels) if label == 0]
     negative_count = min(len(negative_positions), negative_ratio * len(positive_positions))
@@ -277,9 +271,7 @@ def _prepare_behaviors(
         output_dir / "impressions", schemas["impressions"], chunk_size
     )
     positives_writer = (
-        ParquetPartWriter(
-            output_dir / "positive_interactions", schemas["interaction"], chunk_size
-        )
+        ParquetPartWriter(output_dir / "positive_interactions", schemas["interaction"], chunk_size)
         if split in {"train", "dev"}
         else None
     )
@@ -308,18 +300,14 @@ def _prepare_behaviors(
             user_idx = user_to_index.get(row["user_id"], UNKNOWN_INDEX)
             history_ids = row["history"] or []
             candidate_ids = row["candidate_news_ids"] or []
-            history_indices = [
-                item_to_index.get(news_id, UNKNOWN_INDEX) for news_id in history_ids
-            ]
+            history_indices = [item_to_index.get(news_id, UNKNOWN_INDEX) for news_id in history_ids]
             candidate_indices = [
                 item_to_index.get(news_id, UNKNOWN_INDEX) for news_id in candidate_ids
             ]
             history_mask = [index != UNKNOWN_INDEX for index in history_indices]
             candidate_mask = [index != UNKNOWN_INDEX for index in candidate_indices]
             history_train_mask = [news_id in train_item_ids for news_id in history_ids]
-            candidate_train_mask = [
-                news_id in train_item_ids for news_id in candidate_ids
-            ]
+            candidate_train_mask = [news_id in train_item_ids for news_id in candidate_ids]
             impressions_writer.append(
                 {
                     "impression_id": row["impression_id"],
@@ -404,9 +392,7 @@ def _prepare_behaviors(
         "unknown_candidate_items": unknown_candidate_items,
         "unseen_train_candidate_items": unseen_train_candidate_items,
         "unknown_user_pct": round(100 * unknown_users / (rows or 1), 4),
-        "unknown_history_item_pct": round(
-            100 * unknown_history_items / (history_items or 1), 4
-        ),
+        "unknown_history_item_pct": round(100 * unknown_history_items / (history_items or 1), 4),
         "unknown_candidate_item_pct": round(
             100 * unknown_candidate_items / (candidate_items or 1), 4
         ),

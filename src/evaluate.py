@@ -1,8 +1,9 @@
 import argparse
 import json
-from pathlib import Path
 import time
-from typing import Any, Dict, List, Set
+from pathlib import Path
+from typing import Any
+
 import numpy as np
 import pyarrow.dataset as ds
 import yaml
@@ -16,11 +17,13 @@ from src.models.base import BaseRecommender
 def evaluate_impressions(
     model: BaseRecommender,
     impressions_path: Path,
-    k_list: List[int] = [5, 10, 20],
+    k_list: list[int] | None = None,
     sample_size: int | None = None,
-    all_catalog_items: Set[int] | None = None,
-) -> Dict[str, Any]:
+    all_catalog_items: set[int] | None = None,
+) -> dict[str, Any]:
     """Evaluate recommender model on impression dataset across multiple subgroups/slices."""
+    if k_list is None:
+        k_list = [5, 10, 20]
     dataset = ds.dataset(str(impressions_path), format="parquet")
     required_cols = [
         "impression_id",
@@ -32,12 +35,12 @@ def evaluate_impressions(
     ]
 
     slices = ("overall", "cold_item", "warm_item", "cold_user", "warm_user")
-    slice_metrics: Dict[str, Dict[str, List[float]]] = {
+    slice_metrics: dict[str, dict[str, list[float]]] = {
         s: {f"{m}@{k}": [] for m in ("NDCG", "Recall", "HitRate", "MRR") for k in k_list}
         for s in slices
     }
 
-    recommendations_at_10: Dict[int, List[int]] = {}
+    recommendations_at_10: dict[int, list[int]] = {}
     total_evaluated = 0
     start_time = time.perf_counter()
 
@@ -62,7 +65,7 @@ def evaluate_impressions(
             # Sort descending by score
             ranked_indices = np.argsort(-scores)
             ranked_candidates = [candidates[idx] for idx in ranked_indices]
-            true_items = {candidates[idx] for idx, l in enumerate(labels) if l == 1}
+            true_items = {candidates[idx] for idx, lbl in enumerate(labels) if lbl == 1}
 
             imp_id = pydict["impression_id"][i]
             recommendations_at_10[imp_id] = ranked_candidates[:10]
@@ -105,7 +108,7 @@ def evaluate_impressions(
     throughput = total_evaluated / elapsed if elapsed > 0 else 0.0
 
     # Aggregate means
-    results: Dict[str, Any] = {
+    results: dict[str, Any] = {
         "total_evaluated_impressions": total_evaluated,
         "eval_time_seconds": round(elapsed, 2),
         "throughput_impressions_per_sec": round(throughput, 1),
@@ -136,7 +139,7 @@ def evaluate_impressions(
     return results
 
 
-def format_markdown_table(results: Dict[str, Any]) -> str:
+def format_markdown_table(results: dict[str, Any]) -> str:
     """Format evaluation results into a Markdown report table matching capstone guidelines."""
     slices = results.get("slices", {})
     metrics_to_show = ["NDCG@5", "NDCG@10", "NDCG@20", "Recall@10", "Recall@20", "MRR@10"]
@@ -166,16 +169,26 @@ def format_markdown_table(results: Dict[str, Any]) -> str:
     beyond = results.get("beyond_accuracy", {})
     if beyond:
         rows.append(["---"] * len(headers))
-        rows.append([
-            "**Catalog Coverage@10**",
-            f"{beyond.get('catalog_coverage@10', 0.0):.4f}",
-            "-", "-", "-", "-",
-        ])
-        rows.append([
-            "**Gini Index@10**",
-            f"{beyond.get('gini_index@10', 0.0):.4f}",
-            "-", "-", "-", "-",
-        ])
+        rows.append(
+            [
+                "**Catalog Coverage@10**",
+                f"{beyond.get('catalog_coverage@10', 0.0):.4f}",
+                "-",
+                "-",
+                "-",
+                "-",
+            ]
+        )
+        rows.append(
+            [
+                "**Gini Index@10**",
+                f"{beyond.get('gini_index@10', 0.0):.4f}",
+                "-",
+                "-",
+                "-",
+                "-",
+            ]
+        )
 
     table_lines = [
         "| " + " | ".join(headers) + " |",
@@ -190,12 +203,12 @@ def format_markdown_table(results: Dict[str, Any]) -> str:
     return "\n".join(table_lines)
 
 
-def evaluate(config_path: str | Path, sample_size: int | None = None) -> Dict[str, Any]:
+def evaluate(config_path: str | Path, sample_size: int | None = None) -> dict[str, Any]:
     """Run full evaluation pipeline."""
     logger = setup_logger("evaluate")
     logger.info(f"Loading configuration from {config_path}")
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
 
     exp_name = cfg.get("experiment_name", "unnamed_run")
@@ -207,10 +220,9 @@ def evaluate(config_path: str | Path, sample_size: int | None = None) -> Dict[st
     checkpoint_path = artifacts_dir / f"{exp_name}_{model_name}.pkl"
 
     if not checkpoint_path.exists():
-        logger.warning(
-            f"Checkpoint not found at {checkpoint_path}. Training model on the fly..."
-        )
+        logger.warning(f"Checkpoint not found at {checkpoint_path}. Training model on the fly...")
         from src.train import train
+
         checkpoint_path = train(config_path)
 
     logger.info(f"Loading checkpoint from: {checkpoint_path}")
@@ -220,7 +232,7 @@ def evaluate(config_path: str | Path, sample_size: int | None = None) -> Dict[st
     dev_path = Path(dataset_cfg.get("dev_impressions", "data/processed/mind_large/dev/impressions"))
     items_path = Path(dataset_cfg.get("items_mapping", "data/processed/mind_large/mappings/items"))
 
-    catalog_items: Set[int] = set()
+    catalog_items: set[int] = set()
     if items_path.exists():
         logger.info(f"Loading item catalog for beyond-accuracy metrics from: {items_path}")
         items_ds = ds.dataset(str(items_path), format="parquet")
@@ -237,7 +249,16 @@ def evaluate(config_path: str | Path, sample_size: int | None = None) -> Dict[st
     )
 
     report_md = format_markdown_table(results)
-    logger.info("\n" + "=" * 60 + "\nEVALUATION RESULTS REPORT:\n" + "=" * 60 + "\n" + report_md + "\n" + "=" * 60)
+    logger.info(
+        "\n"
+        + "=" * 60
+        + "\nEVALUATION RESULTS REPORT:\n"
+        + "=" * 60
+        + "\n"
+        + report_md
+        + "\n"
+        + "=" * 60
+    )
 
     reports_dir = Path(cfg.get("paths", {}).get("reports_dir", "reports")) / "metrics"
     reports_dir.mkdir(parents=True, exist_ok=True)

@@ -151,8 +151,7 @@ def _iter_tsv(path: Path, expected_columns: int) -> Iterable[list[str]]:
         for line_number, row in enumerate(reader, start=1):
             if len(row) != expected_columns:
                 raise ValueError(
-                    f"{path}:{line_number} has {len(row)} columns; "
-                    f"expected {expected_columns}"
+                    f"{path}:{line_number} has {len(row)} columns; expected {expected_columns}"
                 )
             yield row
 
@@ -228,9 +227,7 @@ def _process_behaviors(
     explode_candidates: bool,
 ) -> tuple[int, int]:
     _, behaviors_schema, candidates_schema = _schemas()
-    behaviors_writer = ParquetPartWriter(
-        output_dir / "behaviors", behaviors_schema, chunk_size
-    )
+    behaviors_writer = ParquetPartWriter(output_dir / "behaviors", behaviors_schema, chunk_size)
     candidates_writer = (
         ParquetPartWriter(output_dir / "candidates", candidates_schema, chunk_size)
         if explode_candidates
@@ -244,9 +241,7 @@ def _process_behaviors(
             impression_id = int(row["impression_id"])
             timestamp = datetime.strptime(row["timestamp"], TIMESTAMP_FORMAT)
             history = parse_history(row["history"])
-            news_ids, labels = parse_impressions(
-                row["impressions"], require_labels=require_labels
-            )
+            news_ids, labels = parse_impressions(row["impressions"], require_labels=require_labels)
         except ValueError as exc:
             raise ValueError(
                 f"Could not parse impression {row['impression_id']} in {raw_path}: {exc}"

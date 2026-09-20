@@ -76,9 +76,7 @@ def test_bpr_item_bias_is_added():
     with torch.no_grad():
         model.user_embedding.weight.zero_()
         model.item_embedding.weight.zero_()
-        model.item_bias.weight.copy_(
-            torch.tensor([[0.5], [1.5]])
-        )
+        model.item_bias.weight.copy_(torch.tensor([[0.5], [1.5]]))
 
     scores = model(
         torch.tensor([0, 0]),

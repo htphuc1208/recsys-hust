@@ -1,5 +1,5 @@
-from typing import Tuple
 import pandas as pd
+
 from src.splits.base import BaseSplitter
 
 
@@ -19,9 +19,7 @@ class GlobalTemporalSplitter(BaseSplitter):
         self.val_ratio = val_ratio
         self.test_ratio = test_ratio
 
-    def split(
-        self, df: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def split(self, df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         df_sorted = df.sort_values(self.timestamp_col).reset_index(drop=True)
         n = len(df_sorted)
 

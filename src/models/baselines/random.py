@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import numpy as np
 import pandas as pd
+
 from src.models.base import BaseRecommender
 
 
@@ -21,16 +23,20 @@ class RandomRecommender(BaseRecommender):
         self.seed = seed
         self.user_col = user_col
         self.item_col = item_col
-        self.catalog_items: List[int] = []
+        self.catalog_items: list[int] = []
         self.rng = np.random.default_rng(self.seed)
 
-    def fit(self, train_df: pd.DataFrame, val_df: Optional[pd.DataFrame] = None) -> "RandomRecommender":
+    def fit(
+        self, train_df: pd.DataFrame, val_df: pd.DataFrame | None = None
+    ) -> "RandomRecommender":
         self.catalog_items = [int(x) for x in train_df[self.item_col].unique().tolist()]
         self.rng = np.random.default_rng(self.seed)
         self.is_fitted = True
         return self
 
-    def predict(self, user_ids: Optional[np.ndarray], item_ids: np.ndarray, **kwargs: Any) -> np.ndarray:
+    def predict(
+        self, user_ids: np.ndarray | None, item_ids: np.ndarray, **kwargs: Any
+    ) -> np.ndarray:
         """Assign uniform random scores in [0, 1) to candidates."""
         return self.rng.random(len(item_ids), dtype=float)
 
@@ -39,9 +45,9 @@ class RandomRecommender(BaseRecommender):
         user_ids: np.ndarray,
         top_k: int = 10,
         filter_seen: bool = True,
-    ) -> Dict[int, List[int]]:
+    ) -> dict[int, list[int]]:
         assert self.is_fitted, "Model must be fitted before recommend()"
-        recs: Dict[int, List[int]] = {}
+        recs: dict[int, list[int]] = {}
         items_arr = np.array(self.catalog_items)
 
         for user in user_ids:

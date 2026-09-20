@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -28,10 +29,12 @@ class ItemKNNRecommender(BaseRecommender):
         self.item_col = item_col
 
         # item_id -> {neighbor_item_id: similarity_weight}
-        self.item_similarities: Dict[int, Dict[int, float]] = {}
-        self.catalog_items: List[int] = []
+        self.item_similarities: dict[int, dict[int, float]] = {}
+        self.catalog_items: list[int] = []
 
-    def fit(self, train_df: pd.DataFrame, val_df: Optional[pd.DataFrame] = None) -> "ItemKNNRecommender":
+    def fit(
+        self, train_df: pd.DataFrame, val_df: pd.DataFrame | None = None
+    ) -> "ItemKNNRecommender":
         # 1. Map users and items to contiguous indices
         unique_users = train_df[self.user_col].unique()
         unique_items = train_df[self.item_col].unique()
@@ -49,7 +52,9 @@ class ItemKNNRecommender(BaseRecommender):
 
         # 2. Build binary user-item CSR matrix (R: n_users x n_items)
         data = np.ones(len(train_df), dtype=np.float32)
-        R = sp.csr_matrix((data, (row_indices, col_indices)), shape=(n_users, n_items), dtype=np.float32)
+        R = sp.csr_matrix(
+            (data, (row_indices, col_indices)), shape=(n_users, n_items), dtype=np.float32
+        )
 
         # 3. Compute item-item co-occurrence matrix C = R^T * R (shape: n_items x n_items)
         C = R.T.dot(R).tocsr()
@@ -92,7 +97,7 @@ class ItemKNNRecommender(BaseRecommender):
             item_id = rev_item_map[i]
             self.item_similarities[item_id] = {
                 rev_item_map[col]: float(sim)
-                for col, sim in zip(neighbor_cols, sims)
+                for col, sim in zip(neighbor_cols, sims, strict=False)
                 if sim > 0.0
             }
 
@@ -101,16 +106,17 @@ class ItemKNNRecommender(BaseRecommender):
 
     def predict(
         self,
-        user_ids: Optional[np.ndarray],
+        user_ids: np.ndarray | None,
         item_ids: np.ndarray,
-        history_item_idxs: Optional[List[int]] = None,
+        history_item_idxs: list[int] | None = None,
         **kwargs: Any,
     ) -> np.ndarray:
         """Score candidate items by sum of similarities to items in user's history."""
         if not self.is_fitted or not history_item_idxs:
             return np.zeros(len(item_ids), dtype=float)
 
-        history_set = set(int(h) for h in history_item_idxs if h >= 0)
+        history_set = {int(h) for h in history_item_idxs if h >= 0}
+
         if not history_set:
             return np.zeros(len(item_ids), dtype=float)
 
@@ -135,10 +141,10 @@ class ItemKNNRecommender(BaseRecommender):
         user_ids: np.ndarray,
         top_k: int = 10,
         filter_seen: bool = True,
-        user_histories: Optional[Dict[int, List[int]]] = None,
-    ) -> Dict[int, List[int]]:
+        user_histories: dict[int, list[int]] | None = None,
+    ) -> dict[int, list[int]]:
         assert self.is_fitted, "Model must be fitted before recommend()"
-        recs: Dict[int, List[int]] = {}
+        recs: dict[int, list[int]] = {}
 
         for user in user_ids:
             u_int = int(user)
@@ -147,7 +153,7 @@ class ItemKNNRecommender(BaseRecommender):
                 recs[u_int] = self.catalog_items[:top_k]
                 continue
 
-            candidate_scores: Dict[int, float] = {}
+            candidate_scores: dict[int, float] = {}
             for h in history:
                 neighbors = self.item_similarities.get(h, {})
                 for neighbor_id, sim in neighbors.items():

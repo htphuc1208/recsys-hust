@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -12,7 +13,7 @@ class BaseRecommender(ABC):
         self.is_fitted = False
 
     @abstractmethod
-    def fit(self, train_df: pd.DataFrame, val_df: Optional[pd.DataFrame] = None) -> "BaseRecommender":
+    def fit(self, train_df: pd.DataFrame, val_df: pd.DataFrame | None = None) -> "BaseRecommender":
         """Fit model on training interactions."""
         pass
 
@@ -27,7 +28,7 @@ class BaseRecommender(ABC):
         user_ids: np.ndarray,
         top_k: int = 10,
         filter_seen: bool = True,
-    ) -> Dict[int, List[int]]:
+    ) -> dict[int, list[int]]:
         """Generate top-K recommended item IDs for given user IDs.
 
         Returns:

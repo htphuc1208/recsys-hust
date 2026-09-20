@@ -1,14 +1,13 @@
-from typing import Dict, List, Set
 import numpy as np
 
 
-def hit_rate_at_k(recommendations: List[int], ground_truth: Set[int], k: int) -> float:
+def hit_rate_at_k(recommendations: list[int], ground_truth: set[int], k: int) -> float:
     """Hit Rate @ K."""
     top_k_recs = recommendations[:k]
     return 1.0 if any(item in ground_truth for item in top_k_recs) else 0.0
 
 
-def recall_at_k(recommendations: List[int], ground_truth: Set[int], k: int) -> float:
+def recall_at_k(recommendations: list[int], ground_truth: set[int], k: int) -> float:
     """Recall @ K."""
     if not ground_truth:
         return 0.0
@@ -17,7 +16,7 @@ def recall_at_k(recommendations: List[int], ground_truth: Set[int], k: int) -> f
     return hits / len(ground_truth)
 
 
-def mrr_at_k(recommendations: List[int], ground_truth: Set[int], k: int) -> float:
+def mrr_at_k(recommendations: list[int], ground_truth: set[int], k: int) -> float:
     """Mean Reciprocal Rank @ K."""
     top_k_recs = recommendations[:k]
     for rank, item in enumerate(top_k_recs, start=1):
@@ -26,7 +25,7 @@ def mrr_at_k(recommendations: List[int], ground_truth: Set[int], k: int) -> floa
     return 0.0
 
 
-def ndcg_at_k(recommendations: List[int], ground_truth: Set[int], k: int) -> float:
+def ndcg_at_k(recommendations: list[int], ground_truth: set[int], k: int) -> float:
     """Normalized Discounted Cumulative Gain @ K with binary relevance."""
     if not ground_truth:
         return 0.0
@@ -45,12 +44,14 @@ def ndcg_at_k(recommendations: List[int], ground_truth: Set[int], k: int) -> flo
 
 
 def compute_ranking_metrics(
-    recommendations: Dict[int, List[int]],
-    ground_truth: Dict[int, Set[int]],
-    k_list: List[int] = [5, 10, 20],
-) -> Dict[str, float]:
+    recommendations: dict[int, list[int]],
+    ground_truth: dict[int, set[int]],
+    k_list: list[int] | None = None,
+) -> dict[str, float]:
     """Compute mean ranking metrics across all users."""
-    results: Dict[str, List[float]] = {}
+    if k_list is None:
+        k_list = [5, 10, 20]
+    results: dict[str, list[float]] = {}
     for k in k_list:
         results[f"NDCG@{k}"] = []
         results[f"Recall@{k}"] = []

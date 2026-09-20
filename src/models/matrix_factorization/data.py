@@ -10,9 +10,7 @@ def get_parquet_files(data_dir: Path) -> list[Path]:
     files = sorted(data_dir.glob("*.parquet"))
 
     if not files:
-        raise FileNotFoundError(
-            f"Không tìm thấy file Parquet trong: {data_dir}"
-        )
+        raise FileNotFoundError(f"Không tìm thấy file Parquet trong: {data_dir}")
 
     return files
 
@@ -88,9 +86,7 @@ def iter_pointwise_batches(
         raise ValueError("batch_size phải lớn hơn 0.")
 
     if shuffle_buffer_size < batch_size:
-        raise ValueError(
-            "shuffle_buffer_size phải lớn hơn hoặc bằng batch_size."
-        )
+        raise ValueError("shuffle_buffer_size phải lớn hơn hoặc bằng batch_size.")
 
     files = get_parquet_files(data_dir)
 

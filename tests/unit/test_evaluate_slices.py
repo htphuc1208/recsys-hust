@@ -1,9 +1,8 @@
 from pathlib import Path
-import numpy as np
+
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import pytest
 
 from src.evaluate import evaluate_impressions
 from src.models.baselines.popularity import PopularityRecommender
