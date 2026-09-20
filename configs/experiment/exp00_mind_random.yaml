@@ -1,0 +1,24 @@
+defaults:
+  - base
+  - dataset: mind_large
+
+experiment_name: "exp00_mind_random"
+seed: 42
+
+dataset:
+  name: "mind_large"
+  train_interactions: "data/processed/mind_large/train/positive_interactions"
+  dev_impressions: "data/processed/mind_large/dev/impressions"
+  items_mapping: "data/processed/mind_large/mappings/items"
+
+model:
+  name: "random"
+  seed: 42
+  user_col: "user_idx"
+  item_col: "item_idx"
+
+evaluation:
+  top_k_list: [5, 10, 20]
+  eval_batch_size: 10000
+  metrics: ["ndcg", "recall", "hit_rate", "mrr", "coverage", "gini"]
+  slices: ["overall", "cold_item", "warm_item", "cold_user", "warm_user"]

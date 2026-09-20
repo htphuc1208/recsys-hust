@@ -1,0 +1,102 @@
+{
+  "total_evaluated_impressions": 20000,
+  "eval_time_seconds": 1.53,
+  "throughput_impressions_per_sec": 13064.9,
+  "slices": {
+    "overall": {
+      "count": 20000,
+      "pct": 100.0,
+      "metrics": {
+        "NDCG@5": 0.22621,
+        "NDCG@10": 0.28848,
+        "NDCG@20": 0.34004,
+        "Recall@5": 0.34402,
+        "Recall@10": 0.52512,
+        "Recall@20": 0.7091,
+        "HitRate@5": 0.39265,
+        "HitRate@10": 0.58875,
+        "HitRate@20": 0.7735,
+        "MRR@5": 0.20222,
+        "MRR@10": 0.22829,
+        "MRR@20": 0.24127
+      }
+    },
+    "cold_item": {
+      "count": 12187,
+      "pct": 60.94,
+      "metrics": {
+        "NDCG@5": 0.189,
+        "NDCG@10": 0.25022,
+        "NDCG@20": 0.30437,
+        "Recall@5": 0.29417,
+        "Recall@10": 0.47181,
+        "Recall@20": 0.66472,
+        "HitRate@5": 0.34561,
+        "HitRate@10": 0.54172,
+        "HitRate@20": 0.73734,
+        "MRR@5": 0.1704,
+        "MRR@10": 0.19643,
+        "MRR@20": 0.21014
+      }
+    },
+    "warm_item": {
+      "count": 7813,
+      "pct": 39.06,
+      "metrics": {
+        "NDCG@5": 0.28426,
+        "NDCG@10": 0.34815,
+        "NDCG@20": 0.39567,
+        "Recall@5": 0.42178,
+        "Recall@10": 0.60827,
+        "Recall@20": 0.77833,
+        "HitRate@5": 0.46602,
+        "HitRate@10": 0.6621,
+        "HitRate@20": 0.8299,
+        "MRR@5": 0.25185,
+        "MRR@10": 0.27798,
+        "MRR@20": 0.28982
+      }
+    },
+    "cold_user": {
+      "count": 5048,
+      "pct": 25.24,
+      "metrics": {
+        "NDCG@5": 0.2555,
+        "NDCG@10": 0.3171,
+        "NDCG@20": 0.36734,
+        "Recall@5": 0.38666,
+        "Recall@10": 0.56862,
+        "Recall@20": 0.75283,
+        "HitRate@5": 0.42195,
+        "HitRate@10": 0.6151,
+        "HitRate@20": 0.79655,
+        "MRR@5": 0.22294,
+        "MRR@10": 0.24862,
+        "MRR@20": 0.26142
+      }
+    },
+    "warm_user": {
+      "count": 14952,
+      "pct": 74.76,
+      "metrics": {
+        "NDCG@5": 0.21633,
+        "NDCG@10": 0.27881,
+        "NDCG@20": 0.33082,
+        "Recall@5": 0.32962,
+        "Recall@10": 0.51043,
+        "Recall@20": 0.69434,
+        "HitRate@5": 0.38276,
+        "HitRate@10": 0.57986,
+        "HitRate@20": 0.76572,
+        "MRR@5": 0.19522,
+        "MRR@10": 0.22142,
+        "MRR@20": 0.23446
+      }
+    }
+  },
+  "beyond_accuracy": {
+    "catalog_coverage@10": 0.01878,
+    "gini_index@10": 0.99814,
+    "total_catalog_items": 130379
+  }
+}
