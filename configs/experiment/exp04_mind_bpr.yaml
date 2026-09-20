@@ -1,0 +1,33 @@
+defaults:
+  - base
+  - dataset: mind_large
+  - model: bpr
+
+experiment_name: "exp04_mind_bpr"
+seed: 42
+
+dataset:
+  name: "mind_large"
+  train_interactions: "data/processed/mind_large/train/pointwise"
+  dev_impressions: "data/processed/mind_large/dev/impressions"
+  items_mapping: "data/processed/mind_large/mappings/items"
+
+model:
+  name: "bpr"
+  user_col: "user_idx"
+  item_col: "item_idx"
+  label_col: "label"
+  embedding_dim: 64
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  epochs: 2
+  batch_size: 16384
+  use_item_bias: true
+  max_train_samples: 500000
+
+
+evaluation:
+  top_k_list: [5, 10, 20]
+  eval_batch_size: 10000
+  metrics: ["ndcg", "recall", "hit_rate", "mrr", "coverage", "gini"]
+  slices: ["overall", "cold_item", "warm_item", "cold_user", "warm_user"]

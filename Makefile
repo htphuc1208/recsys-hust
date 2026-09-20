@@ -51,16 +51,17 @@ evaluate-itemknn:
 	python -m src.evaluate --config configs/experiment/exp02_mind_itemknn.yaml
 
 train-mf:
-	python -m src.models.matrix_factorization.train
+	python -m src.train --config configs/experiment/exp03_mind_mf.yaml
 
 evaluate-mf:
-	python -m src.models.matrix_factorization.evaluate
+	python -m src.evaluate --config configs/experiment/exp03_mind_mf.yaml
 
 train-bpr:
-	python -m src.models.bpr.train
+	python -m src.train --config configs/experiment/exp04_mind_bpr.yaml
 
 evaluate-bpr:
-	python -m src.models.bpr.evaluate
+	python -m src.evaluate --config configs/experiment/exp04_mind_bpr.yaml
+
 
 serve:
 	uvicorn src.serving.app:app --host 0.0.0.0 --port 8000 --reload

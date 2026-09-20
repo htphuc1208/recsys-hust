@@ -48,6 +48,9 @@ def train(config_path: str | Path) -> Path:
     cols_to_load = [user_col, item_col]
     if model_cfg.get("decay_factor") is not None:
         cols_to_load.append(timestamp_col)
+    label_col = model_cfg.get("label_col", "label")
+    if label_col not in cols_to_load:
+        cols_to_load.append(label_col)
 
     logger.info(f"Loading training data from: {train_path}")
     start_load = time.perf_counter()
