@@ -210,3 +210,97 @@ make serve
 # API will be available at http://localhost:8000
 # Interactive Swagger docs: http://localhost:8000/docs
 ```
+
+## Matrix Factorization
+
+Phần Matrix Factorization nằm trong một package riêng:
+
+```text
+src/models/matrix_factorization/
+├── __init__.py
+├── model.py       # Kiến trúc mô hình
+├── data.py        # Đọc và xáo trộn pointwise train data
+├── train.py       # Huấn luyện, checkpoint, resume, chọn best epoch
+└── evaluate.py    # Đánh giá warm-start trên MIND dev
+```
+
+Train mới 3 epoch:
+
+```bash
+python -m src.models.matrix_factorization.train --epochs 3
+```
+
+Chạy tiếp 3 epoch từ một checkpoint:
+
+```bash
+python -m src.models.matrix_factorization.train \
+  --resume artifacts/checkpoints/matrix_factorization/epoch_003.pt \
+  --epochs 3
+```
+
+Đánh giá checkpoint tốt nhất trên toàn bộ dev:
+
+```bash
+python -m src.models.matrix_factorization.evaluate
+```
+
+Checkpoint được tách riêng theo model:
+
+```text
+artifacts/checkpoints/matrix_factorization/
+├── epoch_001.pt
+├── epoch_002.pt
+├── epoch_003.pt
+├── best.pt
+└── history.csv
+```
+
+Đánh giá hiện tại là warm-start: bỏ qua user mới và item chưa xuất hiện trong train. Các chỉ số được tính theo từng impression gồm MRR, HitRate@5, HitRate@10, Recall@5, Recall@10, NDCG@5 và NDCG@10. MIND test chính thức không có labels nên không thể tính trực tiếp các chỉ số ranking trên máy.
+
+## BPR
+
+Phần BPR nằm trong một package riêng và dùng trực tiếp pointwise train data đã được sampling khi chuẩn bị MIND:
+
+```text
+src/models/bpr/
+├── __init__.py
+├── model.py       # Kiến trúc BPR-MF
+├── data.py        # Gom impression và tạo (user, positive, negative)
+├── train.py       # Huấn luyện, checkpoint, resume, chọn best epoch
+└── evaluate.py    # Đánh giá warm-start trên MIND dev
+```
+
+BPR không sampling thêm negative từ toàn bộ catalog. Trong mỗi impression, các negative đã có trong `train/pointwise` được dùng đúng một lần và được phân đều cho các positive.
+
+Train mới 3 epoch:
+
+```bash
+python -m src.models.bpr.train --epochs 3
+```
+
+Chạy tiếp 3 epoch từ một checkpoint:
+
+```bash
+python -m src.models.bpr.train \
+  --resume artifacts/checkpoints/bpr/epoch_003.pt \
+  --epochs 3
+```
+
+Đánh giá checkpoint tốt nhất trên toàn bộ dev:
+
+```bash
+python -m src.models.bpr.evaluate
+```
+
+Checkpoint BPR được lưu riêng:
+
+```text
+artifacts/checkpoints/bpr/
+├── epoch_001.pt
+├── epoch_002.pt
+├── epoch_003.pt
+├── best.pt
+└── history.csv
+```
+
+BPR dùng cùng cách đánh giá warm-start và cùng các hàm metric với Matrix Factorization: MRR, HitRate@5, HitRate@10, Recall@5, Recall@10, NDCG@5 và NDCG@10. `best.pt` được chọn theo NDCG@10 trên dev.
