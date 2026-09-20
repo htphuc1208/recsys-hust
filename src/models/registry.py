@@ -1,9 +1,14 @@
 from typing import Any, Dict, Type
 from src.models.base import BaseRecommender
 from src.models.baselines.popularity import PopularityRecommender
+from src.models.baselines.random import RandomRecommender
+from src.models.baselines.itemknn import ItemKNNRecommender
 
 MODEL_REGISTRY: Dict[str, Type[BaseRecommender]] = {
     "popularity": PopularityRecommender,
+    "mostpopular": PopularityRecommender,
+    "random": RandomRecommender,
+    "itemknn": ItemKNNRecommender,
 }
 
 

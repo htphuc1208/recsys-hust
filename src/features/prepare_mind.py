@@ -433,13 +433,22 @@ def prepare_dataset(
     """Prepare selected splits using mappings fitted exclusively on train."""
     if input_root.resolve() == output_root.resolve():
         raise ValueError("Input and output roots must be different")
-    if output_root.exists():
-        if not overwrite:
-            raise FileExistsError(
-                f"Output already exists: {output_root}. Pass --overwrite to rebuild it."
-            )
-        shutil.rmtree(output_root)
-    output_root.mkdir(parents=True)
+    if output_root.exists() and not overwrite:
+        raise FileExistsError(
+            f"Output already exists: {output_root}. Pass --overwrite to rebuild it."
+        )
+
+    if output_root.exists() and overwrite:
+        if set(splits) == set(SPLITS):
+            shutil.rmtree(output_root)
+            output_root.mkdir(parents=True)
+        else:
+            for s in splits:
+                split_dir = output_root / s
+                if split_dir.exists():
+                    shutil.rmtree(split_dir)
+    else:
+        output_root.mkdir(parents=True)
 
     (
         user_to_index,
