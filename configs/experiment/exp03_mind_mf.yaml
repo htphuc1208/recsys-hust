@@ -1,8 +1,3 @@
-defaults:
-  - base
-  - dataset: mind_large
-  - model: matrix_factorization
-
 experiment_name: "exp03_mind_mf"
 seed: 42
 

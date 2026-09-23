@@ -1,8 +1,3 @@
-defaults:
-  - base
-  - dataset: mind_large
-  - model: bpr
-
 experiment_name: "exp04_mind_bpr"
 seed: 42
 

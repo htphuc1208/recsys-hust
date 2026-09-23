@@ -1,6 +1,0 @@
-name: "popularity"
-type: "baseline"
-
-params:
-  metric: "interaction_count" # "interaction_count" or "average_rating"
-  decay_factor: null # optional time-decay factor

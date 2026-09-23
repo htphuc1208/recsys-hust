@@ -1,9 +1,0 @@
-defaults:
-  - base
-  - dataset: movielens_1m
-  - model: popularity
-  - split: temporal_global
-
-experiment_name: "exp01_popularity_baseline"
-top_k_list: [5, 10, 20]
-metrics: ["ndcg", "recall", "hit_rate", "mrr", "coverage", "novelty"]

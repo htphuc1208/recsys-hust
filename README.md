@@ -22,7 +22,6 @@ recsys-hust/
 │   ├── common/                   # Global logger, seed, and file I/O utilities
 │   ├── ingest/                   # Raw data downloaders and parsers
 │   ├── features/                 # ID encoders, sparse matrices, sequence builders
-│   ├── splits/                   # Temporal & leave-k-out splitting strategies
 │   ├── models/                   # Recommender architectures (baselines, CF, sequential, hybrid)
 │   ├── evaluation/               # Ranking & beyond-accuracy metrics engine
 │   ├── reranking/                # MMR, DPP diversity, and business constraint filters

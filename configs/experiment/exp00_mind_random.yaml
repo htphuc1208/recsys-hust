@@ -1,7 +1,3 @@
-defaults:
-  - base
-  - dataset: mind_large
-
 experiment_name: "exp00_mind_random"
 seed: 42
 

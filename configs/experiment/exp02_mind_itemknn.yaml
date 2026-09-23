@@ -1,7 +1,3 @@
-defaults:
-  - base
-  - dataset: mind_large
-
 experiment_name: "exp02_mind_itemknn"
 seed: 42
 
