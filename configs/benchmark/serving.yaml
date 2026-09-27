@@ -1,0 +1,9 @@
+base_url: http://127.0.0.1:8000
+concurrency: [1, 4, 8, 16, 32, 64]
+duration_seconds: 30
+warmup_requests: 20
+request_timeout_seconds: 5
+payloads_file: null
+server_pid: null
+output: reports/benchmarks/serving.json
+

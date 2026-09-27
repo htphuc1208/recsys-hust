@@ -1,4 +1,14 @@
-.PHONY: help install install-dev lint format test clean serve train-baseline evaluate-baseline evaluate-random train-itemknn evaluate-itemknn train-mf evaluate-mf train-bpr evaluate-bpr
+.PHONY: help install install-dev lint format test clean serve serve-dev \
+	train-baseline evaluate-baseline evaluate-random train-itemknn evaluate-itemknn \
+	train-mf evaluate-mf train-bpr evaluate-bpr train-baselines train-proposed \
+	build-serving-bundle evaluate evaluate-retrieval benchmark-serving
+
+PROPOSED_CONFIG ?= configs/experiment/exp10_mind_hybrid.yaml
+SERVING_CONFIG ?= configs/serving/mind_production.yaml
+SERVING_CHECKPOINT ?= artifacts/checkpoints/exp04_mind_bpr_bpr.pkl
+SERVING_BUNDLE ?= artifacts/serving/current
+MODEL_VERSION ?= dev
+GIT_COMMIT ?= unknown
 
 help:
 	@echo "Available commands:"
@@ -16,14 +26,20 @@ help:
 	@echo "  make evaluate-mf       : Evaluate Matrix Factorization model on dev impressions"
 	@echo "  make train-bpr         : Train BPR model"
 	@echo "  make evaluate-bpr      : Evaluate BPR model on dev impressions"
-	@echo "  make serve             : Run FastAPI recommendation service"
+	@echo "  make train-baselines   : Train all implemented baseline models"
+	@echo "  make train-proposed    : Train proposed model using PROPOSED_CONFIG"
+	@echo "  make build-serving-bundle : Package checkpoint, mappings, popularity and FAISS"
+	@echo "  make evaluate          : Evaluate proposed ranker and candidate retrieval"
+	@echo "  make benchmark-serving : Benchmark a running recommendation API"
+	@echo "  make serve             : Run production-style FastAPI serving"
+	@echo "  make serve-dev         : Run FastAPI with auto-reload"
 	@echo "  make clean             : Clean bytecode and temporary cache files"
 
 install:
 	pip install -e .
 
 install-dev:
-	pip install -e ".[dev,deep]"
+	pip install -e ".[dev,deep,serving]"
 
 lint:
 	ruff check .
@@ -62,8 +78,35 @@ train-bpr:
 evaluate-bpr:
 	python -m src.evaluate --config configs/experiment/exp04_mind_bpr.yaml
 
+train-baselines: train-baseline train-itemknn train-mf train-bpr
+
+train-proposed:
+	python -m src.train --config $(PROPOSED_CONFIG)
+
+build-serving-bundle:
+	python -m src.indexing.build_bundle \
+		--checkpoint $(SERVING_CHECKPOINT) \
+		--users-mapping data/processed/mind_large/mappings/users \
+		--items-mapping data/processed/mind_large/mappings/items \
+		--output-dir $(SERVING_BUNDLE) \
+		--model-version $(MODEL_VERSION) \
+		--git-commit $(GIT_COMMIT) \
+		--overwrite
+
+evaluate:
+	python -m src.evaluate --config $(PROPOSED_CONFIG)
+	python -m src.indexing.evaluate_retrieval --config $(SERVING_CONFIG)
+
+evaluate-retrieval:
+	python -m src.indexing.evaluate_retrieval --config $(SERVING_CONFIG)
+
+benchmark-serving:
+	python -m src.serving.benchmark --config configs/benchmark/serving.yaml $(if $(SERVER_PID),--server-pid $(SERVER_PID),)
 
 serve:
+	uvicorn src.serving.app:app --host 0.0.0.0 --port 8000
+
+serve-dev:
 	uvicorn src.serving.app:app --host 0.0.0.0 --port 8000 --reload
 
 clean:

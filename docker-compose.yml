@@ -1,15 +1,32 @@
-version: '3.8'
-
 services:
   recsys-api:
     build:
       context: .
       dockerfile: Dockerfile
+    init: true
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=production
-      - LOG_LEVEL=info
+      ENVIRONMENT: production
+      LOG_LEVEL: info
+      SERVING_CONFIG: /app/configs/serving/mind_production.yaml
+      MODEL_BUNDLE_DIR: /app/artifacts/serving/current
+      OMP_NUM_THREADS: "1"
     volumes:
       - ./artifacts:/app/artifacts:ro
+    read_only: true
+    tmpfs:
+      - /tmp
     restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=2)",
+        ]
+      interval: 30s
+      timeout: 3s
+      start_period: 15s
+      retries: 3

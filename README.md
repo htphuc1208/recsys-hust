@@ -204,11 +204,43 @@ make test
 
 ### 6. Run Recommendation Serving API
 
+Build a versioned serving bundle from a trained checkpoint before starting the API. The
+default command uses the unified BPR checkpoint; override `SERVING_CHECKPOINT` when the
+proposed ranker is available:
+
+```bash
+make build-serving-bundle \
+  SERVING_CHECKPOINT=artifacts/checkpoints/exp04_mind_bpr_bpr.pkl \
+  MODEL_VERSION=bpr-v1
+```
+
+The bundle contains external-ID mappings, popularity fallback data, the ranker, a FAISS
+collaborative index when the model exposes item factors, and a checksummed manifest.
+
 ```bash
 make serve
 # API will be available at http://localhost:8000
 # Interactive Swagger docs: http://localhost:8000/docs
 ```
+
+The process liveness endpoint is `/health`; `/ready` returns success only after a valid
+serving bundle has loaded. Run the same service in a clean container with:
+
+```bash
+docker compose up --build
+```
+
+Evaluate full-catalog candidate recall and benchmark a running API with:
+
+```bash
+make evaluate-retrieval
+make benchmark-serving
+```
+
+The HTTP benchmark writes p50/p95/p99 latency, throughput, and errors to
+`reports/benchmarks/serving.json`. Pass `SERVER_PID=<pid>` to `make benchmark-serving`
+(or set `server_pid` in the benchmark YAML) to additionally measure serving RAM, CPU,
+and available GPU memory. Resource fields remain null when no server PID is provided.
 
 ## Matrix Factorization
 

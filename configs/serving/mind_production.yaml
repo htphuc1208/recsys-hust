@@ -1,0 +1,32 @@
+bundle_dir: artifacts/serving/current
+
+retrieval:
+  target_candidates: 800
+  min_candidates: 500
+  max_candidates: 1000
+  rrf_constant: 60
+  sources:
+    collaborative:
+      enabled: true
+      limit: 400
+      weight: 1.0
+      timeout_ms: 50
+    sequential:
+      enabled: true
+      limit: 300
+      weight: 1.0
+      timeout_ms: 50
+    content:
+      enabled: true
+      limit: 300
+      weight: 0.8
+      timeout_ms: 50
+    popular:
+      enabled: true
+      limit: 1000
+      weight: 0.5
+      timeout_ms: 20
+
+rank_timeout_ms: 100
+rerank_limit: 200
+

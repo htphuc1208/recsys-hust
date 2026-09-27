@@ -38,6 +38,11 @@ deep = [
     "faiss-cpu>=1.7.4",
     "wandb>=0.16.0",
 ]
+serving = [
+    "faiss-cpu>=1.7.4",
+    "httpx>=0.26.0",
+    "psutil>=5.9.0",
+]
 
 [tool.ruff]
 line-length = 100
