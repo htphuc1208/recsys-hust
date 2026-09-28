@@ -1,0 +1,36 @@
+# P3 sử dụng checkpoint Content-based đã tuning; không huấn luyện lại model nền.
+experiment_name: "exp06_mind_content_p3"
+seed: 42
+
+dataset:
+  name: "mind_large"
+  processed_root: "data/processed/mind_large"
+  dev_impressions: "data/processed/mind_large/dev/impressions"
+  items_mapping: "data/processed/mind_large/mappings/items"
+
+model:
+  name: "content_based"
+
+reranking:
+  enabled: true
+  method: "popularity_diversity"
+  base_checkpoint: "artifacts/checkpoints/exp05_mind_content_content_based.pkl"
+  popularity_train_path: "data/processed/mind_large/train/positive_interactions"
+  news_paths:
+    - "data/processed/mind_large/train/news"
+    - "data/processed/mind_large/dev/news"
+    - "data/processed/mind_large/test/news"
+  top_k: 20
+  candidate_pool_size: null  # null = mọi ứng viên trong impression
+  # Trạng thái trung tính trước tuning P3: giữ nguyên thứ tự relevance của Content-based.
+  # Sau weight sweep sẽ thay bằng bộ trọng số P3 được chọn.
+  weights:
+    relevance: 0.80
+    diversity: 0.15
+    long_tail: 0.05
+
+evaluation:
+  top_k_list: [5, 10, 20]
+  eval_batch_size: 10000
+  metrics: ["ndcg", "recall", "hit_rate", "mrr", "coverage", "gini"]
+  slices: ["overall", "cold_item", "warm_item", "cold_user", "warm_user"]

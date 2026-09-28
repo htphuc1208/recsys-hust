@@ -1,0 +1,47 @@
+{
+  "config": "configs\\experiment\\exp06_mind_content_p3.yaml",
+  "experiment_name": "exp06_mind_content_p3",
+  "dev_sample": {
+    "method": "reservoir_sample_from_full_dev",
+    "seed": 42,
+    "eligible_dev_impressions": 376471,
+    "sample_size_used": 5000
+  },
+  "sweep": {
+    "step": 0.05,
+    "min_relevance": 0.0,
+    "bounds": {
+      "relevance": [
+        0.75,
+        0.95
+      ],
+      "diversity": [
+        0.05,
+        0.25
+      ],
+      "long_tail": [
+        0.0,
+        0.1
+      ]
+    },
+    "output_tag": "fine",
+    "num_configurations": 12,
+    "num_pareto_configurations": 12,
+    "top_k": 10
+  },
+  "baseline": {
+    "NDCG@10": 0.388607,
+    "Diversity@10": 0.648009,
+    "LongTailExposure@10": 0.6932,
+    "ZeroClickExposure@10": 0.384705,
+    "CategoryCoverage@10": 0.463946,
+    "CatalogCoverage@10": 0.012257,
+    "Gini@10": 0.998176
+  },
+  "outputs": {
+    "sweep_results_csv": "reports\\reranking\\weight_sweep\\exp06_mind_content_p3\\fine\\sweep_results.csv",
+    "pareto_front_csv": "reports\\reranking\\weight_sweep\\exp06_mind_content_p3\\fine\\pareto_front.csv",
+    "pareto_ndcg_diversity_png": "reports\\reranking\\weight_sweep\\exp06_mind_content_p3\\fine\\pareto_ndcg_diversity.png",
+    "pareto_ndcg_long_tail_png": "reports\\reranking\\weight_sweep\\exp06_mind_content_p3\\fine\\pareto_ndcg_long_tail.png"
+  }
+}

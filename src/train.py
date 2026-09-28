@@ -1,6 +1,7 @@
 import argparse
 import time
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pyarrow.dataset as ds
@@ -20,6 +21,21 @@ def load_interactions(data_path: str | Path, columns: list[str]) -> pd.DataFrame
     dataset = ds.dataset(str(path), format="parquet")
     available_cols = [col for col in columns if col in dataset.schema.names]
     return dataset.to_table(columns=available_cols).to_pandas()
+
+
+def count_interaction_rows(data_path: str | Path) -> int:
+    """Đếm số dòng Parquet mà không nạp toàn bộ dữ liệu vào Pandas."""
+    path = Path(data_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Interaction data path not found: {path}")
+
+    dataset = ds.dataset(str(path), format="parquet")
+    return int(dataset.count_rows())
+
+
+def _supports_streaming_fit(model: Any) -> bool:
+    """Kiểm tra model có entrypoint train trực tiếp từ đường dẫn dữ liệu không."""
+    return callable(getattr(model, "fit_from_path", None))
 
 
 def train(config_path: str | Path) -> Path:
@@ -46,29 +62,43 @@ def train(config_path: str | Path) -> Path:
     item_col = model_cfg.get("item_col", "item_idx")
     timestamp_col = model_cfg.get("timestamp_col", "timestamp")
 
-    cols_to_load = [user_col, item_col]
-    if model_cfg.get("decay_factor") is not None:
-        cols_to_load.append(timestamp_col)
-    label_col = model_cfg.get("label_col", "label")
-    if label_col not in cols_to_load:
-        cols_to_load.append(label_col)
-
-    logger.info(f"Loading training data from: {train_path}")
-    start_load = time.perf_counter()
-    train_df = load_interactions(train_path, columns=cols_to_load)
-    load_time = time.perf_counter() - start_load
-    logger.info(
-        f"Loaded {len(train_df):,} interaction rows in {load_time:.2f}s "
-        f"({train_df[user_col].nunique():,} unique users, {train_df[item_col].nunique():,} unique items)"
-    )
-
-    model_params = {k: v for k, v in model_cfg.items() if k != "name"}
+    model_params = {key: value for key, value in model_cfg.items() if key != "name"}
+    model_params.setdefault("seed", seed)
     model = get_model(model_name, **model_params)
     logger.info(f"Instantiated model architecture: {model.__class__.__name__}")
 
-    logger.info("Starting model fitting...")
+    logger.info(f"Training data path: {train_path}")
     start_fit = time.perf_counter()
-    model.fit(train_df)
+
+    if _supports_streaming_fit(model):
+        row_count = count_interaction_rows(train_path)
+        logger.info(
+            f"Streaming training enabled: {row_count:,} interaction rows "
+            "will be read directly from Parquet without loading all rows into Pandas."
+        )
+        model.fit_from_path(train_path)
+    else:
+        cols_to_load = [user_col, item_col]
+        if model_cfg.get("decay_factor") is not None:
+            cols_to_load.append(timestamp_col)
+
+        label_col = model_cfg.get("label_col", "label")
+        if label_col not in cols_to_load:
+            cols_to_load.append(label_col)
+
+        logger.info(f"Loading training data from: {train_path}")
+        start_load = time.perf_counter()
+        train_df = load_interactions(train_path, columns=cols_to_load)
+        load_time = time.perf_counter() - start_load
+        logger.info(
+            f"Loaded {len(train_df):,} interaction rows in {load_time:.2f}s "
+            f"({train_df[user_col].nunique():,} unique users, "
+            f"{train_df[item_col].nunique():,} unique items)"
+        )
+
+        logger.info("Starting model fitting...")
+        model.fit(train_df)
+
     fit_time = time.perf_counter() - start_fit
     logger.info(f"Model fitting completed in {fit_time:.2f}s")
 

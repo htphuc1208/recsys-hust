@@ -1,0 +1,13 @@
+{
+  "model": "bpr",
+  "window": "1d",
+  "config_path": "reports/data_minimization/generated_configs/dm_bpr_1d.yaml",
+  "checkpoint_path": "artifacts/data_minimization/checkpoints/dm_bpr_1d_bpr.pkl",
+  "metrics_path": "reports/data_minimization/metrics/dm_bpr_1d_dev.json",
+  "train_wall_seconds": 154.83032019999882,
+  "eval_wall_seconds": 139.0002867000003,
+  "evaluation_sample_size": null,
+  "NDCG@10": 0.35197,
+  "Recall@10": 0.61237,
+  "MRR@10": 0.28749
+}

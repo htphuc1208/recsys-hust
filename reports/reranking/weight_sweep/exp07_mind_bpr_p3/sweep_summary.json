@@ -1,0 +1,32 @@
+{
+  "config": "configs\\experiment\\exp07_mind_bpr_p3.yaml",
+  "experiment_name": "exp07_mind_bpr_p3",
+  "dev_sample": {
+    "method": "reservoir_sample_from_full_dev",
+    "seed": 42,
+    "eligible_dev_impressions": 376471,
+    "sample_size_used": 5000
+  },
+  "sweep": {
+    "step": 0.05,
+    "min_relevance": 0.75,
+    "num_configurations": 21,
+    "num_pareto_configurations": 19,
+    "top_k": 10
+  },
+  "baseline": {
+    "NDCG@10": 0.353239,
+    "Diversity@10": 0.868929,
+    "LongTailExposure@10": 0.4364,
+    "ZeroClickExposure@10": 0.209865,
+    "CategoryCoverage@10": 0.661026,
+    "CatalogCoverage@10": 0.007555,
+    "Gini@10": 0.99916
+  },
+  "outputs": {
+    "sweep_results_csv": "reports\\reranking\\weight_sweep\\exp07_mind_bpr_p3\\sweep_results.csv",
+    "pareto_front_csv": "reports\\reranking\\weight_sweep\\exp07_mind_bpr_p3\\pareto_front.csv",
+    "pareto_ndcg_diversity_png": "reports\\reranking\\weight_sweep\\exp07_mind_bpr_p3\\pareto_ndcg_diversity.png",
+    "pareto_ndcg_long_tail_png": "reports\\reranking\\weight_sweep\\exp07_mind_bpr_p3\\pareto_ndcg_long_tail.png"
+  }
+}

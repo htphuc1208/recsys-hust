@@ -1,0 +1,9 @@
+system,metric,baseline,p3,delta,relative_delta_pct,paired_delta_CI_low,paired_delta_CI_high
+Content-based,NDCG@10,0.391470,0.385940,-0.005530,-1.412624,-0.005865,-0.005181
+Content-based,Recall@10,0.633580,0.624910,-0.008670,-1.368414,-0.009401,-0.007936
+Content-based,MRR@10,0.337330,0.332810,-0.004520,-1.339934,-0.004861,-0.004186
+Content-based,category_diversity@10,0.655860,0.704140,0.048280,7.361327,,
+Content-based,long_tail_exposure@10,0.686410,0.717670,0.031260,4.554129,,
+Content-based,zero_click_exposure@10,0.381620,0.413110,0.031490,8.251664,,
+Content-based,catalog_coverage@10,0.037710,0.038260,0.000550,1.458499,,
+Content-based,gini_index@10,0.998000,0.997950,-0.000050,-0.005010,,

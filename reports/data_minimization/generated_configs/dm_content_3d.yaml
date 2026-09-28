@@ -1,0 +1,58 @@
+experiment_name: dm_content_3d
+seed: 42
+dataset:
+  name: mind_large
+  train_interactions: data/experiments/data_minimization/3d/positive_interactions
+  dev_impressions: data/processed/mind_large/dev/impressions
+  items_mapping: data/processed/mind_large/mappings/items
+model:
+  name: content_based
+  feature_dir: data/processed/mind_large/features/b4
+  user_col: user_idx
+  item_col: item_idx
+  label_col: label
+  cold_user_strategy: zero
+  recommendation_batch_size: 8192
+  feature_weights:
+    title: 0.7
+    abstract: 0.0
+    category: 0.15
+    subcategory: 0.15
+    title_entity: 0.0
+evaluation:
+  top_k_list:
+  - 5
+  - 10
+  - 20
+  eval_batch_size: 10000
+  metrics:
+  - ndcg
+  - recall
+  - hit_rate
+  - mrr
+  - coverage
+  - gini
+  slices:
+  - overall
+  - cold_item
+  - warm_item
+  - cold_user
+  - warm_user
+  - head_item
+  - long_tail_item
+  - zero_click_item
+  - catalog_cold_item
+  - catalog_warm_item
+  item_slicing:
+    head_fraction: 0.2
+  bootstrap:
+    enabled: true
+    num_resamples: 1000
+    confidence_level: 0.95
+    unit: user
+    seed: 42
+    batch_size: 32
+  use_impression_history: false
+paths:
+  artifacts_dir: artifacts/data_minimization
+  reports_dir: reports/data_minimization

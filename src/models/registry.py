@@ -5,6 +5,7 @@ from src.models.baselines.itemknn import ItemKNNRecommender
 from src.models.baselines.popularity import PopularityRecommender
 from src.models.baselines.random import RandomRecommender
 from src.models.bpr import BPRRecommender
+from src.models.content_based import ContentBasedRecommender
 from src.models.matrix_factorization import MatrixFactorizationRecommender
 
 MODEL_REGISTRY: dict[str, type[BaseRecommender]] = {
@@ -15,6 +16,7 @@ MODEL_REGISTRY: dict[str, type[BaseRecommender]] = {
     "mf": MatrixFactorizationRecommender,
     "matrix_factorization": MatrixFactorizationRecommender,
     "bpr": BPRRecommender,
+    "content_based": ContentBasedRecommender,
 }
 
 

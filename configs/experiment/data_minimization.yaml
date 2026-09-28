@@ -1,0 +1,46 @@
+experiment_name: "data_minimization_mind_large"
+seed: 42
+
+# MIND Large release hiện tại chỉ có timestamp interaction train khoảng 6 ngày.
+# Vì vậy dùng 1d / 3d / 5d / all thay vì 7d / 30d / 90d / all.
+source:
+  pointwise: "data/processed/mind_large/train/pointwise"
+  positive_interactions: "data/processed/mind_large/train/positive_interactions"
+
+retention:
+  timestamp_col: "timestamp"
+  # auto = max timestamp của positive_interactions + 1 giây.
+  # Với dữ liệu hiện tại sẽ ra 2019-11-15 00:00:00.
+  cutoff_timestamp: "auto"
+
+windows:
+  - name: "1d"
+    days: 1
+  - name: "3d"
+    days: 3
+  - name: "5d"
+    days: 5
+  - name: "all"
+    days: null
+
+# Tái sử dụng đúng hyperparameter/config final đã chốt ở Bước 1-3.
+models:
+  bpr:
+    enabled: true
+    base_config: "configs/experiment/exp04_mind_bpr.yaml"
+
+  content_based:
+    enabled: true
+    base_config: "configs/experiment/exp05_mind_content.yaml"
+    # GDPR experiment chỉ dùng retained train history để tạo user profile.
+    # Không dùng full history_item_idxs của dev impression làm đường tắt.
+    use_impression_history: false
+
+prepare:
+  rows_per_file: 500000
+  compression: "snappy"
+
+paths:
+  data_dir: "data/experiments/data_minimization"
+  reports_dir: "reports/data_minimization"
+  artifacts_dir: "artifacts/data_minimization"

@@ -1,7 +1,38 @@
+from __future__ import annotations
+
+from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pyarrow.parquet as pq
 import torch
+
+
+@dataclass
+class BPRTrainingSummary:
+    """Thống kê cần thiết trước khi train BPR streaming."""
+
+    pointwise_rows: int
+    pair_count: int
+    positive_rows: int
+    negative_rows: int
+    max_user_idx: int
+    max_item_idx: int
+    observed_user_mask: np.ndarray
+    observed_item_mask: np.ndarray
+    popular_items: list[int]
+    user_seen_items: dict[int, set[int]]
+
+    @property
+    def num_observed_users(self) -> int:
+        """Trả số user thực sự xuất hiện trong các pair train."""
+        return int(self.observed_user_mask.sum())
+
+    @property
+    def num_observed_items(self) -> int:
+        """Trả số item thực sự xuất hiện trong các pair train."""
+        return int(self.observed_item_mask.sum())
 
 
 def get_parquet_files(data_dir: Path) -> list[Path]:
@@ -121,6 +152,93 @@ def iter_impression_rows(
             current_item_ids,
             current_labels,
         )
+
+
+def _ensure_mask_size(mask: bytearray, required_size: int) -> None:
+    """Mở rộng byte mask đủ chứa index cần đánh dấu."""
+    if required_size > len(mask):
+        mask.extend(b"\x00" * (required_size - len(mask)))
+
+
+def _mark_mask(mask: bytearray, index: int) -> None:
+    """Đánh dấu một index hợp lệ trong byte mask."""
+    if index < 0:
+        return
+
+    _ensure_mask_size(mask, index + 1)
+    mask[index] = 1
+
+
+def scan_bpr_training_data(
+    data_dir: Path,
+    read_batch_size: int = 16384,
+    track_user_seen: bool = True,
+) -> BPRTrainingSummary:
+    """Quét pointwise một lần để lấy kích thước và metadata train BPR."""
+    pointwise_rows = 0
+    pair_count = 0
+    positive_rows = 0
+    negative_rows = 0
+    max_user_idx = -1
+    max_item_idx = -1
+
+    observed_users = bytearray()
+    observed_items = bytearray()
+    positive_item_counts: Counter[int] = Counter()
+    user_seen_items: dict[int, set[int]] = {}
+
+    for user_idx, item_ids, labels in iter_impression_rows(
+        data_dir,
+        read_batch_size=read_batch_size,
+    ):
+        pointwise_rows += len(item_ids)
+
+        for item_id, label in zip(item_ids, labels, strict=True):
+            if item_id < 0:
+                continue
+
+            if label == 1:
+                positive_rows += 1
+                positive_item_counts[item_id] += 1
+                if track_user_seen and user_idx >= 0:
+                    user_seen_items.setdefault(user_idx, set()).add(item_id)
+            elif label == 0:
+                negative_rows += 1
+
+        pairs = build_bpr_pairs(
+            user_idx=user_idx,
+            item_ids=item_ids,
+            labels=labels,
+        )
+        pair_count += len(pairs)
+
+        for pair_user_idx, positive_item, negative_item in pairs:
+            max_user_idx = max(max_user_idx, pair_user_idx)
+            max_item_idx = max(max_item_idx, positive_item, negative_item)
+            _mark_mask(observed_users, pair_user_idx)
+            _mark_mask(observed_items, positive_item)
+            _mark_mask(observed_items, negative_item)
+
+    if pair_count == 0:
+        raise ValueError("Không tìm thấy BPR pair hợp lệ trong dữ liệu train.")
+
+    popular_items = [
+        int(item_id)
+        for item_id, _count in positive_item_counts.most_common()
+    ]
+
+    return BPRTrainingSummary(
+        pointwise_rows=pointwise_rows,
+        pair_count=pair_count,
+        positive_rows=positive_rows,
+        negative_rows=negative_rows,
+        max_user_idx=max_user_idx,
+        max_item_idx=max_item_idx,
+        observed_user_mask=np.frombuffer(observed_users, dtype=np.uint8).astype(bool, copy=True),
+        observed_item_mask=np.frombuffer(observed_items, dtype=np.uint8).astype(bool, copy=True),
+        popular_items=popular_items,
+        user_seen_items=user_seen_items,
+    )
 
 
 def convert_pairs_to_tensors(
