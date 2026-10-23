@@ -1,0 +1,6 @@
+slice,slice_label,BPR,Content-based,BPR + P3,Content-based + P3
+head_item,Head item,0.498340,0.361370,0.483140,0.340190
+long_tail_item,Long-tail item,0.215800,0.295410,0.214650,0.288490
+zero_click_item,Zero-click item,0.218300,0.398110,0.233660,0.416530
+catalog_cold_item,Catalog cold item,0.293420,0.499440,0.289980,0.511240
+catalog_warm_item,Catalog warm item,0.352690,0.368740,0.351490,0.361570

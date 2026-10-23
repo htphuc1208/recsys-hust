@@ -1,0 +1,13 @@
+{
+  "model": "content_based",
+  "window": "5d",
+  "config_path": "reports/data_minimization/generated_configs/dm_content_5d.yaml",
+  "checkpoint_path": "artifacts/data_minimization/checkpoints/dm_content_5d_content_based.pkl",
+  "metrics_path": "reports/data_minimization/metrics/dm_content_5d_dev.json",
+  "train_wall_seconds": 3.5734119999979157,
+  "eval_wall_seconds": 842.3369602000021,
+  "evaluation_sample_size": null,
+  "NDCG@10": 0.35723,
+  "Recall@10": 0.59485,
+  "MRR@10": 0.30272
+}

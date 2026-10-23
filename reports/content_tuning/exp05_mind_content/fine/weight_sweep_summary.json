@@ -1,0 +1,89 @@
+{
+  "experiment_name": "exp05_mind_content",
+  "checkpoint": "artifacts\\checkpoints\\exp05_mind_content_content_based.pkl",
+  "dev_impressions": "data\\processed\\mind_large\\dev\\impressions",
+  "eligible_dev_impressions": 376471,
+  "sample_size": 5000,
+  "seed": 42,
+  "step": 0.05,
+  "weight_bounds": {
+    "title": [
+      0.4,
+      0.7
+    ],
+    "abstract": [
+      0.0,
+      0.25
+    ],
+    "category": [
+      0.15,
+      0.25
+    ],
+    "subcategory": [
+      0.15,
+      0.3
+    ],
+    "title_entity": [
+      0.0,
+      0.05
+    ]
+  },
+  "output_tag": "fine",
+  "num_weight_configs": 95,
+  "feature_order": [
+    "title",
+    "abstract",
+    "category",
+    "subcategory",
+    "title_entity"
+  ],
+  "current_weights": {
+    "title": 0.35,
+    "abstract": 0.2,
+    "category": 0.15,
+    "subcategory": 0.1,
+    "title_entity": 0.2
+  },
+  "current_metrics": {
+    "NDCG@10": 0.3772611403952584,
+    "Recall@10": 0.6157360545010545,
+    "MRR@10": 0.3237120634920635,
+    "cold_item_NDCG@10": 0.34790755981034327,
+    "cold_item_Recall@10": 0.5810288385449676,
+    "cold_item_MRR@10": 0.2974805427547363,
+    "warm_item_NDCG@10": 0.42515382450748834,
+    "warm_item_Recall@10": 0.6723636173767753,
+    "warm_item_MRR@10": 0.36651086048454473,
+    "cold_user_NDCG@10": 0.37054159892604954,
+    "cold_user_Recall@10": 0.6205446475588655,
+    "cold_user_MRR@10": 0.30526279495473807,
+    "warm_user_NDCG@10": 0.3795393780760346,
+    "warm_user_Recall@10": 0.6141057173796862,
+    "warm_user_MRR@10": 0.32996722524039074
+  },
+  "best_config": {
+    "rank": 1.0,
+    "title_weight": 0.65,
+    "abstract_weight": 0.05,
+    "category_weight": 0.15,
+    "subcategory_weight": 0.15,
+    "title_entity_weight": 0.0,
+    "NDCG@10": 0.38897638067629325,
+    "Recall@10": 0.6260546525696525,
+    "MRR@10": 0.3354487301587301,
+    "cold_item_NDCG@10": 0.36072561114981294,
+    "cold_item_Recall@10": 0.5919964954400438,
+    "cold_item_MRR@10": 0.30989080901177674,
+    "warm_item_NDCG@10": 0.4350697414826558,
+    "warm_item_Recall@10": 0.6816232247284878,
+    "warm_item_MRR@10": 0.3771484962406015,
+    "cold_user_NDCG@10": 0.37897891143336043,
+    "cold_user_Recall@10": 0.6224215752651772,
+    "cold_user_MRR@10": 0.3172512475237594,
+    "warm_user_NDCG@10": 0.3923659886199336,
+    "warm_user_Recall@10": 0.627286435072991,
+    "warm_user_MRR@10": 0.3416185247532328,
+    "DeltaNDCG@10": 0.011715240281034878,
+    "DeltaColdItemNDCG@10": 0.012818051339469672
+  }
+}

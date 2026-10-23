@@ -55,3 +55,17 @@ def novelty_at_k(
         user_novelties.append(np.mean(scores))
 
     return float(np.mean(user_novelties)) if user_novelties else 0.0
+
+def gini_from_exposure_counts(exposure_counts: np.ndarray) -> float:
+    """Tính Gini trực tiếp từ số lần mỗi item được xuất hiện trong recommendation."""
+    counts = np.asarray(exposure_counts, dtype=np.float64).reshape(-1)
+    if counts.size == 0 or float(counts.sum()) == 0.0:
+        return 0.0
+    if np.any(counts < 0):
+        raise ValueError("exposure_counts không được chứa số âm.")
+
+    counts = np.sort(counts)
+    n = counts.size
+    index = np.arange(1, n + 1, dtype=np.float64)
+    return float((2.0 * np.sum(index * counts)) / (n * np.sum(counts)) - (n + 1.0) / n)
+

@@ -82,12 +82,19 @@ def test_bpr_recommender_lifecycle(tmp_path: Path) -> None:
     assert model.is_fitted
     assert model.user_factors is not None
     assert model.item_factors is not None
+    assert model.user_seen_items == {
+        0: {10},
+        1: {10},
+        2: {20},
+    }
 
     # Predict
-    candidates = np.array([10, 20, 30, 99])
+    candidates = np.array([10, 15, 20, 30, 99])
     scores = model.predict(user_ids=np.array([0]), item_ids=candidates)
-    assert len(scores) == 4
-    assert scores[3] == 0.0
+    assert len(scores) == 5
+    # Item 15 nằm trong khoảng embedding nhưng chưa từng tham gia pair train.
+    assert scores[1] == 0.0
+    assert scores[4] == 0.0
 
     # Recommend
     recs = model.recommend(user_ids=np.array([0, 1]), top_k=2, filter_seen=False)

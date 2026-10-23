@@ -1,0 +1,58 @@
+experiment_name: dm_bpr_3d
+seed: 42
+dataset:
+  name: mind_large
+  train_interactions: data/experiments/data_minimization/3d/pointwise
+  dev_impressions: data/processed/mind_large/dev/impressions
+  items_mapping: data/processed/mind_large/mappings/items
+model:
+  name: bpr
+  user_col: user_idx
+  item_col: item_idx
+  label_col: label
+  embedding_dim: 64
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  epochs: 2
+  batch_size: 16384
+  use_item_bias: true
+  max_train_samples: null
+  shuffle_buffer_size: 65536
+  read_batch_size: 65536
+  track_user_seen: true
+evaluation:
+  top_k_list:
+  - 5
+  - 10
+  - 20
+  eval_batch_size: 10000
+  metrics:
+  - ndcg
+  - recall
+  - hit_rate
+  - mrr
+  - coverage
+  - gini
+  slices:
+  - overall
+  - cold_item
+  - warm_item
+  - cold_user
+  - warm_user
+  - head_item
+  - long_tail_item
+  - zero_click_item
+  - catalog_cold_item
+  - catalog_warm_item
+  item_slicing:
+    head_fraction: 0.2
+  bootstrap:
+    enabled: true
+    num_resamples: 1000
+    confidence_level: 0.95
+    unit: user
+    seed: 42
+    batch_size: 32
+paths:
+  artifacts_dir: artifacts/data_minimization
+  reports_dir: reports/data_minimization
