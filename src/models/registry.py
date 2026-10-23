@@ -5,7 +5,9 @@ from src.models.baselines.itemknn import ItemKNNRecommender
 from src.models.baselines.popularity import PopularityRecommender
 from src.models.baselines.random import RandomRecommender
 from src.models.bpr import BPRRecommender
+from src.models.hybrid import AdaptiveGatingHybrid
 from src.models.matrix_factorization import MatrixFactorizationRecommender
+from src.models.sequential import SASRecRecommender
 
 MODEL_REGISTRY: dict[str, type[BaseRecommender]] = {
     "popularity": PopularityRecommender,
@@ -15,6 +17,10 @@ MODEL_REGISTRY: dict[str, type[BaseRecommender]] = {
     "mf": MatrixFactorizationRecommender,
     "matrix_factorization": MatrixFactorizationRecommender,
     "bpr": BPRRecommender,
+    "sasrec": SASRecRecommender,
+    "hybrid": AdaptiveGatingHybrid,
+    "adaptive_hybrid": AdaptiveGatingHybrid,
+    "adaptive_gating_hybrid": AdaptiveGatingHybrid,
 }
 
 

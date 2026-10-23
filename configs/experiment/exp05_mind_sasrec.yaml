@@ -1,0 +1,31 @@
+experiment_name: "exp05_mind_sasrec"
+seed: 42
+
+dataset:
+  name: "mind_large"
+  train_interactions: "data/processed/mind_large/train/impressions"
+  dev_impressions: "data/processed/mind_large/dev/impressions"
+  items_mapping: "data/processed/mind_large/mappings/items"
+
+model:
+  name: "sasrec"
+  user_col: "user_idx"
+  item_col: "candidate_item_idxs"
+  label_col: "labels"
+  history_col: "history_item_idxs"
+  embedding_dim: 64
+  max_seq_len: 50
+  num_blocks: 2
+  num_heads: 2
+  dropout_rate: 0.2
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  epochs: 3
+  batch_size: 512
+  max_train_samples: 50000
+
+evaluation:
+  top_k_list: [5, 10, 20]
+  eval_batch_size: 10000
+  metrics: ["ndcg", "recall", "hit_rate", "mrr", "coverage", "gini"]
+  slices: ["overall", "cold_item", "warm_item", "cold_user", "warm_user"]

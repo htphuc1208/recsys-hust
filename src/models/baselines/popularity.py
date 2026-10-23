@@ -44,8 +44,8 @@ class PopularityRecommender(BaseRecommender):
             max_ts = ts.max()
             days_diff = (max_ts - ts).dt.total_seconds() / 86400.0
             weights = np.exp(-self.decay_factor * days_diff)
-            item_counts = train_df.groupby(self.item_col).apply(
-                lambda g: weights.loc[g.index].sum()
+            item_counts = (
+                train_df.assign(_decay_weight=weights).groupby(self.item_col)["_decay_weight"].sum()
             )
         else:
             item_counts = train_df[self.item_col].value_counts()

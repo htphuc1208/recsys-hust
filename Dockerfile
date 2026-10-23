@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY pyproject.toml README.md ./
 COPY src/ src/
-RUN python -m pip wheel --wheel-dir /wheels ".[serving]"
+RUN python -m pip wheel --wheel-dir /wheels --extra-index-url https://download.pytorch.org/whl/cpu ".[serving]"
 
 
 FROM python:3.10-slim AS runtime

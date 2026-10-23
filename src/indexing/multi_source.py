@@ -35,10 +35,12 @@ class MultiSourceRetriever:
         latencies: dict[RetrievalSource, float] = {}
         failures: dict[RetrievalSource, str] = {}
 
+        deadlines = {
+            source: started_at[source] + self._config.sources[source].timeout_ms / 1000.0
+            for source in futures
+        }
         for source, future in futures.items():
-            source_config = self._config.sources[source]
-            elapsed = time.perf_counter() - started_at[source]
-            remaining = max(0.0, source_config.timeout_ms / 1000.0 - elapsed)
+            remaining = max(0.0, deadlines[source] - time.perf_counter())
             try:
                 source_candidates[source] = future.result(timeout=remaining)
             except TimeoutError:

@@ -1,6 +1,7 @@
 """Two-stage online recommendation pipeline."""
 
 import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 import numpy as np
 
@@ -41,24 +42,42 @@ class RecommendationPipeline:
 
         scores = {candidate.item_idx: candidate.retrieval_score for candidate in candidates}
         ranker_failed = False
+        ranker_timed_out = False
+
+        rerank_limit = (
+            self.resources.config.rerank_limit if self.resources.config is not None else 200
+        )
+        rank_timeout_s = (
+            self.resources.config.rank_timeout_ms / 1000.0
+            if self.resources.config is not None
+            else 0.1
+        )
+
         if self.resources.ranker is not None and user_idx is not None and candidates:
-            item_ids = np.array([candidate.item_idx for candidate in candidates], dtype=np.int64)
-            try:
-                ranker_scores = self.resources.ranker.predict(
-                    np.array([user_idx], dtype=np.int64),
-                    item_ids,
-                    history_item_idxs=list(history),
-                    retrieval_candidates=candidates,
-                    context=query.context,
-                )
-                if len(ranker_scores) != len(item_ids) or not np.isfinite(ranker_scores).all():
-                    raise ValueError("ranker returned invalid scores")
-                scores = {
-                    int(item_idx): float(score)
-                    for item_idx, score in zip(item_ids, ranker_scores, strict=True)
-                }
-            except Exception:  # noqa: BLE001 - fused retrieval score is the safe fallback
-                ranker_failed = True
+            # Only rerank top rerank_limit candidates sorted by retrieval score
+            sorted_candidates = sorted(candidates, key=lambda c: -c.retrieval_score)
+            to_rerank = sorted_candidates[:rerank_limit]
+            item_ids = np.array([candidate.item_idx for candidate in to_rerank], dtype=np.int64)
+
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                try:
+                    future = executor.submit(
+                        self.resources.ranker.predict,
+                        np.array([user_idx], dtype=np.int64),
+                        item_ids,
+                        history_item_idxs=list(history),
+                        retrieval_candidates=to_rerank,
+                        context=query.context,
+                    )
+                    ranker_scores = future.result(timeout=rank_timeout_s)
+                    if len(ranker_scores) != len(item_ids) or not np.isfinite(ranker_scores).all():
+                        raise ValueError("ranker returned invalid scores")
+                    for item_idx, score in zip(item_ids, ranker_scores, strict=True):
+                        scores[int(item_idx)] = float(score)
+                except TimeoutError:
+                    ranker_timed_out = True
+                except Exception:  # noqa: BLE001 - fused retrieval score is the safe fallback
+                    ranker_failed = True
 
         ranked = stable_top_k(candidates, scores, request.top_k)
         recommendations: list[RecommendedItem] = []
@@ -78,7 +97,9 @@ class RecommendationPipeline:
             )
 
         fallback_reason = None
-        if ranker_failed:
+        if ranker_timed_out:
+            fallback_reason = FallbackReason.RANKER_TIMEOUT
+        elif ranker_failed:
             fallback_reason = FallbackReason.RANKER_ERROR
         elif any(reason == "timeout" for reason in retrieval.failed_sources.values()):
             fallback_reason = FallbackReason.RETRIEVER_TIMEOUT

@@ -1,0 +1,87 @@
+{
+  "Adaptive Gating (Full Proposed)": {
+    "mode": "adaptive",
+    "metrics": {
+      "NDCG@5": 0.2715,
+      "NDCG@10": 0.33255,
+      "NDCG@20": 0.38265,
+      "Recall@5": 0.40127,
+      "Recall@10": 0.57621,
+      "Recall@20": 0.75227,
+      "HitRate@5": 0.456,
+      "HitRate@10": 0.642,
+      "HitRate@20": 0.818,
+      "MRR@5": 0.24633,
+      "MRR@10": 0.27089,
+      "MRR@20": 0.28321
+    }
+  },
+  "Static Fusion (No Gating Net)": {
+    "mode": "static",
+    "metrics": {
+      "NDCG@5": 0.2692,
+      "NDCG@10": 0.33346,
+      "NDCG@20": 0.38193,
+      "Recall@5": 0.3966,
+      "Recall@10": 0.57881,
+      "Recall@20": 0.74978,
+      "HitRate@5": 0.446,
+      "HitRate@10": 0.65,
+      "HitRate@20": 0.814,
+      "MRR@5": 0.2455,
+      "MRR@10": 0.27311,
+      "MRR@20": 0.28439
+    }
+  },
+  "Ablation: No CF Branch": {
+    "mode": "no_cf",
+    "metrics": {
+      "NDCG@5": 0.25575,
+      "NDCG@10": 0.32213,
+      "NDCG@20": 0.36413,
+      "Recall@5": 0.36535,
+      "Recall@10": 0.55557,
+      "Recall@20": 0.70281,
+      "HitRate@5": 0.416,
+      "HitRate@10": 0.624,
+      "HitRate@20": 0.766,
+      "MRR@5": 0.23643,
+      "MRR@10": 0.26493,
+      "MRR@20": 0.27486
+    }
+  },
+  "Ablation: No Sequential Branch": {
+    "mode": "no_seq",
+    "metrics": {
+      "NDCG@5": 0.27412,
+      "NDCG@10": 0.33152,
+      "NDCG@20": 0.39481,
+      "Recall@5": 0.40787,
+      "Recall@10": 0.57063,
+      "Recall@20": 0.79645,
+      "HitRate@5": 0.474,
+      "HitRate@10": 0.636,
+      "HitRate@20": 0.858,
+      "MRR@5": 0.25217,
+      "MRR@10": 0.27368,
+      "MRR@20": 0.28934
+    }
+  },
+  "Ablation: No Content Branch": {
+    "mode": "no_content",
+    "metrics": {
+      "NDCG@5": 0.26397,
+      "NDCG@10": 0.32656,
+      "NDCG@20": 0.37555,
+      "Recall@5": 0.39729,
+      "Recall@10": 0.57576,
+      "Recall@20": 0.74866,
+      "HitRate@5": 0.45,
+      "HitRate@10": 0.642,
+      "HitRate@20": 0.812,
+      "MRR@5": 0.23577,
+      "MRR@10": 0.2623,
+      "MRR@20": 0.27403
+    }
+  }
+}

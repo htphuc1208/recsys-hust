@@ -40,6 +40,7 @@ class ServingResources:
     mappings: IdMappings
     retriever: MultiSourceRetriever
     ranker: BaseRecommender | None = None
+    config: ServingConfig | None = None
 
     @staticmethod
     def _artifact_path(
@@ -103,6 +104,7 @@ class ServingResources:
             mappings=mappings,
             retriever=MultiSourceRetriever(retrievers, config.retrieval),
             ranker=ranker,
+            config=config,
         )
 
     def close(self) -> None:

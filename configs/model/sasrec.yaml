@@ -1,0 +1,15 @@
+name: "sasrec"
+embedding_dim: 64
+max_seq_len: 50
+num_blocks: 2
+num_heads: 2
+dropout_rate: 0.2
+learning_rate: 0.001
+weight_decay: 0.0001
+epochs: 5
+batch_size: 512
+seed: 42
+user_col: "user_idx"
+item_col: "item_idx"
+label_col: "label"
+history_col: "history_item_idxs"
