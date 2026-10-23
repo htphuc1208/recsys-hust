@@ -167,8 +167,7 @@ def _paired_delta_ci(result: dict[str, Any], metric_name: str) -> tuple[float, f
 def _validate_full_dev_results(results: dict[str, dict[str, Any]]) -> int:
     """Đảm bảo bốn result chính cùng đánh giá trên full dev, không phải preview sample."""
     counts = {
-        name: int(result.get("total_evaluated_impressions", 0))
-        for name, result in results.items()
+        name: int(result.get("total_evaluated_impressions", 0)) for name, result in results.items()
     }
     if any(count <= 0 for count in counts.values()):
         raise ValueError(f"Có result không chứa total_evaluated_impressions hợp lệ: {counts}")
@@ -206,25 +205,25 @@ def _validate_data_minimization(summary: pd.DataFrame) -> None:
     if missing:
         raise ValueError(f"summary.csv thiếu cột: {sorted(missing)}")
 
-    expected_windows = {"1d", "3d", "5d", "all"}
+    expected_windows = ("1d", "3d", "5d", "all")
     expected_models = {"bpr", "content_based"}
-    present_pairs = set(zip(summary["window"].astype(str), summary["model"].astype(str)))
+    present_pairs = set(
+        zip(summary["window"].astype(str), summary["model"].astype(str), strict=True)
+    )
     missing_pairs = [
         (window, model)
         for model in sorted(expected_models)
-        for window in ("1d", "3d", "5d", "all")
+        for window in expected_windows
         if (window, model) not in present_pairs
     ]
     if missing_pairs:
         raise ValueError(f"summary.csv thiếu các experiment: {missing_pairs}")
 
 
-
 def load_inputs(paths: ReportPaths) -> ReportInputs:
     """Đọc và kiểm tra toàn bộ nguồn số liệu chính thức."""
     main_results = {
-        key: _read_json(paths.metrics_dir / filename)
-        for key, filename in MAIN_RESULT_FILES.items()
+        key: _read_json(paths.metrics_dir / filename) for key, filename in MAIN_RESULT_FILES.items()
     }
     full_dev_count = _validate_full_dev_results(main_results)
 
@@ -245,9 +244,7 @@ def load_inputs(paths: ReportPaths) -> ReportInputs:
             "NDCG@10",
         )
         if not np.isfinite(independent) or not np.isfinite(paired):
-            raise ValueError(
-                f"Thiếu baseline NDCG@10 để kiểm tra {baseline_key} vs {p3_key}."
-            )
+            raise ValueError(f"Thiếu baseline NDCG@10 để kiểm tra {baseline_key} vs {p3_key}.")
         if abs(independent - paired) > 1e-4:
             raise ValueError(
                 "Baseline độc lập và baseline trong paired P3 không khớp: "
@@ -377,15 +374,9 @@ def build_data_minimization_table(summary: pd.DataFrame) -> pd.DataFrame:
     result = summary.copy()
     result["window"] = result["window"].astype(str)
 
-    all_metrics = (
-        result[result["window"] == "all"]
-        .set_index("model")["NDCG@10"]
-        .to_dict()
-    )
+    all_metrics = result[result["window"] == "all"].set_index("model")["NDCG@10"].to_dict()
     all_train_times = (
-        result[result["window"] == "all"]
-        .set_index("model")["train_wall_seconds"]
-        .to_dict()
+        result[result["window"] == "all"].set_index("model")["train_wall_seconds"].to_dict()
     )
 
     ndcg_loss_pct: list[float] = []
@@ -654,16 +645,10 @@ def build_model_card(
     content_p3_weights = _weights_from_config(inputs.configs["content_p3"], "p3")
 
     bpr_p3_ndcg = bpr_p3_table[bpr_p3_table["metric"] == "NDCG@10"].iloc[0]
-    bpr_p3_diversity = bpr_p3_table[
-        bpr_p3_table["metric"] == "category_diversity@10"
-    ].iloc[0]
-    bpr_p3_long_tail = bpr_p3_table[
-        bpr_p3_table["metric"] == "long_tail_exposure@10"
-    ].iloc[0]
+    bpr_p3_diversity = bpr_p3_table[bpr_p3_table["metric"] == "category_diversity@10"].iloc[0]
+    bpr_p3_long_tail = bpr_p3_table[bpr_p3_table["metric"] == "long_tail_exposure@10"].iloc[0]
 
-    content_p3_ndcg = content_p3_table[
-        content_p3_table["metric"] == "NDCG@10"
-    ].iloc[0]
+    content_p3_ndcg = content_p3_table[content_p3_table["metric"] == "NDCG@10"].iloc[0]
     content_p3_diversity = content_p3_table[
         content_p3_table["metric"] == "category_diversity@10"
     ].iloc[0]
@@ -698,7 +683,7 @@ Content-based dùng metadata item và user profile từ lịch sử tương tác
 {json.dumps(content_weights, ensure_ascii=False, indent=2)}
 ```
 
-`cold_user_strategy = {inputs.configs['content'].get('model', {}).get('cold_user_strategy', 'N/A')}`.
+`cold_user_strategy = {inputs.configs["content"].get("model", {}).get("cold_user_strategy", "N/A")}`.
 
 ## 3. P3 re-ranking
 
@@ -720,15 +705,15 @@ Content-based + P3 weights:
 
 | Model | NDCG@10 | Recall@10 | MRR@10 | Catalog cold NDCG@10 |
 | --- | ---: | ---: | ---: | ---: |
-| BPR | {_format_float(float(bpr_row['NDCG@10']))} | {_format_float(float(bpr_row['Recall@10']))} | {_format_float(float(bpr_row['MRR@10']))} | {_format_float(float(bpr_row['CatalogColdItem_NDCG@10']))} |
-| Content-based | {_format_float(float(content_row['NDCG@10']))} | {_format_float(float(content_row['Recall@10']))} | {_format_float(float(content_row['MRR@10']))} | {_format_float(float(content_row['CatalogColdItem_NDCG@10']))} |
+| BPR | {_format_float(float(bpr_row["NDCG@10"]))} | {_format_float(float(bpr_row["Recall@10"]))} | {_format_float(float(bpr_row["MRR@10"]))} | {_format_float(float(bpr_row["CatalogColdItem_NDCG@10"]))} |
+| Content-based | {_format_float(float(content_row["NDCG@10"]))} | {_format_float(float(content_row["Recall@10"]))} | {_format_float(float(content_row["MRR@10"]))} | {_format_float(float(content_row["CatalogColdItem_NDCG@10"]))} |
 
-Bootstrap CI được tính theo user với cấu hình trong experiment YAML. BPR NDCG@10 CI = [{_format_float(float(bpr_row['NDCG@10_CI_low']), 6)}, {_format_float(float(bpr_row['NDCG@10_CI_high']), 6)}]; Content-based NDCG@10 CI = [{_format_float(float(content_row['NDCG@10_CI_low']), 6)}, {_format_float(float(content_row['NDCG@10_CI_high']), 6)}].
+Bootstrap CI được tính theo user với cấu hình trong experiment YAML. BPR NDCG@10 CI = [{_format_float(float(bpr_row["NDCG@10_CI_low"]), 6)}, {_format_float(float(bpr_row["NDCG@10_CI_high"]), 6)}]; Content-based NDCG@10 CI = [{_format_float(float(content_row["NDCG@10_CI_low"]), 6)}, {_format_float(float(content_row["NDCG@10_CI_high"]), 6)}].
 
 ## 5. Trade-off khi dùng P3
 
-- BPR + P3: NDCG@10 delta = {_format_float(float(bpr_p3_ndcg['delta']), 6)} ({_format_pct(float(bpr_p3_ndcg['relative_delta_pct']))}); Category Diversity@10 = {_format_pct(float(bpr_p3_diversity['relative_delta_pct']))}; Long-tail Exposure@10 = {_format_pct(float(bpr_p3_long_tail['relative_delta_pct']))}.
-- Content-based + P3: NDCG@10 delta = {_format_float(float(content_p3_ndcg['delta']), 6)} ({_format_pct(float(content_p3_ndcg['relative_delta_pct']))}); Category Diversity@10 = {_format_pct(float(content_p3_diversity['relative_delta_pct']))}; Long-tail Exposure@10 = {_format_pct(float(content_p3_long_tail['relative_delta_pct']))}.
+- BPR + P3: NDCG@10 delta = {_format_float(float(bpr_p3_ndcg["delta"]), 6)} ({_format_pct(float(bpr_p3_ndcg["relative_delta_pct"]))}); Category Diversity@10 = {_format_pct(float(bpr_p3_diversity["relative_delta_pct"]))}; Long-tail Exposure@10 = {_format_pct(float(bpr_p3_long_tail["relative_delta_pct"]))}.
+- Content-based + P3: NDCG@10 delta = {_format_float(float(content_p3_ndcg["delta"]), 6)} ({_format_pct(float(content_p3_ndcg["relative_delta_pct"]))}); Category Diversity@10 = {_format_pct(float(content_p3_diversity["relative_delta_pct"]))}; Long-tail Exposure@10 = {_format_pct(float(content_p3_long_tail["relative_delta_pct"]))}.
 
 P3 được thiết kế để chấp nhận một mức giảm relevance có kiểm soát nhằm tăng diversity và long-tail exposure. Chi tiết nằm trong `reports/tables/p3_bpr_comparison.csv` và `reports/tables/p3_content_comparison.csv`.
 
@@ -898,9 +883,9 @@ def build_final_summary(
     content_1d = dm_line(dm_content, "1d")
     content_3d = dm_line(dm_content, "3d")
 
-    content_advantage = 100.0 * (
-        float(content["NDCG@10"]) - float(bpr["NDCG@10"])
-    ) / float(bpr["NDCG@10"])
+    content_advantage = (
+        100.0 * (float(content["NDCG@10"]) - float(bpr["NDCG@10"])) / float(bpr["NDCG@10"])
+    )
 
     return f"""# Final Experimental Summary
 
@@ -910,9 +895,9 @@ Bốn hệ thống chính được đánh giá trên cùng **{inputs.full_dev_co
 
 ## 2. B4 — Content-based Recommender
 
-Content-based đạt NDCG@10 = **{_format_float(float(content['NDCG@10']))}**, so với BPR = **{_format_float(float(bpr['NDCG@10']))}**, tương ứng chênh lệch tương đối **{_format_pct(content_advantage)}** trên full dev.
+Content-based đạt NDCG@10 = **{_format_float(float(content["NDCG@10"]))}**, so với BPR = **{_format_float(float(bpr["NDCG@10"]))}**, tương ứng chênh lệch tương đối **{_format_pct(content_advantage)}** trên full dev.
 
-Khác biệt nổi bật ở `catalog_cold_item`: BPR = **{_format_float(float(bpr['CatalogColdItem_NDCG@10']))}**, Content-based = **{_format_float(float(content['CatalogColdItem_NDCG@10']))}**. Slice này xét relevant item thực sự chưa thấy trong train và bổ sung cho convention `cold_item` ở mức impression.
+Khác biệt nổi bật ở `catalog_cold_item`: BPR = **{_format_float(float(bpr["CatalogColdItem_NDCG@10"]))}**, Content-based = **{_format_float(float(content["CatalogColdItem_NDCG@10"]))}**. Slice này xét relevant item thực sự chưa thấy trong train và bổ sung cho convention `cold_item` ở mức impression.
 
 Final feature weights:
 
@@ -932,9 +917,9 @@ Final P3 weights:
 {json.dumps(bpr_p3_weights, ensure_ascii=False, indent=2)}
 ```
 
-- NDCG@10: {_format_float(bpr_p3['NDCG@10']['baseline'])} → {_format_float(bpr_p3['NDCG@10']['p3'])} ({_format_pct(bpr_p3['NDCG@10']['relative_delta_pct'])}).
-- Category Diversity@10: {_format_float(bpr_p3['category_diversity@10']['baseline'])} → {_format_float(bpr_p3['category_diversity@10']['p3'])} ({_format_pct(bpr_p3['category_diversity@10']['relative_delta_pct'])}).
-- Long-tail Exposure@10: {_format_float(bpr_p3['long_tail_exposure@10']['baseline'])} → {_format_float(bpr_p3['long_tail_exposure@10']['p3'])} ({_format_pct(bpr_p3['long_tail_exposure@10']['relative_delta_pct'])}).
+- NDCG@10: {_format_float(bpr_p3["NDCG@10"]["baseline"])} → {_format_float(bpr_p3["NDCG@10"]["p3"])} ({_format_pct(bpr_p3["NDCG@10"]["relative_delta_pct"])}).
+- Category Diversity@10: {_format_float(bpr_p3["category_diversity@10"]["baseline"])} → {_format_float(bpr_p3["category_diversity@10"]["p3"])} ({_format_pct(bpr_p3["category_diversity@10"]["relative_delta_pct"])}).
+- Long-tail Exposure@10: {_format_float(bpr_p3["long_tail_exposure@10"]["baseline"])} → {_format_float(bpr_p3["long_tail_exposure@10"]["p3"])} ({_format_pct(bpr_p3["long_tail_exposure@10"]["relative_delta_pct"])}).
 
 ### Content-based + P3
 
@@ -944,9 +929,9 @@ Final P3 weights:
 {json.dumps(content_p3_weights, ensure_ascii=False, indent=2)}
 ```
 
-- NDCG@10: {_format_float(content_p3['NDCG@10']['baseline'])} → {_format_float(content_p3['NDCG@10']['p3'])} ({_format_pct(content_p3['NDCG@10']['relative_delta_pct'])}).
-- Category Diversity@10: {_format_float(content_p3['category_diversity@10']['baseline'])} → {_format_float(content_p3['category_diversity@10']['p3'])} ({_format_pct(content_p3['category_diversity@10']['relative_delta_pct'])}).
-- Long-tail Exposure@10: {_format_float(content_p3['long_tail_exposure@10']['baseline'])} → {_format_float(content_p3['long_tail_exposure@10']['p3'])} ({_format_pct(content_p3['long_tail_exposure@10']['relative_delta_pct'])}).
+- NDCG@10: {_format_float(content_p3["NDCG@10"]["baseline"])} → {_format_float(content_p3["NDCG@10"]["p3"])} ({_format_pct(content_p3["NDCG@10"]["relative_delta_pct"])}).
+- Category Diversity@10: {_format_float(content_p3["category_diversity@10"]["baseline"])} → {_format_float(content_p3["category_diversity@10"]["p3"])} ({_format_pct(content_p3["category_diversity@10"]["relative_delta_pct"])}).
+- Long-tail Exposure@10: {_format_float(content_p3["long_tail_exposure@10"]["baseline"])} → {_format_float(content_p3["long_tail_exposure@10"]["p3"])} ({_format_pct(content_p3["long_tail_exposure@10"]["relative_delta_pct"])}).
 
 Kết quả cho thấy P3 tạo trade-off có chủ đích: relevance giảm ở mức nhất định trong khi diversity và exposure của non-head item tăng. Paired bootstrap CI được lưu trong hai JSON exp06/exp07 và bảng CSV tương ứng.
 
@@ -969,15 +954,15 @@ MIND train interaction có timestamp chỉ phủ khoảng sáu ngày nên experi
 
 ### BPR
 
-- 1d giữ {_format_pct(float(bpr_1d['data_retained_pct']))} dữ liệu, giảm storage {_format_pct(float(bpr_1d['storage_reduction_pct']))}, NDCG@10 = {_format_float(float(bpr_1d['NDCG@10']))}, utility retained = {_format_pct(float(bpr_1d['utility_retained_pct']))}.
-- 3d giữ {_format_pct(float(bpr_3d['data_retained_pct']))} dữ liệu, giảm storage {_format_pct(float(bpr_3d['storage_reduction_pct']))}, NDCG@10 = {_format_float(float(bpr_3d['NDCG@10']))}, utility retained = {_format_pct(float(bpr_3d['utility_retained_pct']))}.
+- 1d giữ {_format_pct(float(bpr_1d["data_retained_pct"]))} dữ liệu, giảm storage {_format_pct(float(bpr_1d["storage_reduction_pct"]))}, NDCG@10 = {_format_float(float(bpr_1d["NDCG@10"]))}, utility retained = {_format_pct(float(bpr_1d["utility_retained_pct"]))}.
+- 3d giữ {_format_pct(float(bpr_3d["data_retained_pct"]))} dữ liệu, giảm storage {_format_pct(float(bpr_3d["storage_reduction_pct"]))}, NDCG@10 = {_format_float(float(bpr_3d["NDCG@10"]))}, utility retained = {_format_pct(float(bpr_3d["utility_retained_pct"]))}.
 
 ### Content-based
 
 Lưu ý: Content-based `all` trong Data Minimization không trực tiếp so sánh với exp05 thông thường. Experiment này cố ý đặt `use_impression_history = false` để user profile chỉ sử dụng retained training interactions, tránh full dev history làm che mất tác động của retention window.
 
-- 1d giữ {_format_pct(float(content_1d['data_retained_pct']))} dữ liệu, giảm storage {_format_pct(float(content_1d['storage_reduction_pct']))}, NDCG@10 = {_format_float(float(content_1d['NDCG@10']))}, utility retained = {_format_pct(float(content_1d['utility_retained_pct']))}.
-- 3d giữ {_format_pct(float(content_3d['data_retained_pct']))} dữ liệu, giảm storage {_format_pct(float(content_3d['storage_reduction_pct']))}, NDCG@10 = {_format_float(float(content_3d['NDCG@10']))}, utility retained = {_format_pct(float(content_3d['utility_retained_pct']))}.
+- 1d giữ {_format_pct(float(content_1d["data_retained_pct"]))} dữ liệu, giảm storage {_format_pct(float(content_1d["storage_reduction_pct"]))}, NDCG@10 = {_format_float(float(content_1d["NDCG@10"]))}, utility retained = {_format_pct(float(content_1d["utility_retained_pct"]))}.
+- 3d giữ {_format_pct(float(content_3d["data_retained_pct"]))} dữ liệu, giảm storage {_format_pct(float(content_3d["storage_reduction_pct"]))}, NDCG@10 = {_format_float(float(content_3d["NDCG@10"]))}, utility retained = {_format_pct(float(content_3d["utility_retained_pct"]))}.
 
 BPR giữ utility tốt hơn khi retention window ngắn. Content-based nhạy hơn vì user content profile phụ thuộc trực tiếp vào lượng retained history. Training time của Content-based chỉ vài giây nên không nên diễn giải quá mạnh các khác biệt nhỏ về thời gian giữa windows.
 

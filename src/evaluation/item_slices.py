@@ -96,9 +96,7 @@ def split_relevant_items_by_catalog_status(
     candidate_seen_in_train_mask: list[bool],
 ) -> dict[str, set[int]]:
     """Tách relevant item thành catalog-cold và catalog-warm."""
-    if not (
-        len(candidates) == len(labels) == len(candidate_seen_in_train_mask)
-    ):
+    if not (len(candidates) == len(labels) == len(candidate_seen_in_train_mask)):
         raise ValueError("Candidate, label và seen mask phải cùng độ dài.")
 
     cold_items: set[int] = set()
@@ -108,6 +106,7 @@ def split_relevant_items_by_catalog_status(
         candidates,
         labels,
         candidate_seen_in_train_mask,
+        strict=True,
     ):
         if int(label) != 1:
             continue

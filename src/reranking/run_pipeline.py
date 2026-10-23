@@ -12,7 +12,9 @@ from src.models.base import BaseRecommender
 from src.reranking.pipeline import RerankingPipeline
 
 
-def run_preview(config_path: str | Path, sample_size: int, output: str | Path | None = None) -> Path:
+def run_preview(
+    config_path: str | Path, sample_size: int, output: str | Path | None = None
+) -> Path:
     """Xuất danh sách trước/sau P3 từ các impression; không đọc click labels."""
     import pyarrow.dataset as ds
 
@@ -36,7 +38,11 @@ def run_preview(config_path: str | Path, sample_size: int, output: str | Path | 
     columns = ["impression_id", "user_idx", "history_item_idxs", "candidate_item_idxs"]
     if not set(columns).issubset(dataset.schema.names):
         raise ValueError("Impressions thiếu cột cần thiết để chạy P3.")
-    output_path = Path(output) if output else Path("reports/reranking") / f"{config['experiment_name']}_preview.jsonl"
+    output_path = (
+        Path(output)
+        if output
+        else Path("reports/reranking") / f"{config['experiment_name']}_preview.jsonl"
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     processed = 0

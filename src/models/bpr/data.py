@@ -222,10 +222,7 @@ def scan_bpr_training_data(
     if pair_count == 0:
         raise ValueError("Không tìm thấy BPR pair hợp lệ trong dữ liệu train.")
 
-    popular_items = [
-        int(item_id)
-        for item_id, _count in positive_item_counts.most_common()
-    ]
+    popular_items = [int(item_id) for item_id, _count in positive_item_counts.most_common()]
 
     return BPRTrainingSummary(
         pointwise_rows=pointwise_rows,

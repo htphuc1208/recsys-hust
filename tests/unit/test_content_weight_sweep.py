@@ -71,8 +71,6 @@ def test_generate_weight_grid_step_point_two_has_126_configs():
         assert all(weight >= 0.0 for weight in weights.values())
 
 
-
-
 def test_generate_weight_grid_with_bounds_has_expected_configs():
     """Fine sweep phải chỉ sinh cấu hình nằm trong vùng bounds đã chọn."""
     bounds = {
@@ -112,6 +110,7 @@ def test_generate_weight_grid_rejects_impossible_bounds():
     with pytest.raises(ValueError, match="không thể tạo được"):
         generate_weight_grid(0.05, bounds=bounds)
 
+
 def test_generate_weight_grid_rejects_invalid_step():
     """Step không chia hết 1 phải bị từ chối."""
     with pytest.raises(ValueError, match="chia hết 1"):
@@ -149,9 +148,9 @@ def test_combine_feature_scores_uses_supplied_weights():
         has_cold_candidate=False,
         is_cold_user=False,
     )
-    title_only = {name: 0.0 for name in FEATURE_NAMES}
+    title_only = dict.fromkeys(FEATURE_NAMES, 0.0)
     title_only["title"] = 1.0
-    abstract_only = {name: 0.0 for name in FEATURE_NAMES}
+    abstract_only = dict.fromkeys(FEATURE_NAMES, 0.0)
     abstract_only["abstract"] = 1.0
 
     np.testing.assert_allclose(
@@ -181,9 +180,9 @@ def test_evaluate_cached_weights_changes_ranking_and_slices():
         has_cold_candidate=True,
         is_cold_user=True,
     )
-    title_only = {name: 0.0 for name in FEATURE_NAMES}
+    title_only = dict.fromkeys(FEATURE_NAMES, 0.0)
     title_only["title"] = 1.0
-    abstract_only = {name: 0.0 for name in FEATURE_NAMES}
+    abstract_only = dict.fromkeys(FEATURE_NAMES, 0.0)
     abstract_only["abstract"] = 1.0
 
     title_metrics = evaluate_cached_weights([impression], title_only, top_k=1)

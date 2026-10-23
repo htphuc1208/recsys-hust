@@ -136,40 +136,24 @@ def evaluate_impressions(
                     top_k=max(k_list),
                 )
 
-            true_items = {
-                candidates[idx]
-                for idx, label in enumerate(labels)
-                if int(label) == 1
-            }
+            true_items = {candidates[idx] for idx, label in enumerate(labels) if int(label) == 1}
 
             impression_id = int(pydict["impression_id"][i])
             recommendations_at_10[impression_id] = ranked_candidates[:10]
 
             impression_metrics: dict[str, float] = {}
             for k in k_list:
-                impression_metrics[f"NDCG@{k}"] = ndcg_at_k(
-                    ranked_candidates, true_items, k
-                )
-                impression_metrics[f"Recall@{k}"] = recall_at_k(
-                    ranked_candidates, true_items, k
-                )
-                impression_metrics[f"HitRate@{k}"] = hit_rate_at_k(
-                    ranked_candidates, true_items, k
-                )
-                impression_metrics[f"MRR@{k}"] = mrr_at_k(
-                    ranked_candidates, true_items, k
-                )
+                impression_metrics[f"NDCG@{k}"] = ndcg_at_k(ranked_candidates, true_items, k)
+                impression_metrics[f"Recall@{k}"] = recall_at_k(ranked_candidates, true_items, k)
+                impression_metrics[f"HitRate@{k}"] = hit_rate_at_k(ranked_candidates, true_items, k)
+                impression_metrics[f"MRR@{k}"] = mrr_at_k(ranked_candidates, true_items, k)
 
             # Giữ nguyên convention chung của project cho cold/warm impression.
             has_cold_candidate = False in candidate_train_mask
             is_cold_user = len(history) <= 5 or user_idx == -1
             active_base_slices = ["overall"]
-            active_base_slices.append(
-                "cold_item" if has_cold_candidate else "warm_item"
-            )
-            active_base_slices.append(
-                "cold_user" if is_cold_user else "warm_user"
-            )
+            active_base_slices.append("cold_item" if has_cold_candidate else "warm_item")
+            active_base_slices.append("cold_user" if is_cold_user else "warm_user")
 
             for slice_name in active_base_slices:
                 for metric_name, metric_value in impression_metrics.items():
@@ -286,6 +270,7 @@ def evaluate_impressions(
 
     return results
 
+
 def format_markdown_table(results: dict[str, Any]) -> str:
     """Tạo report cho model thường, gồm slicing và bootstrap CI."""
     slices = results.get("slices", {})
@@ -313,8 +298,19 @@ def format_markdown_table(results: dict[str, Any]) -> str:
     beyond = results.get("beyond_accuracy", {})
     if beyond:
         rows.append(["---"] * len(headers))
-        rows.append(["**Catalog Coverage@10**", f"{beyond.get('catalog_coverage@10', 0.0):.4f}", "-", "-", "-", "-"])
-        rows.append(["**Gini Index@10**", f"{beyond.get('gini_index@10', 0.0):.4f}", "-", "-", "-", "-"])
+        rows.append(
+            [
+                "**Catalog Coverage@10**",
+                f"{beyond.get('catalog_coverage@10', 0.0):.4f}",
+                "-",
+                "-",
+                "-",
+                "-",
+            ]
+        )
+        rows.append(
+            ["**Gini Index@10**", f"{beyond.get('gini_index@10', 0.0):.4f}", "-", "-", "-", "-"]
+        )
 
     lines = [
         "| " + " | ".join(headers) + " |",
@@ -334,12 +330,14 @@ def format_markdown_table(results: dict[str, Any]) -> str:
         "catalog_warm_item",
     ]
     if any(slices.get(name, {}).get("count", 0) > 0 for name in item_slice_order):
-        lines.extend([
-            "",
-            "### NDCG@10 theo item slice",
-            "| Slice | Count | NDCG@10 | Recall@10 | MRR@10 |",
-            "| :--- | ---: | ---: | ---: | ---: |",
-        ])
+        lines.extend(
+            [
+                "",
+                "### NDCG@10 theo item slice",
+                "| Slice | Count | NDCG@10 | Recall@10 | MRR@10 |",
+                "| :--- | ---: | ---: | ---: | ---: |",
+            ]
+        )
         for slice_name in item_slice_order:
             info = slices.get(slice_name, {})
             metrics = info.get("metrics", {})
@@ -354,12 +352,14 @@ def format_markdown_table(results: dict[str, Any]) -> str:
     bootstrap_metrics = bootstrap.get("metrics", {})
     if bootstrap_metrics:
         confidence_pct = 100.0 * float(bootstrap.get("confidence_level", 0.95))
-        lines.extend([
-            "",
-            f"Bootstrap: unit={bootstrap.get('unit')}, resamples={bootstrap.get('num_resamples')}, confidence={bootstrap.get('confidence_level')}",
-            f"| Metric | Mean | {confidence_pct:.0f}% CI |",
-            "| :--- | ---: | :---: |",
-        ])
+        lines.extend(
+            [
+                "",
+                f"Bootstrap: unit={bootstrap.get('unit')}, resamples={bootstrap.get('num_resamples')}, confidence={bootstrap.get('confidence_level')}",
+                f"| Metric | Mean | {confidence_pct:.0f}% CI |",
+                "| :--- | ---: | :---: |",
+            ]
+        )
         for metric_name, metric_info in bootstrap_metrics.items():
             ci = metric_info.get("ci", [0.0, 0.0])
             lines.append(
@@ -368,6 +368,7 @@ def format_markdown_table(results: dict[str, Any]) -> str:
             )
 
     return "\n".join(lines)
+
 
 def format_p3_markdown_table(results: dict[str, Any]) -> str:
     """Tạo bảng trước/sau P3 và bảng slicing chính."""
@@ -524,7 +525,9 @@ def evaluate(config_path: str | Path, sample_size: int | None = None) -> dict[st
         train_click_counts = None
         train_path_value = dataset_cfg.get("train_interactions")
         if train_path_value and catalog_items:
-            logger.info(f"Loading train click counts for Head/Long-tail slices from: {train_path_value}")
+            logger.info(
+                f"Loading train click counts for Head/Long-tail slices from: {train_path_value}"
+            )
             train_click_counts = load_train_click_counts(
                 train_path_value,
                 len(catalog_items),

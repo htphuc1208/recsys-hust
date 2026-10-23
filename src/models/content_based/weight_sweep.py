@@ -19,7 +19,6 @@ from src.models.content_based.recommender import (
     ContentBasedRecommender,
 )
 
-
 FEATURE_NAMES = tuple(FEATURE_FILES.keys())
 
 
@@ -80,20 +79,14 @@ def _normalize_weight_bounds(
         upper = float(upper)
 
         if not 0.0 <= lower <= upper <= 1.0:
-            raise ValueError(
-                f"Bounds của {name} phải thỏa 0 <= min <= max <= 1."
-            )
+            raise ValueError(f"Bounds của {name} phải thỏa 0 <= min <= max <= 1.")
 
         lower_units = int(round(lower * divisions))
         upper_units = int(round(upper * divisions))
         if not np.isclose(lower_units / divisions, lower, atol=1e-8):
-            raise ValueError(
-                f"Min bound của {name}={lower} không nằm trên lưới step={step}."
-            )
+            raise ValueError(f"Min bound của {name}={lower} không nằm trên lưới step={step}.")
         if not np.isclose(upper_units / divisions, upper, atol=1e-8):
-            raise ValueError(
-                f"Max bound của {name}={upper} không nằm trên lưới step={step}."
-            )
+            raise ValueError(f"Max bound của {name}={upper} không nằm trên lưới step={step}.")
         normalized[name] = (lower_units, upper_units)
 
     minimum_sum = sum(value[0] for value in normalized.values())
@@ -112,22 +105,14 @@ def generate_weight_grid(
     divisions = _validate_step(step)
     bound_units = _normalize_weight_bounds(step, bounds)
 
-    ranges = {
-        name: range(bound_units[name][0], bound_units[name][1] + 1)
-        for name in FEATURE_NAMES
-    }
+    ranges = {name: range(bound_units[name][0], bound_units[name][1] + 1) for name in FEATURE_NAMES}
 
     configurations: list[dict[str, float]] = []
     for title_units in ranges["title"]:
         for abstract_units in ranges["abstract"]:
             for category_units in ranges["category"]:
                 for subcategory_units in ranges["subcategory"]:
-                    used_units = (
-                        title_units
-                        + abstract_units
-                        + category_units
-                        + subcategory_units
-                    )
+                    used_units = title_units + abstract_units + category_units + subcategory_units
                     title_entity_units = divisions - used_units
                     if title_entity_units not in ranges["title_entity"]:
                         continue
@@ -140,10 +125,7 @@ def generate_weight_grid(
                         title_entity_units,
                     )
                     configurations.append(
-                        {
-                            name: units[index] / divisions
-                            for index, name in enumerate(FEATURE_NAMES)
-                        }
+                        {name: units[index] / divisions for index, name in enumerate(FEATURE_NAMES)}
                     )
 
     if not configurations:
@@ -241,8 +223,7 @@ def cache_feature_scores(
         profiles = model._build_profiles(history)
 
         feature_scores: dict[str, np.ndarray] = {
-            name: np.zeros(candidates.size, dtype=np.float32)
-            for name in FEATURE_NAMES
+            name: np.zeros(candidates.size, dtype=np.float32) for name in FEATURE_NAMES
         }
         fallback_scores: np.ndarray | None = None
 
@@ -260,9 +241,7 @@ def cache_feature_scores(
 
         labels = row["labels"]
         true_items = {
-            int(candidates[index])
-            for index, label in enumerate(labels)
-            if int(label) == 1
+            int(candidates[index]) for index, label in enumerate(labels) if int(label) == 1
         }
         candidate_train_mask = row["candidate_seen_in_train_mask"]
         has_cold_candidate = any(not bool(value) for value in candidate_train_mask)
@@ -327,10 +306,7 @@ def evaluate_cached_weights(
     for impression in cached:
         scores = combine_feature_scores(impression, weights)
         order = np.argsort(-scores, kind="stable")
-        ranking = [
-            int(impression.candidate_item_idxs[index])
-            for index in order
-        ]
+        ranking = [int(impression.candidate_item_idxs[index]) for index in order]
 
         metrics = {
             f"NDCG@{top_k}": ndcg_at_k(ranking, impression.true_items, top_k),
@@ -356,10 +332,7 @@ def evaluate_cached_weights(
 
 def _weight_columns(weights: dict[str, float]) -> dict[str, float]:
     """Đổi tên trọng số thành cột CSV dễ đọc."""
-    return {
-        f"{name}_weight": float(weights[name])
-        for name in FEATURE_NAMES
-    }
+    return {f"{name}_weight": float(weights[name]) for name in FEATURE_NAMES}
 
 
 def run_weight_sweep(
@@ -382,11 +355,7 @@ def run_weight_sweep(
 
     if checkpoint_path is None:
         artifacts_dir = Path(config.get("paths", {}).get("artifacts_dir", "artifacts"))
-        checkpoint_path = (
-            artifacts_dir
-            / "checkpoints"
-            / f"{experiment_name}_content_based.pkl"
-        )
+        checkpoint_path = artifacts_dir / "checkpoints" / f"{experiment_name}_content_based.pkl"
     checkpoint_path = Path(checkpoint_path)
 
     print("Nạp Content-based checkpoint...")
@@ -404,18 +373,12 @@ def run_weight_sweep(
         sample_size=settings.sample_size,
         seed=settings.seed,
     )
-    print(
-        f"Dev có {eligible_count:,} impression hợp lệ; "
-        f"dùng {len(rows):,} impression để sweep."
-    )
+    print(f"Dev có {eligible_count:,} impression hợp lệ; dùng {len(rows):,} impression để sweep.")
 
     print("Chấm 5 feature một lần cho dev sample...")
     cached = cache_feature_scores(model, rows)
 
-    current_weights = {
-        name: float(model.feature_weights[name])
-        for name in FEATURE_NAMES
-    }
+    current_weights = {name: float(model.feature_weights[name]) for name in FEATURE_NAMES}
     baseline = evaluate_cached_weights(
         cached,
         current_weights,
@@ -472,11 +435,7 @@ def run_weight_sweep(
     ).reset_index(drop=True)
     results.insert(0, "rank", np.arange(1, len(results) + 1))
 
-    output_dir = (
-        Path("reports")
-        / "content_tuning"
-        / experiment_name
-    )
+    output_dir = Path("reports") / "content_tuning" / experiment_name
     if settings.output_tag is not None:
         output_dir = output_dir / settings.output_tag.strip()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -527,9 +486,7 @@ def run_weight_sweep(
 
 def parse_args() -> argparse.Namespace:
     """Đọc tham số dòng lệnh."""
-    parser = argparse.ArgumentParser(
-        description="Quét 5 trọng số của Content-based recommender."
-    )
+    parser = argparse.ArgumentParser(description="Quét 5 trọng số của Content-based recommender.")
     parser.add_argument(
         "--config",
         default="configs/experiment/exp05_mind_content.yaml",
@@ -587,10 +544,7 @@ def main() -> None:
         )
         for name in FEATURE_NAMES
     }
-    has_custom_bounds = any(
-        lower != 0.0 or upper != 1.0
-        for lower, upper in weight_bounds.values()
-    )
+    has_custom_bounds = any(lower != 0.0 or upper != 1.0 for lower, upper in weight_bounds.values())
 
     settings = SweepSettings(
         step=args.step,

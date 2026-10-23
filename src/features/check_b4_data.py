@@ -1,10 +1,8 @@
-
 """Kiểm tra metadata MINDlarge trước khi xây dựng mô hình B4."""
 
 from pathlib import Path
 
 import pyarrow.dataset as ds
-
 
 DATA_ROOT = Path("data/processed/mind_large")
 
@@ -32,9 +30,7 @@ def load_dataset(directory: Path, required_columns: list[str]):
     missing_columns = set(required_columns) - set(dataset.schema.names)
 
     if missing_columns:
-        raise ValueError(
-            f"Thiếu các cột trong {directory}: {missing_columns}"
-        )
+        raise ValueError(f"Thiếu các cột trong {directory}: {missing_columns}")
 
     return dataset
 
@@ -49,9 +45,7 @@ def load_item_mapping() -> dict:
         ["news_id", "item_idx"],
     )
 
-    table = dataset.to_table(
-        columns=["news_id", "item_idx"]
-    )
+    table = dataset.to_table(columns=["news_id", "item_idx"])
 
     mapping = {}
 
@@ -129,10 +123,7 @@ def inspect_news(split: str, item_mapping: dict):
 
     print(f"Tổng lượt title entities: {total_title_entities:,}")
 
-    print(
-        "Tỷ lệ bài có title entities: "
-        f"{articles_with_title_entities / total_rows * 100:.2f}%"
-    )
+    print(f"Tỷ lệ bài có title entities: {articles_with_title_entities / total_rows * 100:.2f}%")
 
     sample = dataset.head(
         3,

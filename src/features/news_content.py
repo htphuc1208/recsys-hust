@@ -4,16 +4,15 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 import joblib
 import numpy as np
 from scipy import sparse
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import OneHotEncoder
-
 
 NEWS_COLUMNS = [
     "news_id",
@@ -72,9 +71,7 @@ def load_item_mapping(processed_root: Path) -> tuple[dict[str, int], list[str], 
     first_seen_by_index = {}
     mapping_path = processed_root / "mappings" / "items"
 
-    for row in iter_parquet_rows(
-        mapping_path, ["news_id", "item_idx", "first_seen_split"]
-    ):
+    for row in iter_parquet_rows(mapping_path, ["news_id", "item_idx", "first_seen_split"]):
         news_id = row["news_id"]
         item_idx = int(row["item_idx"])
         if news_id in mapping or item_idx in first_seen_by_index:
@@ -95,9 +92,7 @@ def load_item_mapping(processed_root: Path) -> tuple[dict[str, int], list[str], 
     return mapping, news_ids, first_seen
 
 
-def load_news_catalog(
-    processed_root: Path, mapping: dict[str, int]
-) -> list[NewsRecord | None]:
+def load_news_catalog(processed_root: Path, mapping: dict[str, int]) -> list[NewsRecord | None]:
     """Gộp metadata theo thứ tự ưu tiên train, dev, test mà không đổi item_idx."""
 
     records: list[NewsRecord | None] = [None] * len(mapping)
@@ -132,9 +127,7 @@ def load_news_catalog(
     return records
 
 
-def get_train_records(
-    records: list[NewsRecord | None], first_seen: list[str]
-) -> list[NewsRecord]:
+def get_train_records(records: list[NewsRecord | None], first_seen: list[str]) -> list[NewsRecord]:
     """Chỉ chọn catalog train để fit bộ từ vựng và bộ mã hóa."""
 
     train_records = [
@@ -173,8 +166,7 @@ def build_text_feature(
     for start_index in range(0, len(records), batch_size):
         current_records = records[start_index : start_index + batch_size]
         documents = [
-            getattr(record, field_name) if record is not None else ""
-            for record in current_records
+            getattr(record, field_name) if record is not None else "" for record in current_records
         ]
         blocks.append(vectorizer.transform(documents))
 
@@ -189,28 +181,21 @@ def build_category_feature(
 ) -> tuple[sparse.csr_matrix, OneHotEncoder]:
     """Fit one-hot theo category của train và bỏ qua category mới ở dev/test."""
 
-    encoder = OneHotEncoder(
-        handle_unknown="ignore", sparse_output=True, dtype=np.float32
-    )
+    encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=True, dtype=np.float32)
     training_values = np.asarray(
         [[getattr(record, field_name)] for record in train_records], dtype=object
     )
     encoder.fit(training_values)
 
     all_values = np.asarray(
-        [
-            [getattr(record, field_name) if record is not None else ""]
-            for record in records
-        ],
+        [[getattr(record, field_name) if record is not None else ""] for record in records],
         dtype=object,
     )
     matrix = encoder.transform(all_values).tocsr()
     return matrix, encoder
 
 
-def load_train_entity_embeddings(
-    entity_path: Path, needed_ids: set[str]
-) -> dict[str, np.ndarray]:
+def load_train_entity_embeddings(entity_path: Path, needed_ids: set[str]) -> dict[str, np.ndarray]:
     """Chỉ nạp các vector thực thể cần thiết từ file embedding train."""
 
     if not entity_path.is_file():
@@ -230,8 +215,7 @@ def load_train_entity_embeddings(
                 continue
             if len(parts) != ENTITY_DIMENSION + 1:
                 raise ValueError(
-                    f"Vector {entity_id} tại dòng {line_number} "
-                    f"không có {ENTITY_DIMENSION} chiều."
+                    f"Vector {entity_id} tại dòng {line_number} không có {ENTITY_DIMENSION} chiều."
                 )
 
             vector = np.asarray([float(value) for value in parts[1:]], dtype=np.float32)
@@ -267,9 +251,7 @@ def build_title_entity_feature(
         articles_with_entities += 1
         entity_mentions += len(entity_ids)
         matched_vectors = [
-            entity_vectors[entity_id]
-            for entity_id in entity_ids
-            if entity_id in entity_vectors
+            entity_vectors[entity_id] for entity_id in entity_ids if entity_id in entity_vectors
         ]
         matched_entity_mentions += len(matched_vectors)
         if not matched_vectors:
@@ -344,8 +326,12 @@ def build_features(
     feature_shapes = {}
     for feature_name, field_name, max_features in feature_settings:
         matrix, transformer = build_text_feature(
-            records, train_records, field_name, max_features,
-            min_document_frequency, batch_size,
+            records,
+            train_records,
+            field_name,
+            max_features,
+            min_document_frequency,
+            batch_size,
         )
         save_feature(output_directory, feature_name, matrix, transformer)
         feature_shapes[feature_name] = list(matrix.shape)
@@ -415,15 +401,18 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="Xây dựng đặc trưng nội dung B4")
     parser.add_argument(
-        "--processed-root", type=Path,
+        "--processed-root",
+        type=Path,
         default=Path("data/processed/mind_large"),
     )
     parser.add_argument(
-        "--entity-path", type=Path,
+        "--entity-path",
+        type=Path,
         default=Path("data/raw/mind_large/MINDlarge_train/entity_embedding.vec"),
     )
     parser.add_argument(
-        "--output-dir", type=Path,
+        "--output-dir",
+        type=Path,
         default=Path("data/processed/mind_large/features/b4"),
     )
     parser.add_argument("--title-features", type=int, default=20000)

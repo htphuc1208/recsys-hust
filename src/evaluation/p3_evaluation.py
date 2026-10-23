@@ -10,8 +10,8 @@ from typing import Any
 import numpy as np
 import pyarrow.dataset as ds
 
-from src.evaluation.bootstrap import BootstrapSettings, paired_bootstrap_comparison
 from src.evaluation.beyond_accuracy import gini_from_exposure_counts
+from src.evaluation.bootstrap import BootstrapSettings, paired_bootstrap_comparison
 from src.evaluation.item_slices import (
     LONG_TAIL,
     ZERO_CLICK,
@@ -52,7 +52,7 @@ class ExposureAccumulator:
     list_count: int = 0
 
     @classmethod
-    def create(cls, num_items: int) -> "ExposureAccumulator":
+    def create(cls, num_items: int) -> ExposureAccumulator:
         return cls(item_exposure_counts=np.zeros(num_items, dtype=np.int64))
 
     def update(
@@ -83,8 +83,7 @@ class ExposureAccumulator:
                 category_counts[category] = category_counts.get(category, 0) + 1
             total_pairs = len(top_items) * (len(top_items) - 1) / 2.0
             same_category_pairs = sum(
-                count * (count - 1) / 2.0
-                for count in category_counts.values()
+                count * (count - 1) / 2.0 for count in category_counts.values()
             )
             diversity = 1.0 - same_category_pairs / total_pairs
 
@@ -151,11 +150,7 @@ class ExposureAccumulator:
 def _empty_slice_store(k_list: list[int]) -> dict[str, dict[str, list[float]]]:
     """Tạo vùng tích lũy metric cho mọi slice."""
     return {
-        slice_name: {
-            f"{metric_name}@{k}": []
-            for metric_name in RANKING_METRICS
-            for k in k_list
-        }
+        slice_name: {f"{metric_name}@{k}": [] for metric_name in RANKING_METRICS for k in k_list}
         for slice_name in ALL_SLICES
     }
 
@@ -285,9 +280,7 @@ def evaluate_p3_impressions(
             )
 
             true_items = {
-                candidates[index]
-                for index, label in enumerate(labels)
-                if int(label) == 1
+                candidates[index] for index, label in enumerate(labels) if int(label) == 1
             }
             baseline_metrics = _ranking_metrics(baseline, true_items, k_list)
             reranked_metrics = _ranking_metrics(reranked, true_items, k_list)

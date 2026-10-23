@@ -143,15 +143,9 @@ def test_prepare_retention_windows_keeps_expected_recent_days(tmp_path: Path) ->
     assert int(counts.loc["all", "positive_rows"]) == 6
 
     assert int(ds.dataset(str(paths["1d"].pointwise), format="parquet").count_rows()) == 2
-    assert paths["all"].pointwise == (
-        tmp_path / "data/experiments/data_minimization/all/pointwise"
-    )
-    assert paths["all"].pointwise != (
-        tmp_path / "data/processed/mind_large/train/pointwise"
-    )
-    assert int(
-        ds.dataset(str(paths["all"].pointwise), format="parquet").count_rows()
-    ) == 12
+    assert paths["all"].pointwise == (tmp_path / "data/experiments/data_minimization/all/pointwise")
+    assert paths["all"].pointwise != (tmp_path / "data/processed/mind_large/train/pointwise")
+    assert int(ds.dataset(str(paths["all"].pointwise), format="parquet").count_rows()) == 12
     assert float(counts.loc["all", "pointwise_storage_reduction_pct"]) == 0.0
     assert float(counts.loc["all", "positive_storage_reduction_pct"]) == 0.0
     assert bool(counts.loc["all", "is_materialized_copy"]) is True

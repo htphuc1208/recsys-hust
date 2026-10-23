@@ -12,7 +12,6 @@ from scipy import sparse
 
 from src.models.base import BaseRecommender
 
-
 FEATURE_FILES = {
     "title": "title_tfidf.npz",
     "abstract": "abstract_tfidf.npz",
@@ -81,11 +80,7 @@ class ContentBasedRecommender(BaseRecommender):
         required_names = (
             set(FEATURE_FILES)
             if load_all
-            else {
-                name
-                for name, weight in self.feature_weights.items()
-                if weight > 0.0
-            }
+            else {name for name, weight in self.feature_weights.items() if weight > 0.0}
         )
         if required_names.issubset(self._features):
             return
@@ -128,7 +123,7 @@ class ContentBasedRecommender(BaseRecommender):
 
     def fit(
         self, train_df: pd.DataFrame, val_df: pd.DataFrame | None = None
-    ) -> "ContentBasedRecommender":
+    ) -> ContentBasedRecommender:
         """Nạp đặc trưng, lưu lịch sử và thống kê popularity chỉ từ train."""
         self._ensure_features_loaded()
         required_columns = {self.user_col, self.item_col}

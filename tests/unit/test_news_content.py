@@ -33,9 +33,7 @@ def test_train_only_tfidf_and_new_item():
         make_record(1, "football match news", "sports"),
         make_record(2, "quasar football", "science"),
     ]
-    matrix, vectorizer = build_text_feature(
-        records, records[:2], "title", 100, 1, 2
-    )
+    matrix, vectorizer = build_text_feature(records, records[:2], "title", 100, 1, 2)
     assert matrix.shape[0] == 3
     assert sparse.isspmatrix_csr(matrix)
     assert "quasar" not in vectorizer.vocabulary_
@@ -130,9 +128,14 @@ def test_build_features_preserves_mapping_and_train_vocabulary(tmp_path, monkeyp
     )
     output_directory = tmp_path / "output"
     news_content.build_features(
-        processed_root, entity_path, output_directory,
-        title_features=100, abstract_features=100,
-        min_document_frequency=1, batch_size=2, overwrite=False,
+        processed_root,
+        entity_path,
+        output_directory,
+        title_features=100,
+        abstract_features=100,
+        min_document_frequency=1,
+        batch_size=2,
+        overwrite=False,
     )
 
     import json

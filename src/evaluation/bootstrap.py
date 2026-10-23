@@ -62,7 +62,6 @@ def _percentile_interval(
     return low, high
 
 
-
 def bootstrap_confidence_intervals(
     user_ids: np.ndarray,
     values: np.ndarray,
@@ -132,6 +131,7 @@ def bootstrap_confidence_intervals(
 
     return results
 
+
 def paired_bootstrap_comparison(
     user_ids: np.ndarray,
     baseline_values: np.ndarray,
@@ -199,9 +199,7 @@ def paired_bootstrap_comparison(
         reranked_ci = _percentile_interval(
             reranked_boot[:, metric_index], settings.confidence_level
         )
-        delta_ci = _percentile_interval(
-            delta_boot[:, metric_index], settings.confidence_level
-        )
+        delta_ci = _percentile_interval(delta_boot[:, metric_index], settings.confidence_level)
         baseline_mean = float(np.mean(baseline[:, metric_index]))
         reranked_mean = float(np.mean(reranked[:, metric_index]))
 

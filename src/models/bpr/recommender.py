@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -140,7 +141,7 @@ class BPRRecommender(PyTorchRecommenderBase):
         self,
         train_path: str | Path,
         val_df: pd.DataFrame | None = None,
-    ) -> "BPRRecommender":
+    ) -> BPRRecommender:
         """Train BPR streaming trực tiếp từ thư mục pointwise Parquet."""
         del val_df
         set_seed(self.seed)
@@ -250,27 +251,31 @@ class BPRRecommender(PyTorchRecommenderBase):
         positive_df = df[df[self.label_col] == 1]
         negative_df = df[df[self.label_col] == 0]
         pairs = []
-        positives_by_user = (
-            positive_df.groupby(self.user_col)[self.item_col].apply(list).to_dict()
-        )
-        negatives_by_user = (
-            negative_df.groupby(self.user_col)[self.item_col].apply(list).to_dict()
-        )
+        positives_by_user = positive_df.groupby(self.user_col)[self.item_col].apply(list).to_dict()
+        negatives_by_user = negative_df.groupby(self.user_col)[self.item_col].apply(list).to_dict()
 
+        rng = np.random.default_rng(self.seed)
         for user_idx, positive_items in positives_by_user.items():
             negative_items = negatives_by_user.get(user_idx, [])
+            seen_u = self.user_seen_items.get(int(user_idx), set())
             if not negative_items:
-                continue
-
-            for negative_index, negative_item in enumerate(negative_items):
-                positive_item = positive_items[negative_index % len(positive_items)]
-                pairs.append(
-                    (
-                        int(user_idx),
-                        int(positive_item),
-                        int(negative_item),
+                for positive_item in positive_items:
+                    neg = int(rng.integers(0, self.num_items))
+                    for _ in range(10):
+                        if neg not in seen_u:
+                            break
+                        neg = int(rng.integers(0, self.num_items))
+                    pairs.append((int(user_idx), int(positive_item), neg))
+            else:
+                for negative_index, negative_item in enumerate(negative_items):
+                    positive_item = positive_items[negative_index % len(positive_items)]
+                    pairs.append(
+                        (
+                            int(user_idx),
+                            int(positive_item),
+                            int(negative_item),
+                        )
                     )
-                )
 
         return pairs
 
@@ -291,7 +296,7 @@ class BPRRecommender(PyTorchRecommenderBase):
         self,
         train_df: pd.DataFrame,
         val_df: pd.DataFrame | None = None,
-    ) -> "BPRRecommender":
+    ) -> BPRRecommender:
         """Fit từ DataFrame nhỏ; pipeline BPR chính dùng fit_from_path()."""
         del val_df
         set_seed(self.seed)
@@ -325,9 +330,7 @@ class BPRRecommender(PyTorchRecommenderBase):
 
         item_counts = positive_df[self.item_col].value_counts()
         self.popular_items_fallback = [
-            int(item_id)
-            for item_id in item_counts.index.tolist()
-            if int(item_id) >= 0
+            int(item_id) for item_id in item_counts.index.tolist() if int(item_id) >= 0
         ]
 
         if self.track_user_seen:
@@ -398,9 +401,7 @@ class BPRRecommender(PyTorchRecommenderBase):
 
         if np.any(valid_mask):
             valid_positions = np.flatnonzero(valid_mask)
-            observed_mask[valid_positions] = self.observed_user_mask[
-                user_arr[valid_positions]
-            ]
+            observed_mask[valid_positions] = self.observed_user_mask[user_arr[valid_positions]]
 
         user_arr[~observed_mask] = -1
         return user_arr
@@ -448,20 +449,14 @@ class BPRRecommender(PyTorchRecommenderBase):
 
             if not is_warm_user:
                 recs[user_idx] = [
-                    item_id
-                    for item_id in self.popular_items_fallback
-                    if item_id not in seen
+                    item_id for item_id in self.popular_items_fallback if item_id not in seen
                 ][:top_k]
                 continue
 
             candidate_items = observed_items
             if filter_seen and seen:
                 candidate_items = np.array(
-                    [
-                        int(item_id)
-                        for item_id in observed_items
-                        if int(item_id) not in seen
-                    ],
+                    [int(item_id) for item_id in observed_items if int(item_id) not in seen],
                     dtype=int,
                 )
 
@@ -484,8 +479,7 @@ class BPRRecommender(PyTorchRecommenderBase):
                 top_positions = partition[np.argsort(-scores[partition])]
 
             recs[user_idx] = [
-                int(item_id)
-                for item_id in candidate_items[top_positions[:result_size]].tolist()
+                int(item_id) for item_id in candidate_items[top_positions[:result_size]].tolist()
             ]
 
         return recs

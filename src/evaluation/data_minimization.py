@@ -201,9 +201,7 @@ def build_time_filter(
     timestamp_type = schema.field(timestamp_col).type
     start_scalar = pa.scalar(start_time, type=timestamp_type)
     cutoff_scalar = pa.scalar(cutoff_time, type=timestamp_type)
-    return (ds.field(timestamp_col) >= start_scalar) & (
-        ds.field(timestamp_col) < cutoff_scalar
-    )
+    return (ds.field(timestamp_col) >= start_scalar) & (ds.field(timestamp_col) < cutoff_scalar)
 
 
 def parquet_storage_bytes(path: Path) -> int:
@@ -212,13 +210,7 @@ def parquet_storage_bytes(path: Path) -> int:
         return int(path.stat().st_size) if path.suffix.lower() == ".parquet" else 0
     if not path.exists():
         return 0
-    return int(
-        sum(
-            file.stat().st_size
-            for file in path.rglob("*.parquet")
-            if file.is_file()
-        )
-    )
+    return int(sum(file.stat().st_size for file in path.rglob("*.parquet") if file.is_file()))
 
 
 def clear_directory(path: Path) -> None:
@@ -485,8 +477,7 @@ def prepare_retention_datasets(
             positive_target = window_dir / "positive_interactions"
 
             print(
-                f"[prepare] {window.name}: giữ interaction từ "
-                f"{start_time} đến trước {cutoff_time}"
+                f"[prepare] {window.name}: giữ interaction từ {start_time} đến trước {cutoff_time}"
             )
             write_filtered_parquet_dataset(
                 source_path=pointwise_source,
@@ -541,17 +532,9 @@ def prepare_retention_datasets(
                 "pointwise_storage_mb": pointwise_bytes / (1024**2),
                 "positive_storage_mb": positive_bytes / (1024**2),
                 "pointwise_storage_reduction_pct": 100.0
-                * (
-                    1.0
-                    - pointwise_bytes
-                    / max(normalized_all_storage["pointwise"], 1)
-                ),
+                * (1.0 - pointwise_bytes / max(normalized_all_storage["pointwise"], 1)),
                 "positive_storage_reduction_pct": 100.0
-                * (
-                    1.0
-                    - positive_bytes
-                    / max(normalized_all_storage["positive_interactions"], 1)
-                ),
+                * (1.0 - positive_bytes / max(normalized_all_storage["positive_interactions"], 1)),
                 "is_materialized_copy": True,
                 "storage_baseline": "normalized_all",
             }
@@ -616,9 +599,7 @@ def build_model_config(
     if model_key == "content_based":
         # Trong thí nghiệm privacy, profile chỉ được phép dùng retained train history.
         use_impression_history = bool(model_entry.get("use_impression_history", False))
-        base_config.setdefault("evaluation", {})[
-            "use_impression_history"
-        ] = use_impression_history
+        base_config.setdefault("evaluation", {})["use_impression_history"] = use_impression_history
 
     config_path = layout.generated_config_dir / f"{experiment_name}.yaml"
     save_yaml(config_path, base_config)
@@ -794,10 +775,9 @@ def build_summary(
     summary_df = pd.DataFrame(summary_rows)
     window_order = {name: index for index, name in enumerate(stats_df["window"].tolist())}
     summary_df["_window_order"] = summary_df["window"].map(window_order)
-    summary_df = summary_df.sort_values(["model", "_window_order"]).drop(
-        columns=["_window_order"]
-    )
+    summary_df = summary_df.sort_values(["model", "_window_order"]).drop(columns=["_window_order"])
     summary_path = layout.reports_dir / "summary.csv"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_df.to_csv(summary_path, index=False)
     print(f"[summary] {summary_path}")
     return summary_df
@@ -944,9 +924,7 @@ def run_experiment(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     """Tạo CLI cho thí nghiệm Data Minimization."""
-    parser = argparse.ArgumentParser(
-        description="MIND Data Minimization experiment: 1d/3d/5d/all"
-    )
+    parser = argparse.ArgumentParser(description="MIND Data Minimization experiment: 1d/3d/5d/all")
     parser.add_argument(
         "--config",
         default="configs/experiment/data_minimization.yaml",

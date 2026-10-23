@@ -23,7 +23,8 @@ def create_features(tmp_path):
             [0.0, 0.0, 1.0],
             [1.0, 0.0, 0.0],
             [0.0, 0.0, 0.0],
-        ], dtype=np.float32,
+        ],
+        dtype=np.float32,
     )
     category = np.array(
         [
@@ -32,7 +33,8 @@ def create_features(tmp_path):
             [0.0, 1.0],
             [1.0, 0.0],
             [0.0, 0.0],
-        ], dtype=np.float32,
+        ],
+        dtype=np.float32,
     )
     groups = {
         "title_tfidf": title,
@@ -62,10 +64,12 @@ def create_features(tmp_path):
 
 def create_train_data():
     """Item 3 không có lượt click train; item 0 là bài phổ biến."""
-    return pd.DataFrame({
-        "user_idx": [0, 0, 1, 2],
-        "item_idx": [0, 0, 1, 2],
-    })
+    return pd.DataFrame(
+        {
+            "user_idx": [0, 0, 1, 2],
+            "item_idx": [0, 0, 1, 2],
+        }
+    )
 
 
 def test_registry_and_weights(tmp_path):
@@ -91,7 +95,10 @@ def test_cold_item_scores_without_clicks(tmp_path):
     assert scores[0] > scores[2]
     assert scores[0] > scores[3]
     assert model.popularity_scores[3] == 0.0
-    assert model.predict(np.array([0]), np.array([-1, 100]), history_item_idxs=[0]).tolist() == [0, 0]
+    assert model.predict(np.array([0]), np.array([-1, 100]), history_item_idxs=[0]).tolist() == [
+        0,
+        0,
+    ]
 
 
 def test_explicit_history_overrides_training_history(tmp_path):
@@ -99,9 +106,7 @@ def test_explicit_history_overrides_training_history(tmp_path):
     model = ContentBasedRecommender(feature_dir=str(create_features(tmp_path)))
     model.fit(create_train_data())
     score_from_train = model.predict(np.array([0]), np.array([0, 1]))
-    score_from_impression = model.predict(
-        np.array([0]), np.array([0, 1]), history_item_idxs=[1]
-    )
+    score_from_impression = model.predict(np.array([0]), np.array([0, 1]), history_item_idxs=[1])
     assert score_from_train[0] > score_from_train[1]
     assert score_from_impression[1] > score_from_impression[0]
 
@@ -145,9 +150,7 @@ def test_recommend_filter_seen_and_candidate_list(tmp_path):
         np.array([0]), top_k=2, candidate_item_idxs=[0, 1, 3], filter_seen=True
     )
     assert recommendations[0] == [3, 1]
-    empty_user = model.recommend(
-        np.array([999]), top_k=1, candidate_item_idxs=[0, 3]
-    )
+    empty_user = model.recommend(np.array([999]), top_k=1, candidate_item_idxs=[0, 3])
     assert empty_user[999] == [0]
 
 

@@ -55,9 +55,7 @@ class PopularityDiversityReranker:
         if maximum == 0:
             self.long_tail_scores = np.ones(counts.size, dtype=np.float32)
         else:
-            self.long_tail_scores = (
-                1.0 - np.log1p(counts) / np.log1p(maximum)
-            ).astype(np.float32)
+            self.long_tail_scores = (1.0 - np.log1p(counts) / np.log1p(maximum)).astype(np.float32)
 
     @staticmethod
     def _normalize_relevance(scores: np.ndarray) -> np.ndarray:
@@ -134,5 +132,7 @@ class PopularityDiversityReranker:
         # Phần còn lại giữ thứ tự baseline; không bỏ hay thêm ứng viên.
         selected_items = [int(pool_items[position]) for position in selected_positions]
         selected_set = set(selected_items)
-        trailing_items = [int(items[index]) for index in baseline_indices if int(items[index]) not in selected_set]
+        trailing_items = [
+            int(items[index]) for index in baseline_indices if int(items[index]) not in selected_set
+        ]
         return selected_items + trailing_items

@@ -40,7 +40,7 @@ def load_item_catalog(mapping_path: str | Path, news_paths: list[str | Path]) ->
             raise ValueError(f"News metadata thiếu item_idx/category: {path}")
         for batch in news_ds.to_batches(columns=["item_idx", "category"], batch_size=8192):
             rows = batch.to_pydict()
-            for item_id, category in zip(rows["item_idx"], rows["category"]):
+            for item_id, category in zip(rows["item_idx"], rows["category"], strict=True):
                 index = int(item_id)
                 if index < 0 or index >= len(categories):
                     raise ValueError(f"News metadata có item_idx không hợp lệ: {index}")
@@ -85,7 +85,7 @@ class RerankingPipeline:
         self.reranker = reranker
 
     @classmethod
-    def from_config(cls, config: dict[str, Any]) -> "RerankingPipeline":
+    def from_config(cls, config: dict[str, Any]) -> RerankingPipeline:
         """Khởi tạo P3 từ cấu hình và metadata MIND đã chuẩn bị."""
         rerank_cfg = config.get("reranking", {})
         if rerank_cfg.get("method", "popularity_diversity") != "popularity_diversity":
@@ -93,9 +93,13 @@ class RerankingPipeline:
         dataset_cfg = config.get("dataset", {})
         data_root = Path(dataset_cfg.get("processed_root", "data/processed/mind_large"))
         mapping_path = dataset_cfg.get("items_mapping", str(data_root / "mappings/items"))
-        news_paths = rerank_cfg.get("news_paths", [str(data_root / split / "news") for split in ("train", "dev", "test")])
+        news_paths = rerank_cfg.get(
+            "news_paths", [str(data_root / split / "news") for split in ("train", "dev", "test")]
+        )
         categories = load_item_catalog(mapping_path, news_paths)
-        train_path = rerank_cfg.get("popularity_train_path", str(data_root / "train/positive_interactions"))
+        train_path = rerank_cfg.get(
+            "popularity_train_path", str(data_root / "train/positive_interactions")
+        )
         click_counts = load_train_click_counts(train_path, len(categories))
         weight_cfg = rerank_cfg.get("weights", {})
         weights = RerankingWeights(
@@ -112,7 +116,9 @@ class RerankingPipeline:
         )
         return cls(reranker)
 
-    def rerank(self, candidate_item_idxs: list[int], scores: np.ndarray, top_k: int | None = None) -> list[int]:
+    def rerank(
+        self, candidate_item_idxs: list[int], scores: np.ndarray, top_k: int | None = None
+    ) -> list[int]:
         """Chuyển điểm mô hình nền thành danh sách đã tái xếp hạng."""
         return self.reranker.rerank(candidate_item_idxs, scores, top_k=top_k)
 

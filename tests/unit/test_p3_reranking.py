@@ -75,7 +75,9 @@ def test_invalid_weights_rejected(weights):
         RerankingWeights(*weights)
 
 
-@pytest.mark.parametrize("items,scores", [([0, 1], [0.8]), ([0, 0], [0.8, 0.6]), ([100], [0.5]), ([0], [float("nan")])])
+@pytest.mark.parametrize(
+    "items,scores", [([0, 1], [0.8]), ([0, 0], [0.8, 0.6]), ([100], [0.5]), ([0], [float("nan")])]
+)
 def test_invalid_candidates_rejected(items, scores):
     """P3 phát hiện ID, điểm số và số lượng phần tử không hợp lệ."""
     with pytest.raises(ValueError):
@@ -90,6 +92,7 @@ def test_candidate_pool_constraint():
 
 class StubModel:
     """Mô hình nền giả dùng để kiểm tra việc truyền history."""
+
     def __init__(self):
         self.history = None
 
