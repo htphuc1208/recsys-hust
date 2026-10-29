@@ -1,0 +1,9 @@
+﻿split,field,articles,articles_with_entity_ids,articles_with_matched_ids,articles_with_valid_embedding,articles_with_ids_but_no_matching_embedding,entity_mentions,matched_entity_mentions,unique_entity_ids,matched_unique_entity_ids,entity_presence_pct,embedding_coverage_pct,match_among_articles_with_entities_pct,mention_match_pct
+overall,title,130379,96927,94656,94656,2271,155515,150006,27518,23712,74.34,72.6,97.66,96.46
+overall,abstract,130379,97787,96269,96269,1518,257574,247507,44481,37223,75.0,73.84,98.45,96.09
+train,title,101527,75474,74877,74877,597,121064,119539,23408,22649,74.34,73.75,99.21,98.74
+train,abstract,101527,76045,75675,75675,370,199621,197476,37793,36741,74.9,74.54,99.51,98.93
+dev,title,2624,1946,1827,1827,119,3169,2899,1722,1458,74.16,69.63,93.88,91.48
+dev,abstract,2624,1986,1894,1894,92,5273,4709,2749,2198,75.69,72.18,95.37,89.3
+test,title,26228,19507,17952,17952,1555,31282,27568,9465,6526,74.37,68.45,92.03,88.13
+test,abstract,26228,19756,18700,18700,1056,52680,45322,15634,9735,75.32,71.3,94.65,86.03

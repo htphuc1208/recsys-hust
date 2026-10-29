@@ -1,0 +1,33 @@
+{
+  "checkpoint": "artifacts\\checkpoints\\exp11_mind_content_baseline_new_features_content_based.pkl",
+  "repeats": 5,
+  "measurement": "warm-cache, feature load only; checkpoint unpickle excluded",
+  "results": [
+    {
+      "feature_dir": "data\\processed\\mind_large\\features\\b4_abstract_experiment",
+      "load_times_ms": [
+        52.126,
+        51.964,
+        51.624,
+        52.458,
+        51.398
+      ],
+      "median_ms": 51.964,
+      "min_ms": 51.398,
+      "prediction_identical_to_first": true
+    },
+    {
+      "feature_dir": "data\\processed\\mind_large\\features\\b4_abstract_uncompressed",
+      "load_times_ms": [
+        32.627,
+        20.812,
+        19.355,
+        19.82,
+        19.625
+      ],
+      "median_ms": 19.82,
+      "min_ms": 19.355,
+      "prediction_identical_to_first": true
+    }
+  ]
+}
