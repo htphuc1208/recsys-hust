@@ -56,6 +56,8 @@ def run_ablation_study(
     results: dict[str, Any] = {}
 
     cf_ckpt = Path("artifacts/checkpoints/exp04_mind_bpr_bpr.pkl")
+    seq_ckpt = Path("artifacts/checkpoints/exp05_mind_sasrec_sasrec.pkl")
+    content_ckpt = Path("artifacts/checkpoints/exp05_mind_content_content_based.pkl")
     pop_ckpt = Path("artifacts/checkpoints/exp01_mind_popularity_popularity.pkl")
 
     for name, params in configurations.items():
@@ -64,8 +66,10 @@ def run_ablation_study(
             mode=params["mode"],
             static_weights=params["static_weights"],
             cf_checkpoint=cf_ckpt if cf_ckpt.exists() else None,
-            content_checkpoint=pop_ckpt if pop_ckpt.exists() else None,
-            seq_params={"epochs": 1, "batch_size": 512, "max_seq_len": 50},
+            seq_checkpoint=seq_ckpt if seq_ckpt.exists() else None,
+            content_checkpoint=content_ckpt
+            if content_ckpt.exists()
+            else (pop_ckpt if pop_ckpt.exists() else None),
         )
         model.is_fitted = True
         if hasattr(model.cf_model, "item_factors"):

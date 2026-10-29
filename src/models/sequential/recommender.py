@@ -81,12 +81,19 @@ class SASRecRecommender(PyTorchRecommenderBase):
             df = df.sample(n=self.max_train_samples, random_state=self.seed)
 
         # Track catalog size
-        max_i = (
-            int(df[self.item_col].max()) + 1 if len(df) > 0 and self.item_col in df.columns else 0
-        )
+        max_i = 0
+        if len(df) > 0 and self.item_col in df.columns:
+            first_val = df[self.item_col].iloc[0]
+            if isinstance(first_val, (list, np.ndarray)):
+                for items in df[self.item_col].dropna():
+                    if len(items) > 0:
+                        max_i = max(max_i, max(items) + 1)
+            else:
+                max_i = int(df[self.item_col].max()) + 1
+
         if self.history_col in df.columns:
             for hist in df[self.history_col].dropna():
-                if hist:
+                if hist is not None and len(hist):
                     max_i = max(max_i, max(hist) + 1)
         self.num_items = max(self.num_items, max_i)
 
@@ -95,17 +102,36 @@ class SASRecRecommender(PyTorchRecommenderBase):
             self.num_users = max(self.num_users, max_u)
 
         # Track popular items for fallback
-        if self.item_col in df.columns:
-            item_counts = df[self.item_col].value_counts()
-            self.popular_items_fallback = [int(x) for x in item_counts.index.tolist()]
+        if self.item_col in df.columns and len(df) > 0:
+            first_val = df[self.item_col].iloc[0]
+            if isinstance(first_val, (list, np.ndarray)):
+                from collections import Counter
+
+                counts: Counter[int] = Counter()
+                for items in df[self.item_col].dropna():
+                    counts.update(int(x) for x in items if x >= 0)
+                self.popular_items_fallback = [int(x) for x, _ in counts.most_common(1000)]
+            else:
+                item_counts = df[self.item_col].value_counts()
+                self.popular_items_fallback = [int(x) for x in item_counts.index.tolist()]
 
         # Track user seen items
-        if self.user_col in df.columns and self.item_col in df.columns:
-            self.user_seen_items = (
-                df.groupby(self.user_col)[self.item_col]
-                .apply(lambda s: {int(x) for x in s if x >= 0})
-                .to_dict()
-            )
+        if self.user_col in df.columns and self.item_col in df.columns and len(df) > 0:
+            first_val = df[self.item_col].iloc[0]
+            if isinstance(first_val, (list, np.ndarray)):
+                user_seen: dict[int, set[int]] = {}
+                for _, row in df.iterrows():
+                    u = int(row[self.user_col])
+                    items = row[self.item_col]
+                    if items is not None:
+                        user_seen.setdefault(u, set()).update(int(x) for x in items if x >= 0)
+                self.user_seen_items = user_seen
+            else:
+                self.user_seen_items = (
+                    df.groupby(self.user_col)[self.item_col]
+                    .apply(lambda s: {int(x) for x in s if x >= 0})
+                    .to_dict()
+                )
 
         # Construct training sequence triplets: (padded_history, pos_item, neg_item)
         sequences: list[list[int]] = []
@@ -114,27 +140,53 @@ class SASRecRecommender(PyTorchRecommenderBase):
 
         if self.history_col in df.columns:
             # Data already contains user click history (e.g. from impressions or behavior logs)
-            pos_mask = (
-                df[self.label_col] == 1
-                if self.label_col in df.columns
-                else pd.Series(True, index=df.index)
-            )
-            train_rows = df[pos_mask]
-
-            for _, row in train_rows.iterrows():
-                hist = row.get(self.history_col) or []
-                pos_i = int(row[self.item_col])
-                if pos_i < 0 or pos_i >= self.num_items:
+            for _, row in df.iterrows():
+                hist = row.get(self.history_col)
+                if hist is None or not len(hist):
                     continue
                 padded = self._pad_sequence(hist)
-                # Sample random negative
-                neg_i = np.random.randint(0, self.num_items)
-                while neg_i == pos_i and self.num_items > 1:
-                    neg_i = np.random.randint(0, self.num_items)
 
-                sequences.append(padded)
-                pos_items.append(pos_i)
-                neg_items.append(neg_i)
+                raw_cands = row.get(self.item_col)
+                raw_labels = row.get(self.label_col)
+
+                if isinstance(raw_cands, (list, np.ndarray)):
+                    cands = list(raw_cands)
+                    lbls = (
+                        list(raw_labels)
+                        if isinstance(raw_labels, (list, np.ndarray))
+                        else [1] * len(cands)
+                    )
+                    pos_cands = [
+                        int(c)
+                        for c, lbl in zip(cands, lbls, strict=False)
+                        if lbl == 1 and 0 <= c < self.num_items
+                    ]
+                    neg_cands = [
+                        int(c)
+                        for c, lbl in zip(cands, lbls, strict=False)
+                        if lbl == 0 and 0 <= c < self.num_items
+                    ]
+                    for pos_i in pos_cands:
+                        if neg_cands:
+                            neg_i = int(np.random.choice(neg_cands))
+                        else:
+                            neg_i = int(np.random.randint(0, self.num_items))
+                            while neg_i == pos_i and self.num_items > 1:
+                                neg_i = int(np.random.randint(0, self.num_items))
+                        sequences.append(padded)
+                        pos_items.append(pos_i)
+                        neg_items.append(neg_i)
+                elif raw_cands is not None:
+                    if raw_labels is not None and int(raw_labels) != 1:
+                        continue
+                    pos_i = int(raw_cands)
+                    if 0 <= pos_i < self.num_items:
+                        neg_i = int(np.random.randint(0, self.num_items))
+                        while neg_i == pos_i and self.num_items > 1:
+                            neg_i = int(np.random.randint(0, self.num_items))
+                        sequences.append(padded)
+                        pos_items.append(pos_i)
+                        neg_items.append(neg_i)
         elif self.user_col in df.columns and self.item_col in df.columns:
             # Construct sequences by grouping interactions per user
             for _u, group in df.groupby(self.user_col):

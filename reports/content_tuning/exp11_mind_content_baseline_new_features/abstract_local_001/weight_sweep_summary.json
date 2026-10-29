@@ -1,0 +1,98 @@
+{
+  "experiment_name": "exp11_mind_content_baseline_new_features",
+  "checkpoint": "artifacts\\checkpoints\\exp11_mind_content_baseline_new_features_content_based.pkl",
+  "dev_impressions": "data\\processed\\mind_large\\dev\\impressions",
+  "eligible_dev_impressions": 376471,
+  "sample_size": 5000,
+  "seed": 42,
+  "step": 0.01,
+  "weight_bounds": {
+    "title": [
+      0.65,
+      0.7
+    ],
+    "abstract": [
+      0.0,
+      0.0
+    ],
+    "category": [
+      0.15,
+      0.15
+    ],
+    "subcategory": [
+      0.15,
+      0.15
+    ],
+    "title_entity": [
+      0.0,
+      0.0
+    ],
+    "abstract_entity": [
+      0.0,
+      0.05
+    ]
+  },
+  "output_tag": "abstract_local_001",
+  "num_weight_configs": 6,
+  "candidate_config": "reports\\content_tuning\\exp11_mind_content_baseline_new_features\\abstract_local_001\\best_config_candidate.yaml",
+  "feature_order": [
+    "title",
+    "abstract",
+    "category",
+    "subcategory",
+    "title_entity",
+    "abstract_entity"
+  ],
+  "include_abstract_entity": true,
+  "current_weights": {
+    "title": 0.7,
+    "abstract": 0.0,
+    "category": 0.15,
+    "subcategory": 0.15,
+    "title_entity": 0.0,
+    "abstract_entity": 0.0
+  },
+  "current_metrics": {
+    "NDCG@10": 0.38860746327561685,
+    "Recall@10": 0.6250921128871129,
+    "MRR@10": 0.3359907936507936,
+    "cold_item_NDCG@10": 0.36114473989246115,
+    "cold_item_Recall@10": 0.5908848722961626,
+    "cold_item_MRR@10": 0.31169713261648746,
+    "warm_item_NDCG@10": 0.433415064584976,
+    "warm_item_Recall@10": 0.6809039264828739,
+    "warm_item_MRR@10": 0.37562781954887214,
+    "cold_user_NDCG@10": 0.3790035715679179,
+    "cold_user_Recall@10": 0.6256074625742872,
+    "cold_user_MRR@10": 0.3173860302414805,
+    "warm_user_NDCG@10": 0.39186363009456343,
+    "warm_user_Recall@10": 0.6249173853284726,
+    "warm_user_MRR@10": 0.3422986754066025
+  },
+  "best_config": {
+    "rank": 1.0,
+    "title_weight": 0.7,
+    "abstract_weight": 0.0,
+    "category_weight": 0.15,
+    "subcategory_weight": 0.15,
+    "title_entity_weight": 0.0,
+    "abstract_entity_weight": 0.0,
+    "NDCG@10": 0.38860746327561685,
+    "Recall@10": 0.6250921128871129,
+    "MRR@10": 0.3359907936507936,
+    "cold_item_NDCG@10": 0.36114473989246115,
+    "cold_item_Recall@10": 0.5908848722961626,
+    "cold_item_MRR@10": 0.31169713261648746,
+    "warm_item_NDCG@10": 0.433415064584976,
+    "warm_item_Recall@10": 0.6809039264828739,
+    "warm_item_MRR@10": 0.37562781954887214,
+    "cold_user_NDCG@10": 0.3790035715679179,
+    "cold_user_Recall@10": 0.6256074625742872,
+    "cold_user_MRR@10": 0.3173860302414805,
+    "warm_user_NDCG@10": 0.39186363009456343,
+    "warm_user_Recall@10": 0.6249173853284726,
+    "warm_user_MRR@10": 0.3422986754066025,
+    "DeltaNDCG@10": 0.0,
+    "DeltaColdItemNDCG@10": 0.0
+  }
+}

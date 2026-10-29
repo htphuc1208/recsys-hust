@@ -94,3 +94,9 @@ artifacts/indexes/*
 configs/experiment/smoke/
 scripts/smoke/
 artifacts/serving/
+
+# Generated MIND submission artifacts are local, not source code
+reports/submissions/
+
+# Local pytest basetemp directories
+tmp_pytest_*/

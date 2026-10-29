@@ -1,14 +1,18 @@
+'''
 import sys
 import types
+'''
 
 import numpy as np
 
+'''
 # Container test environment may not ship PyArrow. Stub only enough to import src.evaluate.
 pyarrow_module = types.ModuleType("pyarrow")
 pyarrow_dataset_module = types.ModuleType("pyarrow.dataset")
 pyarrow_dataset_module.dataset = lambda *args, **kwargs: None
 sys.modules.setdefault("pyarrow", pyarrow_module)
 sys.modules.setdefault("pyarrow.dataset", pyarrow_dataset_module)
+'''
 
 from src.evaluate import evaluate_impressions
 from src.evaluation.bootstrap import BootstrapSettings, bootstrap_confidence_intervals

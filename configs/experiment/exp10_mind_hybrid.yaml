@@ -13,6 +13,8 @@ model:
   embedding_dim: 64
   normalize_branch_scores: true
   cf_checkpoint: "artifacts/checkpoints/exp04_mind_bpr_bpr.pkl"
+  seq_checkpoint: "artifacts/checkpoints/exp05_mind_sasrec_sasrec.pkl"
+  content_checkpoint: "artifacts/checkpoints/exp05_mind_content_content_based.pkl"
   static_weights: [0.4, 0.4, 0.2]
   cf_params:
     epochs: 2

@@ -372,36 +372,39 @@ class BPRRecommender(PyTorchRecommenderBase):
 
     def _observed_item_mask_for(self, item_ids: np.ndarray) -> np.ndarray:
         """Trả mask item đã thực sự tham gia train BPR."""
+        mask = getattr(self, "observed_item_mask", None)
         item_arr = np.asarray(item_ids, dtype=int)
+        if mask is None or len(mask) == 0:
+            return np.ones(item_arr.shape, dtype=bool)
+
         result = np.zeros(item_arr.shape, dtype=bool)
-        valid_mask = (item_arr >= 0) & (item_arr < len(self.observed_item_mask))
+        valid_mask = (item_arr >= 0) & (item_arr < len(mask))
 
         if np.any(valid_mask):
             valid_positions = np.flatnonzero(valid_mask)
-            result[valid_positions] = self.observed_item_mask[item_arr[valid_positions]]
+            result[valid_positions] = mask[item_arr[valid_positions]]
 
         return result
 
     def _replace_unobserved_users(self, user_ids: np.ndarray) -> np.ndarray:
         """Biến user chưa train thành cold user để không dùng embedding ngẫu nhiên."""
+        mask = getattr(self, "observed_user_mask", None)
         user_arr = np.asarray(user_ids, dtype=int).copy()
+        if mask is None or len(mask) == 0:
+            return user_arr
 
         if user_arr.ndim == 0:
             user_idx = int(user_arr.item())
-            if (
-                user_idx < 0
-                or user_idx >= len(self.observed_user_mask)
-                or not self.observed_user_mask[user_idx]
-            ):
+            if user_idx < 0 or user_idx >= len(mask) or not mask[user_idx]:
                 return np.asarray(-1, dtype=int)
             return user_arr
 
-        valid_mask = (user_arr >= 0) & (user_arr < len(self.observed_user_mask))
+        valid_mask = (user_arr >= 0) & (user_arr < len(mask))
         observed_mask = np.zeros(user_arr.shape, dtype=bool)
 
         if np.any(valid_mask):
             valid_positions = np.flatnonzero(valid_mask)
-            observed_mask[valid_positions] = self.observed_user_mask[user_arr[valid_positions]]
+            observed_mask[valid_positions] = mask[user_arr[valid_positions]]
 
         user_arr[~observed_mask] = -1
         return user_arr
@@ -434,17 +437,21 @@ class BPRRecommender(PyTorchRecommenderBase):
         if not self.is_fitted or self.user_factors is None or self.item_factors is None:
             raise RuntimeError("Model must be fitted before calling recommend().")
 
-        observed_items = np.flatnonzero(self.observed_item_mask)
+        item_mask = getattr(self, "observed_item_mask", None)
+        user_mask = getattr(self, "observed_user_mask", None)
+        observed_items = (
+            np.flatnonzero(item_mask)
+            if item_mask is not None and len(item_mask) > 0
+            else np.arange(self.num_items)
+        )
         recs: dict[int, list[int]] = {}
 
         for user_id in user_ids:
             user_idx = int(user_id)
             seen = self.user_seen_items.get(user_idx, set()) if filter_seen else set()
 
-            is_warm_user = (
-                0 <= user_idx < len(self.user_factors)
-                and user_idx < len(self.observed_user_mask)
-                and bool(self.observed_user_mask[user_idx])
+            is_warm_user = 0 <= user_idx < len(self.user_factors) and (
+                user_mask is None or (user_idx < len(user_mask) and bool(user_mask[user_idx]))
             )
 
             if not is_warm_user:

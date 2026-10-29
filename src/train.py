@@ -86,14 +86,32 @@ def train(config_path: str | Path) -> Path:
         if label_col not in cols_to_load:
             cols_to_load.append(label_col)
 
+        history_col = model_cfg.get("history_col")
+        if history_col and history_col not in cols_to_load:
+            cols_to_load.append(history_col)
+
         logger.info(f"Loading training data from: {train_path}")
         start_load = time.perf_counter()
         train_df = load_interactions(train_path, columns=cols_to_load)
         load_time = time.perf_counter() - start_load
+
+        try:
+            n_items = train_df[item_col].nunique()
+        except TypeError:
+            import numpy as np
+
+            n_items = len(
+                {
+                    x
+                    for row in train_df[item_col]
+                    for x in (row if isinstance(row, (list, np.ndarray)) else [row])
+                }
+            )
+
         logger.info(
             f"Loaded {len(train_df):,} interaction rows in {load_time:.2f}s "
             f"({train_df[user_col].nunique():,} unique users, "
-            f"{train_df[item_col].nunique():,} unique items)"
+            f"{n_items:,} unique items)"
         )
 
         logger.info("Starting model fitting...")
