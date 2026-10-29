@@ -5,9 +5,10 @@
 
 PROPOSED_CONFIG ?= configs/experiment/exp10_mind_hybrid.yaml
 SERVING_CONFIG ?= configs/serving/mind_production.yaml
-SERVING_CHECKPOINT ?= artifacts/checkpoints/exp04_mind_bpr_bpr.pkl
+SERVING_CHECKPOINT ?= artifacts/checkpoints/exp10_mind_hybrid_hybrid.pkl
 SERVING_BUNDLE ?= artifacts/serving/current
 MODEL_VERSION ?= dev
+CONTENT_DIM ?= 64
 GIT_COMMIT ?= unknown
 
 help:

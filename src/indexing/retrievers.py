@@ -50,8 +50,8 @@ class VectorRetriever:
         index: FaissVectorIndex,
         query_encoder: Callable[[RetrievalQuery], np.ndarray | None],
     ):
-        if source not in (RetrievalSource.COLLABORATIVE, RetrievalSource.CONTENT):
-            raise ValueError("VectorRetriever supports collaborative or content sources")
+        if source == RetrievalSource.POPULAR:
+            raise ValueError("VectorRetriever does not support the popular source")
         self.source = source
         self._index = index
         self._query_encoder = query_encoder

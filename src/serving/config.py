@@ -40,6 +40,7 @@ class ServingConfig(BaseModel):
     retrieval: RetrievalConfig
     rank_timeout_ms: int = Field(default=100, ge=1, le=60_000)
     rerank_limit: int = Field(default=200, ge=1, le=10_000)
+    warmup: bool = True
 
 
 def load_serving_config(path: str | Path | None = None) -> ServingConfig:

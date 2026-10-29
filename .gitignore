@@ -89,3 +89,8 @@ artifacts/indexes/*
 *.onnx
 *.bin
 *.index
+
+# Local smoke-test configs, scripts and serving bundles (not shared)
+configs/experiment/smoke/
+scripts/smoke/
+artifacts/serving/
