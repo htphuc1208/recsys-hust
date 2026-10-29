@@ -27,6 +27,6 @@ retrieval:
       weight: 0.5
       timeout_ms: 20
 
-rank_timeout_ms: 100
-rerank_limit: 200
+rank_timeout_ms: 200
+rerank_limit: 100
 

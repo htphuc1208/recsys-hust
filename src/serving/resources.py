@@ -89,6 +89,8 @@ class ServingResources:
         if collaborative_path is not None and collaborative_metadata_path is not None:
             index = FaissVectorIndex.load(collaborative_path, collaborative_metadata_path)
             user_factors = getattr(ranker, "user_factors", None)
+            if user_factors is None and hasattr(ranker, "cf_model"):
+                user_factors = getattr(ranker.cf_model, "user_factors", None)
             if user_factors is None:
                 raise ValueError("collaborative index requires ranker.user_factors")
 
