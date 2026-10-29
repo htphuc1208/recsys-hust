@@ -84,6 +84,8 @@ artifacts/checkpoints/*
 !artifacts/checkpoints/.gitkeep
 artifacts/indexes/*
 !artifacts/indexes/.gitkeep
+artifacts/serving/*
+!artifacts/serving/.gitkeep
 *.pt
 *.pth
 *.onnx
