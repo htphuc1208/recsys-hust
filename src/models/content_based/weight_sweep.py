@@ -1,4 +1,4 @@
-"""Quét 5 trọng số Content-based trên một mẫu cố định của toàn bộ tập dev."""
+"""Quét trọng số Content-based trên một mẫu cố định của toàn bộ tập dev."""
 
 from __future__ import annotations
 
@@ -15,16 +15,19 @@ import yaml
 from src.evaluation.ranking_metrics import mrr_at_k, ndcg_at_k, recall_at_k
 from src.models.base import BaseRecommender
 from src.models.content_based.recommender import (
+    AVAILABLE_FEATURE_FILES,
     FEATURE_FILES,
     ContentBasedRecommender,
 )
 
-FEATURE_NAMES = tuple(FEATURE_FILES.keys())
+FEATURE_NAMES = tuple(FEATURE_FILES.keys())  # 5 feature mặc định, giữ nguyên hành vi cũ.
+FEATURE_NAMES_WITH_ABSTRACT_ENTITY = tuple(AVAILABLE_FEATURE_FILES.keys())
+MAX_SWEEP_CONFIGS = 10_000
 
 
 @dataclass(frozen=True)
 class CachedContentImpression:
-    """Giữ component score của 5 feature cho một impression dev."""
+    """Giữ component score của các feature cho một impression dev."""
 
     impression_id: int
     candidate_item_idxs: np.ndarray
@@ -45,6 +48,7 @@ class SweepSettings:
     top_k: int = 10
     weight_bounds: dict[str, tuple[float, float]] | None = None
     output_tag: str | None = None
+    include_abstract_entity: bool = False
 
     def __post_init__(self) -> None:
         if not 0.0 < self.step <= 1.0:
@@ -68,19 +72,23 @@ def _validate_step(step: float) -> int:
 def _normalize_weight_bounds(
     step: float,
     bounds: dict[str, tuple[float, float]] | None,
+    feature_names: tuple[str, ...] = FEATURE_NAMES,
 ) -> dict[str, tuple[int, int]]:
-    """Đổi bounds từ giá trị thực sang đơn vị lưới nguyên."""
+    """Đổi bounds sang đơn vị nguyên, phù hợp cả 5/6 nhóm feature."""
     divisions = _validate_step(step)
     normalized: dict[str, tuple[int, int]] = {}
+    if not feature_names or len(set(feature_names)) != len(feature_names):
+        raise ValueError("Danh sách feature phải không rỗng và không trùng.")
+    if set(feature_names) - set(AVAILABLE_FEATURE_FILES):
+        raise ValueError("Danh sách feature có tên không hợp lệ.")
+    if bounds and set(bounds) - set(feature_names):
+        raise ValueError("Bounds chứa feature không được chọn.")
 
-    for name in FEATURE_NAMES:
+    for name in feature_names:
         lower, upper = (0.0, 1.0) if bounds is None else bounds.get(name, (0.0, 1.0))
-        lower = float(lower)
-        upper = float(upper)
-
+        lower, upper = float(lower), float(upper)
         if not 0.0 <= lower <= upper <= 1.0:
             raise ValueError(f"Bounds của {name} phải thỏa 0 <= min <= max <= 1.")
-
         lower_units = int(round(lower * divisions))
         upper_units = int(round(upper * divisions))
         if not np.isclose(lower_units / divisions, lower, atol=1e-8):
@@ -89,45 +97,48 @@ def _normalize_weight_bounds(
             raise ValueError(f"Max bound của {name}={upper} không nằm trên lưới step={step}.")
         normalized[name] = (lower_units, upper_units)
 
-    minimum_sum = sum(value[0] for value in normalized.values())
-    maximum_sum = sum(value[1] for value in normalized.values())
-    if minimum_sum > divisions or maximum_sum < divisions:
+    if (
+        sum(v[0] for v in normalized.values()) > divisions
+        or sum(v[1] for v in normalized.values()) < divisions
+    ):
         raise ValueError("Các bounds không thể tạo được bộ trọng số có tổng bằng 1.")
-
     return normalized
 
 
 def generate_weight_grid(
     step: float,
     bounds: dict[str, tuple[float, float]] | None = None,
+    feature_names: tuple[str, ...] = FEATURE_NAMES,
 ) -> list[dict[str, float]]:
-    """Sinh các bộ 5 trọng số tổng bằng 1 và thỏa bounds nếu có."""
+    """Sinh lưới trọng số tổng bằng 1; giới hạn số cấu hình để tránh bùng nổ."""
     divisions = _validate_step(step)
-    bound_units = _normalize_weight_bounds(step, bounds)
-
-    ranges = {name: range(bound_units[name][0], bound_units[name][1] + 1) for name in FEATURE_NAMES}
-
+    bound_units = _normalize_weight_bounds(step, bounds, feature_names)
     configurations: list[dict[str, float]] = []
-    for title_units in ranges["title"]:
-        for abstract_units in ranges["abstract"]:
-            for category_units in ranges["category"]:
-                for subcategory_units in ranges["subcategory"]:
-                    used_units = title_units + abstract_units + category_units + subcategory_units
-                    title_entity_units = divisions - used_units
-                    if title_entity_units not in ranges["title_entity"]:
-                        continue
 
-                    units = (
-                        title_units,
-                        abstract_units,
-                        category_units,
-                        subcategory_units,
-                        title_entity_units,
+    def add_units(index: int, remaining: int, assigned: list[int]) -> None:
+        if index == len(feature_names):
+            if remaining == 0:
+                configurations.append(
+                    {
+                        name: value / divisions
+                        for name, value in zip(feature_names, assigned, strict=True)
+                    }
+                )
+                if len(configurations) > MAX_SWEEP_CONFIGS:
+                    raise ValueError(
+                        f"Lưới vượt {MAX_SWEEP_CONFIGS:,} cấu hình; hãy siết bounds hoặc tăng step."
                     )
-                    configurations.append(
-                        {name: units[index] / divisions for index, name in enumerate(FEATURE_NAMES)}
-                    )
+            return
 
+        name = feature_names[index]
+        low, high = bound_units[name]
+        others = feature_names[index + 1 :]
+        others_min = sum(bound_units[k][0] for k in others)
+        others_max = sum(bound_units[k][1] for k in others)
+        for units in range(max(low, remaining - others_max), min(high, remaining - others_min) + 1):
+            add_units(index + 1, remaining - units, assigned + [units])
+
+    add_units(0, divisions, [])
     if not configurations:
         raise ValueError("Không có cấu hình trọng số nào thỏa step và bounds đã chọn.")
     return configurations
@@ -208,13 +219,16 @@ def sample_dev_rows(
 def cache_feature_scores(
     model: ContentBasedRecommender,
     rows: list[dict[str, Any]],
+    feature_names: tuple[str, ...] = FEATURE_NAMES,
 ) -> list[CachedContentImpression]:
-    """Chấm 5 feature đúng một lần cho mỗi impression rồi lưu cache."""
+    """Chấm feature đúng một lần cho mỗi impression rồi lưu cache."""
     if not model.is_fitted:
         raise RuntimeError("Checkpoint Content-based chưa fitted.")
 
-    # Sweep phải có đủ cả 5 feature, kể cả feature đang có weight bằng 0.
-    model._ensure_features_loaded(load_all=True)
+    # Quét 6 chiều phải tải abstract_entity dù trọng số baseline đang bằng 0.
+    model._ensure_features_loaded(
+        load_all=True, include_optional="abstract_entity" in feature_names
+    )
     cached: list[CachedContentImpression] = []
 
     for row_number, row in enumerate(rows, start=1):
@@ -223,14 +237,15 @@ def cache_feature_scores(
         profiles = model._build_profiles(history)
 
         feature_scores: dict[str, np.ndarray] = {
-            name: np.zeros(candidates.size, dtype=np.float32) for name in FEATURE_NAMES
+            name: np.zeros(candidates.size, dtype=np.float32) for name in feature_names
         }
         fallback_scores: np.ndarray | None = None
 
         if profiles:
             scored = model._score_candidates_by_feature(candidates, profiles)
             for name, scores in scored.items():
-                feature_scores[name] = np.asarray(scores, dtype=np.float32)
+                if name in feature_scores:
+                    feature_scores[name] = np.asarray(scores, dtype=np.float32)
         elif model.cold_user_strategy == "popularity":
             fallback_scores = model.popularity_scores[candidates].astype(
                 np.float32,
@@ -269,13 +284,14 @@ def cache_feature_scores(
 def combine_feature_scores(
     impression: CachedContentImpression,
     weights: dict[str, float],
+    feature_names: tuple[str, ...] = FEATURE_NAMES,
 ) -> np.ndarray:
-    """Ghép 5 component score theo một bộ trọng số."""
+    """Ghép component score theo một bộ trọng số."""
     if impression.fallback_scores is not None:
         return impression.fallback_scores
 
     scores = np.zeros(impression.candidate_item_idxs.size, dtype=np.float32)
-    for name in FEATURE_NAMES:
+    for name in feature_names:
         scores += float(weights[name]) * impression.feature_scores[name]
     return scores
 
@@ -293,6 +309,7 @@ def evaluate_cached_weights(
     cached: list[CachedContentImpression],
     weights: dict[str, float],
     top_k: int = 10,
+    feature_names: tuple[str, ...] = FEATURE_NAMES,
 ) -> dict[str, float]:
     """Đánh giá một bộ trọng số trên cache, dùng đúng tie-breaking stable."""
     slice_values = {
@@ -304,7 +321,7 @@ def evaluate_cached_weights(
     }
 
     for impression in cached:
-        scores = combine_feature_scores(impression, weights)
+        scores = combine_feature_scores(impression, weights, feature_names=feature_names)
         order = np.argsort(-scores, kind="stable")
         ranking = [int(impression.candidate_item_idxs[index]) for index in order]
 
@@ -330,9 +347,11 @@ def evaluate_cached_weights(
     return result
 
 
-def _weight_columns(weights: dict[str, float]) -> dict[str, float]:
+def _weight_columns(
+    weights: dict[str, float], feature_names: tuple[str, ...] = FEATURE_NAMES
+) -> dict[str, float]:
     """Đổi tên trọng số thành cột CSV dễ đọc."""
-    return {f"{name}_weight": float(weights[name]) for name in FEATURE_NAMES}
+    return {f"{name}_weight": float(weights[name]) for name in feature_names}
 
 
 def run_weight_sweep(
@@ -363,6 +382,14 @@ def run_weight_sweep(
     if not isinstance(loaded, ContentBasedRecommender):
         raise TypeError("Checkpoint không phải ContentBasedRecommender.")
     model = loaded
+    feature_names = (
+        FEATURE_NAMES_WITH_ABSTRACT_ENTITY if settings.include_abstract_entity else FEATURE_NAMES
+    )
+    if (
+        not settings.include_abstract_entity
+        and model.feature_weights.get("abstract_entity", 0.0) > 0
+    ):
+        raise ValueError("Checkpoint đang dùng abstract_entity; hãy bật --include-abstract-entity.")
 
     print(
         "Lấy sample cố định trực tiếp từ toàn bộ dev: "
@@ -375,14 +402,15 @@ def run_weight_sweep(
     )
     print(f"Dev có {eligible_count:,} impression hợp lệ; dùng {len(rows):,} impression để sweep.")
 
-    print("Chấm 5 feature một lần cho dev sample...")
-    cached = cache_feature_scores(model, rows)
+    print(f"Chấm {len(feature_names)} feature một lần cho dev sample...")
+    cached = cache_feature_scores(model, rows, feature_names=feature_names)
 
-    current_weights = {name: float(model.feature_weights[name]) for name in FEATURE_NAMES}
+    current_weights = {name: float(model.feature_weights.get(name, 0.0)) for name in feature_names}
     baseline = evaluate_cached_weights(
         cached,
         current_weights,
         top_k=settings.top_k,
+        feature_names=feature_names,
     )
     ndcg_key = f"NDCG@{settings.top_k}"
     recall_key = f"Recall@{settings.top_k}"
@@ -392,11 +420,12 @@ def run_weight_sweep(
     weight_grid = generate_weight_grid(
         settings.step,
         bounds=settings.weight_bounds,
+        feature_names=feature_names,
     )
     print(f"Số cấu hình trọng số: {len(weight_grid):,}")
     if settings.weight_bounds is not None:
         print("Bounds fine sweep:")
-        for name in FEATURE_NAMES:
+        for name in feature_names:
             lower, upper = settings.weight_bounds.get(name, (0.0, 1.0))
             print(f"  {name}: [{lower:.2f}, {upper:.2f}]")
 
@@ -406,9 +435,10 @@ def run_weight_sweep(
             cached,
             weights,
             top_k=settings.top_k,
+            feature_names=feature_names,
         )
         record = {
-            **_weight_columns(weights),
+            **_weight_columns(weights, feature_names=feature_names),
             **metrics,
             f"Delta{ndcg_key}": metrics[ndcg_key] - baseline[ndcg_key],
             f"DeltaColdItemNDCG@{settings.top_k}": (
@@ -420,9 +450,7 @@ def run_weight_sweep(
         if index == 1 or index % 10 == 0 or index == len(weight_grid):
             print(
                 f"  [{index:>3}/{len(weight_grid)}] "
-                f"w=({weights['title']:.2f}, {weights['abstract']:.2f}, "
-                f"{weights['category']:.2f}, {weights['subcategory']:.2f}, "
-                f"{weights['title_entity']:.2f}) "
+                f"w=({', '.join(f'{name}={weights[name]:.2f}' for name in feature_names)}) "
                 f"NDCG={metrics[ndcg_key]:.5f} "
                 f"Cold={metrics[cold_ndcg_key]:.5f}"
             )
@@ -446,6 +474,18 @@ def run_weight_sweep(
     results.to_csv(results_path, index=False)
     results.head(20).to_csv(top_path, index=False)
 
+    # Xuất YAML ứng viên để chạy train/evaluate Full Dev một cách tái lập.
+    candidate_path = output_dir / "best_config_candidate.yaml"
+    candidate_config = dict(config)
+    candidate_config["experiment_name"] = f"{experiment_name}_sweep_candidate"
+    candidate_config["model"] = dict(model_config)
+    candidate_config["model"]["feature_weights"] = {
+        name: float(results.iloc[0][f"{name}_weight"]) for name in feature_names
+    }
+    # Việc sweep chỉ chọn cấu hình; chưa chứng minh tốt hơn trên Full Dev độc lập.
+    with candidate_path.open("w", encoding="utf-8") as file:
+        yaml.safe_dump(candidate_config, file, allow_unicode=True, sort_keys=False)
+
     summary = {
         "experiment_name": experiment_name,
         "checkpoint": str(checkpoint_path),
@@ -457,7 +497,9 @@ def run_weight_sweep(
         "weight_bounds": settings.weight_bounds,
         "output_tag": settings.output_tag,
         "num_weight_configs": len(weight_grid),
-        "feature_order": list(FEATURE_NAMES),
+        "candidate_config": str(candidate_path),
+        "feature_order": list(feature_names),
+        "include_abstract_entity": settings.include_abstract_entity,
         "current_weights": current_weights,
         "current_metrics": baseline,
         "best_config": results.iloc[0].to_dict() if not results.empty else None,
@@ -481,12 +523,15 @@ def run_weight_sweep(
     )
     print("Kết quả:", results_path)
     print("Top 20:", top_path)
+    print("Cấu hình ứng viên để train/evaluate Full Dev:", candidate_path)
     return results
 
 
 def parse_args() -> argparse.Namespace:
     """Đọc tham số dòng lệnh."""
-    parser = argparse.ArgumentParser(description="Quét 5 trọng số của Content-based recommender.")
+    parser = argparse.ArgumentParser(
+        description="Quét 5 hoặc 6 trọng số của Content-based recommender."
+    )
     parser.add_argument(
         "--config",
         default="configs/experiment/exp05_mind_content.yaml",
@@ -510,6 +555,11 @@ def parse_args() -> argparse.Namespace:
         help="Số impression dev dùng cho sweep.",
     )
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--include-abstract-entity",
+        action="store_true",
+        help="Quét đủ 6 feature; yêu cầu Feature Store có abstract_entity_embeddings.npy.",
+    )
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument(
         "--output-tag",
@@ -517,7 +567,7 @@ def parse_args() -> argparse.Namespace:
         help="Thư mục con để không ghi đè sweep trước, ví dụ fine.",
     )
 
-    for feature_name in FEATURE_NAMES:
+    for feature_name in FEATURE_NAMES_WITH_ABSTRACT_ENTITY:
         cli_name = feature_name.replace("_", "-")
         parser.add_argument(
             f"--{cli_name}-min",
@@ -537,12 +587,19 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """Entry point của Content-based weight sweep."""
     args = parse_args()
+    feature_names = (
+        FEATURE_NAMES_WITH_ABSTRACT_ENTITY if args.include_abstract_entity else FEATURE_NAMES
+    )
+    if not args.include_abstract_entity and (
+        args.abstract_entity_min != 0.0 or args.abstract_entity_max != 1.0
+    ):
+        raise ValueError("Dùng --include-abstract-entity để đặt bounds cho abstract_entity.")
     weight_bounds = {
         name: (
             float(getattr(args, f"{name}_min")),
             float(getattr(args, f"{name}_max")),
         )
-        for name in FEATURE_NAMES
+        for name in feature_names
     }
     has_custom_bounds = any(lower != 0.0 or upper != 1.0 for lower, upper in weight_bounds.values())
 
@@ -553,6 +610,7 @@ def main() -> None:
         top_k=args.top_k,
         weight_bounds=weight_bounds if has_custom_bounds else None,
         output_tag=args.output_tag,
+        include_abstract_entity=args.include_abstract_entity,
     )
     run_weight_sweep(
         config_path=args.config,

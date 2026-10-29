@@ -1,0 +1,5 @@
+﻿split,articles,both,title_only,abstract_only,neither,both_pct,title_only_pct,abstract_only_pct,neither_pct,combined_coverage_pct,gain_over_title_pp,gain_over_abstract_pp
+overall,130379,77227,17429,19042,16681,59.23,13.37,14.61,12.79,87.21,14.61,13.37
+train,101527,61325,13552,14350,12300,60.4,13.35,14.13,12.12,87.88,14.13,13.35
+dev,2624,1496,331,398,399,57.01,12.61,15.17,15.21,84.79,15.17,12.61
+test,26228,14406,3546,4294,3982,54.93,13.52,16.37,15.18,84.82,16.37,13.52

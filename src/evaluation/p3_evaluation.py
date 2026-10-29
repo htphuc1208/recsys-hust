@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from array import array
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -254,6 +255,13 @@ def evaluate_p3_impressions(
     baseline_boot_values = np.empty((max_records, len(bootstrap_metric_names)), dtype=np.float32)
     reranked_boot_values = np.empty_like(baseline_boot_values)
 
+    settings = bootstrap_settings or BootstrapSettings(enabled=False)
+    # Mảng nhị phân giúp giữ bootstrap theo slice gọn bộ nhớ trên MIND Large.
+    slice_boot_users = {name: array("q") for name in ALL_SLICES} if settings.enabled else {}
+    slice_boot_before = {name: array("f") for name in ALL_SLICES} if settings.enabled else {}
+    slice_boot_after = {name: array("f") for name in ALL_SLICES} if settings.enabled else {}
+    ranking_boot_names = bootstrap_metric_names[:3]
+
     total_evaluated = 0
     start_time = time.perf_counter()
 
@@ -291,9 +299,18 @@ def evaluate_p3_impressions(
             is_cold_user = len(history) <= 5 or user_idx == -1
             active_base_slices.append("cold_user" if is_cold_user else "warm_user")
 
+            bootstrap_user = user_idx if user_idx >= 0 else -(total_evaluated + 1)
             for slice_name in active_base_slices:
                 _append_metrics(baseline_store, slice_name, baseline_metrics)
                 _append_metrics(reranked_store, slice_name, reranked_metrics)
+                if settings.enabled and slice_name != "overall":
+                    slice_boot_users[slice_name].append(bootstrap_user)
+                    slice_boot_before[slice_name].extend(
+                        [baseline_metrics[name] for name in ranking_boot_names]
+                    )
+                    slice_boot_after[slice_name].extend(
+                        [reranked_metrics[name] for name in ranking_boot_names]
+                    )
 
             popularity_truth = split_relevant_items_by_popularity(
                 true_items,
@@ -310,16 +327,18 @@ def evaluate_p3_impressions(
             for slice_name, slice_true_items in item_slice_truth.items():
                 if not slice_true_items:
                     continue
-                _append_metrics(
-                    baseline_store,
-                    slice_name,
-                    _ranking_metrics(baseline, slice_true_items, k_list),
-                )
-                _append_metrics(
-                    reranked_store,
-                    slice_name,
-                    _ranking_metrics(reranked, slice_true_items, k_list),
-                )
+                before_metrics = _ranking_metrics(baseline, slice_true_items, k_list)
+                after_metrics = _ranking_metrics(reranked, slice_true_items, k_list)
+                _append_metrics(baseline_store, slice_name, before_metrics)
+                _append_metrics(reranked_store, slice_name, after_metrics)
+                if settings.enabled and slice_name != "overall":
+                    slice_boot_users[slice_name].append(bootstrap_user)
+                    slice_boot_before[slice_name].extend(
+                        [before_metrics[name] for name in ranking_boot_names]
+                    )
+                    slice_boot_after[slice_name].extend(
+                        [after_metrics[name] for name in ranking_boot_names]
+                    )
 
             baseline_div, baseline_lte, _baseline_zero = baseline_exposure.update(
                 baseline,
@@ -335,7 +354,7 @@ def evaluate_p3_impressions(
             )
 
             # Unknown user (-1) được xem như cluster riêng cho từng impression.
-            user_ids[total_evaluated] = user_idx if user_idx >= 0 else -(total_evaluated + 1)
+            user_ids[total_evaluated] = bootstrap_user
             baseline_boot_values[total_evaluated] = [
                 baseline_metrics[f"NDCG@{key_k}"],
                 baseline_metrics[f"Recall@{key_k}"],
@@ -385,7 +404,6 @@ def evaluate_p3_impressions(
         after = float(reranked_result["beyond_accuracy"][metric_name])
         comparison["overall_delta"][metric_name] = round(after - before, 5)
 
-    settings = bootstrap_settings or BootstrapSettings(enabled=False)
     if settings.enabled and total_evaluated > 0:
         comparison["bootstrap"] = {
             "unit": settings.unit,
@@ -398,6 +416,31 @@ def evaluate_p3_impressions(
                 metric_names=bootstrap_metric_names,
                 settings=settings,
             ),
+        }
+        # Mẫu paired được căn thẳng hàng và resample theo cùng user IDs
+        # trong từng slice để delta CI có ý nghĩa thống kê.
+        comparison["bootstrap"]["slices"] = {
+            name: {
+                "count": total_evaluated if name == "overall" else len(slice_boot_users[name]),
+                "metrics": {
+                    key: comparison["bootstrap"]["metrics"][key] for key in ranking_boot_names
+                }
+                if name == "overall"
+                else paired_bootstrap_comparison(
+                    user_ids=np.frombuffer(slice_boot_users[name], dtype=np.int64),
+                    baseline_values=np.frombuffer(
+                        slice_boot_before[name], dtype=np.float32
+                    ).reshape(-1, len(ranking_boot_names)),
+                    reranked_values=np.frombuffer(slice_boot_after[name], dtype=np.float32).reshape(
+                        -1, len(ranking_boot_names)
+                    ),
+                    metric_names=ranking_boot_names,
+                    settings=settings,
+                )
+                if slice_boot_users[name]
+                else {},
+            }
+            for name in ALL_SLICES
         }
 
     return {

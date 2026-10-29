@@ -1,0 +1,11 @@
+﻿model,metric,baseline,reranked,delta,status,source_file
+exp06_mind_content_p3,catalog_coverage@10,0.03771,0.03826,0.0005500000000000019,available,exp06_mind_content_p3_dev.json
+exp06_mind_content_p3,gini_index@10,0.998,0.99795,-4.999999999999449e-05,available,exp06_mind_content_p3_dev.json
+exp06_mind_content_p3,category_diversity@10,0.65586,0.70414,0.04827999999999999,available,exp06_mind_content_p3_dev.json
+exp06_mind_content_p3,long_tail_exposure@10,0.68641,0.71767,0.031260000000000066,available,exp06_mind_content_p3_dev.json
+exp06_mind_content_p3,zero_click_exposure@10,0.38162,0.41311,0.03148999999999996,available,exp06_mind_content_p3_dev.json
+exp07_mind_bpr_p3,catalog_coverage@10,0.0268,0.03005,0.0032499999999999994,available,exp07_mind_bpr_p3_dev.json
+exp07_mind_bpr_p3,gini_index@10,0.9991,0.99895,-0.00014999999999998348,available,exp07_mind_bpr_p3_dev.json
+exp07_mind_bpr_p3,category_diversity@10,0.87215,0.90902,0.03687000000000007,available,exp07_mind_bpr_p3_dev.json
+exp07_mind_bpr_p3,long_tail_exposure@10,0.4379,0.5046,0.06670000000000004,available,exp07_mind_bpr_p3_dev.json
+exp07_mind_bpr_p3,zero_click_exposure@10,0.21136,0.26537,0.05401,available,exp07_mind_bpr_p3_dev.json

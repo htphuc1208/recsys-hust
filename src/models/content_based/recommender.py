@@ -19,12 +19,18 @@ FEATURE_FILES = {
     "subcategory": "subcategory_onehot.npz",
     "title_entity": "title_entity_embeddings.npy",
 }
+# Tách optional để weight_sweep 5 chiều cũ không bị thay đổi.
+OPTIONAL_FEATURE_FILES = {"abstract_entity": "abstract_entity_embeddings.npy"}
+AVAILABLE_FEATURE_FILES = {**FEATURE_FILES, **OPTIONAL_FEATURE_FILES}
+ENTITY_FEATURE_NAMES = {"title_entity", "abstract_entity"}
+
 DEFAULT_WEIGHTS = {
     "title": 0.35,
     "abstract": 0.20,
     "category": 0.15,
     "subcategory": 0.10,
     "title_entity": 0.20,
+    "abstract_entity": 0.00,
 }
 
 
@@ -64,10 +70,10 @@ class ContentBasedRecommender(BaseRecommender):
     def _validate_weights(weights: dict[str, float] | None) -> dict[str, float]:
         """Kiểm tra trọng số và chuẩn hóa tổng về 1."""
         supplied = DEFAULT_WEIGHTS if weights is None else weights
-        unknown = set(supplied) - set(FEATURE_FILES)
+        unknown = set(supplied) - set(AVAILABLE_FEATURE_FILES)
         if unknown:
             raise ValueError(f"Tên feature không hợp lệ: {sorted(unknown)}")
-        values = {name: float(supplied.get(name, 0.0)) for name in FEATURE_FILES}
+        values = {name: float(supplied.get(name, 0.0)) for name in AVAILABLE_FEATURE_FILES}
         if not all(np.isfinite(weight) and weight >= 0.0 for weight in values.values()):
             raise ValueError("Các trọng số phải hữu hạn và không âm.")
         total = sum(values.values())
@@ -75,10 +81,17 @@ class ContentBasedRecommender(BaseRecommender):
             raise ValueError("Phải có ít nhất một trọng số dương.")
         return {name: weight / total for name, weight in values.items()}
 
-    def _ensure_features_loaded(self, load_all: bool = False) -> None:
-        """Đọc đặc trưng cần dùng theo item_idx; tuning có thể yêu cầu đủ 5 nhóm."""
+    def _ensure_features_loaded(
+        self, load_all: bool = False, include_optional: bool = False
+    ) -> None:
+        """Nạp feature cần thiết; sweep 6 chiều có thể yêu cầu cả optional có weight 0."""
         required_names = (
             set(FEATURE_FILES)
+            | {
+                name
+                for name in OPTIONAL_FEATURE_FILES
+                if include_optional or self.feature_weights.get(name, 0.0) > 0.0
+            }
             if load_all
             else {name for name, weight in self.feature_weights.items() if weight > 0.0}
         )
@@ -103,13 +116,13 @@ class ContentBasedRecommender(BaseRecommender):
             raise ValueError("Checkpoint không khớp số item với thư mục đặc trưng.")
 
         loaded: dict[str, sparse.csr_matrix | np.ndarray] = dict(self._features)
-        for name, filename in FEATURE_FILES.items():
+        for name, filename in AVAILABLE_FEATURE_FILES.items():
             if name not in required_names or name in loaded:
                 continue
             path = self.feature_dir / filename
             if not path.is_file():
                 raise FileNotFoundError(f"Thiếu thành phần đặc trưng: {path}")
-            if name == "title_entity":
+            if name in ENTITY_FEATURE_NAMES:
                 matrix = np.load(path, mmap_mode="r", allow_pickle=False)
             else:
                 matrix = sparse.load_npz(path).tocsr()
@@ -187,7 +200,7 @@ class ContentBasedRecommender(BaseRecommender):
         profiles: dict[str, sparse.csr_matrix | np.ndarray] = {}
 
         for name, matrix in self._features.items():
-            if name == "title_entity":
+            if name in ENTITY_FEATURE_NAMES:
                 profile = np.asarray(matrix[history_ids], dtype=np.float32).mean(axis=0)
                 norm = float(np.linalg.norm(profile))
                 if norm > 0:
@@ -222,7 +235,7 @@ class ContentBasedRecommender(BaseRecommender):
         feature_scores: dict[str, np.ndarray] = {}
         for name, profile in profiles.items():
             matrix = self._features[name]
-            if name == "title_entity":
+            if name in ENTITY_FEATURE_NAMES:
                 similarity = np.asarray(matrix[candidates] @ profile, dtype=np.float32)
             else:
                 similarity = np.asarray(

@@ -1,0 +1,12 @@
+﻿model,variant,source_file,impressions,bootstrap_unit,num_resamples,NDCG@10,NDCG@10_ci_low,NDCG@10_ci_high,Recall@10,Recall@10_ci_low,Recall@10_ci_high,MRR@10,MRR@10_ci_low,MRR@10_ci_high,catalog_coverage@10,gini_index@10,category_diversity@10,long_tail_exposure@10,zero_click_exposure@10
+exp00_mind_random,single,exp00_mind_random_dev.json,376471,,,0.28717,,,0.52431,,,0.22687,,,0.0383,0.99805,,,
+exp01_mind_popularity,single,exp01_mind_popularity_dev.json,376471,,,0.30791,,,0.55574,,,0.24394,,,0.02111,0.99913,,,
+exp02_mind_itemknn,single,exp02_mind_itemknn_dev.json,376471,,,0.29067,,,0.52694,,,0.23137,,,0.03797,0.99804,,,
+exp03_mind_mf,single,exp03_mind_mf_dev.json,376471,,,0.29286,,,0.53538,,,0.23373,,,0.03428,0.99859,,,
+exp04_mind_bpr,single,exp04_mind_bpr_dev.json,376471,user,1000,0.35718,0.356046,0.358201,0.6152,0.613699,0.616745,0.29466,0.293506,0.295785,0.0268,0.9991,,,
+exp05_mind_content,single,exp05_mind_content_dev.json,376471,user,1000,0.39147,0.390398,0.392551,0.63358,0.632204,0.635026,0.33733,0.336192,0.338488,0.03771,0.998,,,
+exp06_mind_content_p3,reranked,exp06_mind_content_p3_dev.json,376471,user,1000,0.38594,0.384903,0.387033,0.62491,0.623471,0.626409,0.33281,0.331685,0.33405,0.03826,0.99795,0.70414,0.71767,0.41311
+exp07_mind_bpr_p3,reranked,exp07_mind_bpr_p3_dev.json,376471,user,1000,0.35565,0.354533,0.356717,0.60814,0.606652,0.609724,0.29572,0.29453,0.296773,0.03005,0.99895,0.90902,0.5046,0.26537
+exp11_mind_content_baseline_new_features,single,exp11_mind_content_baseline_new_features_dev.json,376471,user,1000,0.39147,0.390398,0.392551,0.63358,0.632204,0.635026,0.33733,0.336192,0.338488,0.03771,0.998,,,
+exp11_mind_content_baseline_new_features_sweep_candidate,single,exp11_mind_content_baseline_new_features_sweep_candidate_dev.json,376471,user,1000,0.39147,0.390398,0.392551,0.63358,0.632204,0.635026,0.33733,0.336192,0.338488,0.03771,0.998,,,
+exp12_mind_content_abstract_entity,single,exp12_mind_content_abstract_entity_dev.json,376471,user,1000,0.38646,0.385364,0.387554,0.63009,0.628652,0.631525,0.33175,0.330589,0.332909,0.03733,0.99808,,,

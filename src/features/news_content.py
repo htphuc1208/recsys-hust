@@ -22,6 +22,7 @@ NEWS_COLUMNS = [
     "title",
     "abstract",
     "title_entity_ids",
+    "abstract_entity_ids",
 ]
 ENTITY_DIMENSION = 100
 
@@ -36,6 +37,7 @@ class NewsRecord:
     category: str
     subcategory: str
     title_entity_ids: tuple[str, ...]
+    abstract_entity_ids: tuple[str, ...] = ()
 
 
 def clean_text(value: str | None) -> str:
@@ -120,6 +122,7 @@ def load_news_catalog(processed_root: Path, mapping: dict[str, int]) -> list[New
                 category=clean_text(row["category"]),
                 subcategory=clean_text(row["subcategory"]),
                 title_entity_ids=tuple(row["title_entity_ids"] or []),
+                abstract_entity_ids=tuple(row.get("abstract_entity_ids") or []),
             )
             added += 1
         print(f"Đã thêm {added:,} bài viết từ {split}.")
@@ -229,10 +232,15 @@ def load_train_entity_embeddings(entity_path: Path, needed_ids: set[str]) -> dic
     return entity_vectors
 
 
-def build_title_entity_feature(
-    records: list[NewsRecord | None], entity_vectors: dict[str, np.ndarray]
+def build_entity_feature(
+    records: list[NewsRecord | None],
+    entity_vectors: dict[str, np.ndarray],
+    field_name: str,
 ) -> tuple[np.ndarray, dict[str, int]]:
-    """Trung bình các vector thực thể hợp lệ, chuẩn hóa L2 theo bài viết."""
+    """Gộp entity theo từng trường, giữ item_idx và trả thống kê coverage."""
+
+    if field_name not in ("title_entity_ids", "abstract_entity_ids"):
+        raise ValueError(f"Trường thực thể không hợp lệ: {field_name}")
 
     matrix = np.zeros((len(records), ENTITY_DIMENSION), dtype=np.float32)
     articles_with_entities = 0
@@ -243,8 +251,8 @@ def build_title_entity_feature(
     for item_idx, record in enumerate(records):
         if record is None:
             continue
-        # Bỏ ID trùng để một thực thể không bị tính nhiều lần trong cùng tiêu đề.
-        entity_ids = list(dict.fromkeys(record.title_entity_ids))
+        # Bỏ ID trùng để một entity không bị tính nhiều lần trong cùng bài.
+        entity_ids = list(dict.fromkeys(getattr(record, field_name)))
         if not entity_ids:
             continue
 
@@ -264,12 +272,26 @@ def build_title_entity_feature(
             articles_with_matched_entities += 1
 
     statistics = {
-        "articles_with_title_entities": articles_with_entities,
+        "articles_with_entities": articles_with_entities,
         "articles_with_matched_entities": articles_with_matched_entities,
         "unique_entity_mentions": entity_mentions,
         "matched_entity_mentions": matched_entity_mentions,
     }
     return matrix, statistics
+
+
+def build_title_entity_feature(
+    records: list[NewsRecord | None], entity_vectors: dict[str, np.ndarray]
+) -> tuple[np.ndarray, dict[str, int]]:
+    """Wrapper tương thích các lời gọi và thống kê title entity hiện có."""
+
+    matrix, stats = build_entity_feature(records, entity_vectors, "title_entity_ids")
+    return matrix, {
+        "articles_with_title_entities": stats["articles_with_entities"],
+        "articles_with_matched_entities": stats["articles_with_matched_entities"],
+        "unique_entity_mentions": stats["unique_entity_mentions"],
+        "matched_entity_mentions": stats["matched_entity_mentions"],
+    }
 
 
 def prepare_output_directory(output_directory: Path, overwrite: bool) -> None:
@@ -287,10 +309,11 @@ def save_feature(
     name: str,
     matrix: sparse.csr_matrix,
     transformer: TfidfVectorizer | OneHotEncoder,
+    compress_sparse: bool = True,
 ) -> None:
     """Lưu ma trận CSR và bộ biến đổi để sử dụng lại khi có bài mới."""
 
-    sparse.save_npz(output_directory / f"{name}.npz", matrix, compressed=True)
+    sparse.save_npz(output_directory / f"{name}.npz", matrix, compressed=compress_sparse)
     joblib.dump(transformer, output_directory / f"{name}_transformer.joblib")
     print(f"{name}: shape={matrix.shape}, nnz={matrix.nnz:,}")
 
@@ -304,8 +327,10 @@ def build_features(
     min_document_frequency: int,
     batch_size: int,
     overwrite: bool,
+    include_abstract_entity: bool = False,
+    compress_sparse: bool = True,
 ) -> None:
-    """Tạo đầy đủ các thành phần nội dung và xuất báo cáo thống kê."""
+    """Tạo đặc trưng, tùy chọn thêm abstract entity vào một Feature Store mới."""
 
     if title_features <= 0 or abstract_features <= 0 or batch_size <= 0:
         raise ValueError("Các tham số kích thước và batch_size phải lớn hơn 0.")
@@ -333,7 +358,9 @@ def build_features(
             min_document_frequency,
             batch_size,
         )
-        save_feature(output_directory, feature_name, matrix, transformer)
+        save_feature(
+            output_directory, feature_name, matrix, transformer, compress_sparse=compress_sparse
+        )
         feature_shapes[feature_name] = list(matrix.shape)
 
     for feature_name, field_name in [
@@ -341,14 +368,22 @@ def build_features(
         ("subcategory_onehot", "subcategory"),
     ]:
         matrix, transformer = build_category_feature(records, train_records, field_name)
-        save_feature(output_directory, feature_name, matrix, transformer)
+        save_feature(
+            output_directory, feature_name, matrix, transformer, compress_sparse=compress_sparse
+        )
         feature_shapes[feature_name] = list(matrix.shape)
 
+    entity_fields = (
+        ("title_entity_ids", "abstract_entity_ids")
+        if include_abstract_entity
+        else ("title_entity_ids",)
+    )
     needed_ids = {
         entity_id
         for record in records
         if record is not None
-        for entity_id in record.title_entity_ids
+        for field in entity_fields
+        for entity_id in getattr(record, field)
     }
     print(f"Số thực thể duy nhất cần tra cứu: {len(needed_ids):,}")
     entity_vectors = load_train_entity_embeddings(entity_path, needed_ids)
@@ -356,6 +391,18 @@ def build_features(
     entity_matrix, entity_stats = build_title_entity_feature(records, entity_vectors)
     np.save(output_directory / "title_entity_embeddings.npy", entity_matrix)
     feature_shapes["title_entity_embeddings"] = list(entity_matrix.shape)
+
+    abstract_stats = None
+    if include_abstract_entity:
+        abstract_matrix, abstract_stats = build_entity_feature(
+            records, entity_vectors, "abstract_entity_ids"
+        )
+        np.save(output_directory / "abstract_entity_embeddings.npy", abstract_matrix)
+        feature_shapes["abstract_entity_embeddings"] = list(abstract_matrix.shape)
+        print(
+            f"Abstract entity: {abstract_matrix.shape}, matched={abstract_stats['articles_with_matched_entities']:,}"
+        )
+        del abstract_matrix
 
     # Ghi chỉ mục gốc để dễ đối chiếu, không tạo lại hoặc thay đổi mapping.
     with (output_directory / "item_index.json").open("w", encoding="utf-8") as file:
@@ -366,6 +413,7 @@ def build_features(
         "transform_scope": "train, dev and available test news metadata",
         "entity_source": str(entity_path),
         "entity_dimension": ENTITY_DIMENSION,
+        "sparse_storage": {"format": "npz", "compressed": compress_sparse},
         "total_item_mapping": len(mapping),
         "train_items": len(train_records),
         "items_with_metadata": sum(record is not None for record in records),
@@ -384,6 +432,9 @@ def build_features(
             "Unseen categories and unmatched entities produce zero components."
         ),
     }
+    if include_abstract_entity:
+        metadata["abstract_entity_statistics"] = abstract_stats
+        metadata["includes_abstract_entity"] = True
     with (output_directory / "manifest.json").open("w", encoding="utf-8") as file:
         json.dump(metadata, file, ensure_ascii=False, indent=2)
 
@@ -420,6 +471,17 @@ def main() -> None:
     parser.add_argument("--min-df", type=int, default=2)
     parser.add_argument("--batch-size", type=int, default=2048)
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument(
+        "--no-compress-sparse",
+        action="store_false",
+        dest="compress_sparse",
+        help="Lưu các ma trận CSR .npz không nén để giảm thời gian nạp.",
+    )
+    parser.add_argument(
+        "--include-abstract-entity",
+        action="store_true",
+        help="Tạo thêm abstract_entity_embeddings.npy (nên dùng --output-dir mới).",
+    )
     args = parser.parse_args()
 
     build_features(
@@ -431,6 +493,8 @@ def main() -> None:
         min_document_frequency=args.min_df,
         batch_size=args.batch_size,
         overwrite=args.overwrite,
+        include_abstract_entity=args.include_abstract_entity,
+        compress_sparse=args.compress_sparse,
     )
 
 

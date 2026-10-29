@@ -1,6 +1,7 @@
 import argparse
 import json
 import time
+from array import array
 from pathlib import Path
 from typing import Any
 
@@ -97,6 +98,12 @@ def evaluate_impressions(
         bootstrap_user_ids = None
         bootstrap_values = None
 
+    # Mỗi slice có tập impression và user IDs riêng để Bootstrap theo đúng
+    # định nghĩa slice; không thể tái tạo CI từ các mean JSON đã làm tròn.
+    # Mảng nhị phân tránh giữ hàng triệu Python int/float trong RAM.
+    slice_bootstrap_users = {name: array("q") for name in slices} if settings.enabled else {}
+    slice_bootstrap_values = {name: array("f") for name in slices} if settings.enabled else {}
+
     total_evaluated = 0
     start_time = time.perf_counter()
 
@@ -155,9 +162,16 @@ def evaluate_impressions(
             active_base_slices.append("cold_item" if has_cold_candidate else "warm_item")
             active_base_slices.append("cold_user" if is_cold_user else "warm_user")
 
+            # User không có mapping (-1) không được xem là một cluster chung.
+            bootstrap_user = user_idx if user_idx >= 0 else -(total_evaluated + 1)
             for slice_name in active_base_slices:
                 for metric_name, metric_value in impression_metrics.items():
                     slice_metrics[slice_name][metric_name].append(float(metric_value))
+                if settings.enabled and slice_name != "overall":
+                    slice_bootstrap_users[slice_name].append(bootstrap_user)
+                    slice_bootstrap_values[slice_name].extend(
+                        [impression_metrics[name] for name in bootstrap_metric_names]
+                    )
 
             # Item popularity slices dùng chính relevant/clicked items.
             item_slice_truth: dict[str, set[int]] = {}
@@ -179,25 +193,27 @@ def evaluate_impressions(
             for slice_name, slice_true_items in item_slice_truth.items():
                 if not slice_true_items:
                     continue
+                item_metrics: dict[str, float] = {}
                 for k in k_list:
-                    slice_metrics[slice_name][f"NDCG@{k}"].append(
-                        ndcg_at_k(ranked_candidates, slice_true_items, k)
+                    item_metrics[f"NDCG@{k}"] = ndcg_at_k(ranked_candidates, slice_true_items, k)
+                    item_metrics[f"Recall@{k}"] = recall_at_k(
+                        ranked_candidates, slice_true_items, k
                     )
-                    slice_metrics[slice_name][f"Recall@{k}"].append(
-                        recall_at_k(ranked_candidates, slice_true_items, k)
+                    item_metrics[f"HitRate@{k}"] = hit_rate_at_k(
+                        ranked_candidates, slice_true_items, k
                     )
-                    slice_metrics[slice_name][f"HitRate@{k}"].append(
-                        hit_rate_at_k(ranked_candidates, slice_true_items, k)
-                    )
-                    slice_metrics[slice_name][f"MRR@{k}"].append(
-                        mrr_at_k(ranked_candidates, slice_true_items, k)
+                    item_metrics[f"MRR@{k}"] = mrr_at_k(ranked_candidates, slice_true_items, k)
+                for metric_name, value in item_metrics.items():
+                    slice_metrics[slice_name][metric_name].append(value)
+                if settings.enabled and slice_name != "overall":
+                    slice_bootstrap_users[slice_name].append(bootstrap_user)
+                    slice_bootstrap_values[slice_name].extend(
+                        [item_metrics[name] for name in bootstrap_metric_names]
                     )
 
             if settings.enabled and bootstrap_user_ids is not None and bootstrap_values is not None:
                 # Unknown user (-1) được tách thành cluster riêng cho từng impression.
-                bootstrap_user_ids[total_evaluated] = (
-                    user_idx if user_idx >= 0 else -(total_evaluated + 1)
-                )
+                bootstrap_user_ids[total_evaluated] = bootstrap_user
                 bootstrap_values[total_evaluated] = [
                     impression_metrics[f"NDCG@{key_k}"],
                     impression_metrics[f"Recall@{key_k}"],
@@ -266,6 +282,24 @@ def evaluate_impressions(
                 metric_names=bootstrap_metric_names,
                 settings=settings,
             ),
+        }
+        results["bootstrap"]["slices"] = {
+            name: {
+                "count": total_evaluated if name == "overall" else len(slice_bootstrap_users[name]),
+                "metrics": results["bootstrap"]["metrics"]
+                if name == "overall"
+                else bootstrap_confidence_intervals(
+                    user_ids=np.frombuffer(slice_bootstrap_users[name], dtype=np.int64),
+                    values=np.frombuffer(slice_bootstrap_values[name], dtype=np.float32).reshape(
+                        -1, len(bootstrap_metric_names)
+                    ),
+                    metric_names=bootstrap_metric_names,
+                    settings=settings,
+                )
+                if slice_bootstrap_users[name]
+                else {},
+            }
+            for name in slices
         }
 
     return results
