@@ -89,3 +89,9 @@ artifacts/indexes/*
 *.onnx
 *.bin
 *.index
+
+# Generated MIND submission artifacts are local, not source code
+reports/submissions/
+
+# Local pytest basetemp directories
+tmp_pytest_*/
