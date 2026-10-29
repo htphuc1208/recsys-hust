@@ -1,0 +1,11 @@
+{
+  "metrics_dir": "reports\\metrics",
+  "reference_impressions": 376471,
+  "input_files": 11,
+  "model_rows": 11,
+  "slice_metric_rows": 330,
+  "ci_available_rows": 129,
+  "ci_not_recorded_rows": 141,
+  "excluded_mismatched": [],
+  "methodology": "CI chỉ lấy từ bootstrap per-impression khi chạy evaluate; không tính lại CI từ mean JSON. Item slices sử dụng relevant/clicked items riêng, có thể chồng nhau; không cộng số lượng slice."
+}

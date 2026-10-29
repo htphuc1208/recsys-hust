@@ -1,0 +1,19 @@
+{
+  "metrics_dir": "reports\\metrics",
+  "reference_impressions": 376471,
+  "input_files": 4,
+  "model_rows": 4,
+  "slice_metric_rows": 120,
+  "ci_available_rows": 120,
+  "ci_not_recorded_rows": 0,
+  "excluded_mismatched": [],
+  "methodology": "CI chỉ lấy từ bootstrap per-impression khi chạy evaluate; không tính lại CI từ mean JSON. Item slices sử dụng relevant/clicked items riêng, có thể chồng nhau; không cộng số lượng slice.",
+  "profile": "core",
+  "missing_requested_models": [],
+  "selected_models": [
+    "exp04_mind_bpr",
+    "exp05_mind_content",
+    "exp06_mind_content_p3",
+    "exp07_mind_bpr_p3"
+  ]
+}

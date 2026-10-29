@@ -1,8 +1,8 @@
 {
   "evaluation_mode": "paired_baseline_vs_p3",
   "total_evaluated_impressions": 376471,
-  "eval_time_seconds": 326.87,
-  "throughput_impressions_per_sec": 1151.7,
+  "eval_time_seconds": 313.3,
+  "throughput_impressions_per_sec": 1201.6,
   "item_popularity_definition": {
     "head_fraction_of_clicked_items": 0.2,
     "head_items": 3461,
@@ -508,6 +508,568 @@
             0.066311,
             0.067077
           ]
+        }
+      },
+      "slices": {
+        "overall": {
+          "count": 376471,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.357178,
+              "baseline_ci": [
+                0.356046,
+                0.358201
+              ],
+              "reranked_mean": 0.355653,
+              "reranked_ci": [
+                0.354533,
+                0.356717
+              ],
+              "delta": -0.001525,
+              "delta_ci": [
+                -0.001821,
+                -0.001234
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.615199,
+              "baseline_ci": [
+                0.613699,
+                0.616745
+              ],
+              "reranked_mean": 0.608137,
+              "reranked_ci": [
+                0.606652,
+                0.609724
+              ],
+              "delta": -0.007063,
+              "delta_ci": [
+                -0.007851,
+                -0.006289
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.29466,
+              "baseline_ci": [
+                0.293506,
+                0.295785
+              ],
+              "reranked_mean": 0.295718,
+              "reranked_ci": [
+                0.29453,
+                0.296773
+              ],
+              "delta": 0.001058,
+              "delta_ci": [
+                0.000832,
+                0.001311
+              ]
+            }
+          }
+        },
+        "cold_item": {
+          "count": 230384,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.30473,
+              "baseline_ci": [
+                0.303557,
+                0.306037
+              ],
+              "reranked_mean": 0.302612,
+              "reranked_ci": [
+                0.301396,
+                0.303885
+              ],
+              "delta": -0.002118,
+              "delta_ci": [
+                -0.002495,
+                -0.001708
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.548537,
+              "baseline_ci": [
+                0.54662,
+                0.550361
+              ],
+              "reranked_mean": 0.54087,
+              "reranked_ci": [
+                0.538938,
+                0.542788
+              ],
+              "delta": -0.007667,
+              "delta_ci": [
+                -0.008754,
+                -0.006665
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.247595,
+              "baseline_ci": [
+                0.246331,
+                0.248857
+              ],
+              "reranked_mean": 0.248145,
+              "reranked_ci": [
+                0.246891,
+                0.249413
+              ],
+              "delta": 0.00055,
+              "delta_ci": [
+                0.000254,
+                0.000843
+              ]
+            }
+          }
+        },
+        "warm_item": {
+          "count": 146087,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.43989,
+              "baseline_ci": [
+                0.43809,
+                0.441519
+              ],
+              "reranked_mean": 0.439299,
+              "reranked_ci": [
+                0.437479,
+                0.440923
+              ],
+              "delta": -0.000591,
+              "delta_ci": [
+                -0.001033,
+                -0.000167
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.720328,
+              "baseline_ci": [
+                0.718177,
+                0.722451
+              ],
+              "reranked_mean": 0.714218,
+              "reranked_ci": [
+                0.712062,
+                0.716345
+              ],
+              "delta": -0.00611,
+              "delta_ci": [
+                -0.007237,
+                -0.005044
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.368883,
+              "baseline_ci": [
+                0.367045,
+                0.370657
+              ],
+              "reranked_mean": 0.370743,
+              "reranked_ci": [
+                0.368909,
+                0.372463
+              ],
+              "delta": 0.00186,
+              "delta_ci": [
+                0.001468,
+                0.002257
+              ]
+            }
+          }
+        },
+        "cold_user": {
+          "count": 96685,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.383922,
+              "baseline_ci": [
+                0.381825,
+                0.386001
+              ],
+              "reranked_mean": 0.382176,
+              "reranked_ci": [
+                0.380152,
+                0.384208
+              ],
+              "delta": -0.001746,
+              "delta_ci": [
+                -0.002276,
+                -0.001183
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.653729,
+              "baseline_ci": [
+                0.650784,
+                0.656445
+              ],
+              "reranked_mean": 0.647515,
+              "reranked_ci": [
+                0.644753,
+                0.65029
+              ],
+              "delta": -0.006213,
+              "delta_ci": [
+                -0.007599,
+                -0.004673
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.312139,
+              "baseline_ci": [
+                0.309958,
+                0.314219
+              ],
+              "reranked_mean": 0.312278,
+              "reranked_ci": [
+                0.310079,
+                0.314375
+              ],
+              "delta": 0.000139,
+              "delta_ci": [
+                -0.000265,
+                0.000572
+              ]
+            }
+          }
+        },
+        "warm_user": {
+          "count": 279786,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.347936,
+              "baseline_ci": [
+                0.346692,
+                0.349141
+              ],
+              "reranked_mean": 0.346487,
+              "reranked_ci": [
+                0.345233,
+                0.347691
+              ],
+              "delta": -0.001449,
+              "delta_ci": [
+                -0.00181,
+                -0.001059
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.601885,
+              "baseline_ci": [
+                0.600091,
+                0.603714
+              ],
+              "reranked_mean": 0.594529,
+              "reranked_ci": [
+                0.592788,
+                0.596247
+              ],
+              "delta": -0.007356,
+              "delta_ci": [
+                -0.008335,
+                -0.006394
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.28862,
+              "baseline_ci": [
+                0.287311,
+                0.28979
+              ],
+              "reranked_mean": 0.289996,
+              "reranked_ci": [
+                0.288697,
+                0.291169
+              ],
+              "delta": 0.001376,
+              "delta_ci": [
+                0.001084,
+                0.001674
+              ]
+            }
+          }
+        },
+        "head_item": {
+          "count": 165359,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.498339,
+              "baseline_ci": [
+                0.496718,
+                0.499989
+              ],
+              "reranked_mean": 0.483135,
+              "reranked_ci": [
+                0.48135,
+                0.484812
+              ],
+              "delta": -0.015204,
+              "delta_ci": [
+                -0.015693,
+                -0.014731
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.770681,
+              "baseline_ci": [
+                0.76865,
+                0.772626
+              ],
+              "reranked_mean": 0.728015,
+              "reranked_ci": [
+                0.725906,
+                0.730136
+              ],
+              "delta": -0.042666,
+              "delta_ci": [
+                -0.04377,
+                -0.041545
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.424398,
+              "baseline_ci": [
+                0.42268,
+                0.426133
+              ],
+              "reranked_mean": 0.419221,
+              "reranked_ci": [
+                0.41754,
+                0.42094
+              ],
+              "delta": -0.005176,
+              "delta_ci": [
+                -0.005614,
+                -0.004749
+              ]
+            }
+          }
+        },
+        "long_tail_item": {
+          "count": 158659,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.215801,
+              "baseline_ci": [
+                0.214597,
+                0.217136
+              ],
+              "reranked_mean": 0.214648,
+              "reranked_ci": [
+                0.213401,
+                0.215957
+              ],
+              "delta": -0.001153,
+              "delta_ci": [
+                -0.001671,
+                -0.000648
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.475477,
+              "baseline_ci": [
+                0.473113,
+                0.477811
+              ],
+              "reranked_mean": 0.463712,
+              "reranked_ci": [
+                0.461214,
+                0.466004
+              ],
+              "delta": -0.011765,
+              "delta_ci": [
+                -0.013325,
+                -0.010343
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.138441,
+              "baseline_ci": [
+                0.137468,
+                0.139582
+              ],
+              "reranked_mean": 0.1415,
+              "reranked_ci": [
+                0.140429,
+                0.142644
+              ],
+              "delta": 0.003058,
+              "delta_ci": [
+                0.002744,
+                0.003368
+              ]
+            }
+          }
+        },
+        "zero_click_item": {
+          "count": 138487,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.218298,
+              "baseline_ci": [
+                0.216805,
+                0.219955
+              ],
+              "reranked_mean": 0.233664,
+              "reranked_ci": [
+                0.232167,
+                0.235273
+              ],
+              "delta": 0.015366,
+              "delta_ci": [
+                0.01491,
+                0.015864
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.43369,
+              "baseline_ci": [
+                0.43124,
+                0.436327
+              ],
+              "reranked_mean": 0.47701,
+              "reranked_ci": [
+                0.474448,
+                0.479712
+              ],
+              "delta": 0.04332,
+              "delta_ci": [
+                0.041937,
+                0.044745
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.152095,
+              "baseline_ci": [
+                0.150788,
+                0.153467
+              ],
+              "reranked_mean": 0.159779,
+              "reranked_ci": [
+                0.158427,
+                0.161193
+              ],
+              "delta": 0.007684,
+              "delta_ci": [
+                0.007423,
+                0.007968
+              ]
+            }
+          }
+        },
+        "catalog_cold_item": {
+          "count": 46547,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.293417,
+              "baseline_ci": [
+                0.290613,
+                0.296373
+              ],
+              "reranked_mean": 0.289978,
+              "reranked_ci": [
+                0.287231,
+                0.292956
+              ],
+              "delta": -0.00344,
+              "delta_ci": [
+                -0.004222,
+                -0.002646
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.547179,
+              "baseline_ci": [
+                0.543135,
+                0.551887
+              ],
+              "reranked_mean": 0.54752,
+              "reranked_ci": [
+                0.543485,
+                0.552342
+              ],
+              "delta": 0.000341,
+              "delta_ci": [
+                -0.001938,
+                0.002587
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.214882,
+              "baseline_ci": [
+                0.212174,
+                0.217581
+              ],
+              "reranked_mean": 0.21107,
+              "reranked_ci": [
+                0.2084,
+                0.21386
+              ],
+              "delta": -0.003812,
+              "delta_ci": [
+                -0.004266,
+                -0.00334
+              ]
+            }
+          }
+        },
+        "catalog_warm_item": {
+          "count": 348829,
+          "metrics": {
+            "NDCG@10": {
+              "baseline_mean": 0.352693,
+              "baseline_ci": [
+                0.351549,
+                0.353799
+              ],
+              "reranked_mean": 0.351492,
+              "reranked_ci": [
+                0.350328,
+                0.35262
+              ],
+              "delta": -0.001201,
+              "delta_ci": [
+                -0.001509,
+                -0.000904
+              ]
+            },
+            "Recall@10": {
+              "baseline_mean": 0.60884,
+              "baseline_ci": [
+                0.60712,
+                0.610445
+              ],
+              "reranked_mean": 0.601071,
+              "reranked_ci": [
+                0.59928,
+                0.602641
+              ],
+              "delta": -0.007769,
+              "delta_ci": [
+                -0.008591,
+                -0.006968
+              ]
+            },
+            "MRR@10": {
+              "baseline_mean": 0.291394,
+              "baseline_ci": [
+                0.290212,
+                0.29252
+              ],
+              "reranked_mean": 0.29296,
+              "reranked_ci": [
+                0.291768,
+                0.294122
+              ],
+              "delta": 0.001566,
+              "delta_ci": [
+                0.001317,
+                0.001815
+              ]
+            }
+          }
         }
       }
     }
