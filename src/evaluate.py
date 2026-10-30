@@ -1,7 +1,7 @@
 import argparse
-from array import array
 import json
 import time
+from array import array
 from pathlib import Path
 from typing import Any
 
@@ -196,8 +196,12 @@ def evaluate_impressions(
                 item_metrics: dict[str, float] = {}
                 for k in k_list:
                     item_metrics[f"NDCG@{k}"] = ndcg_at_k(ranked_candidates, slice_true_items, k)
-                    item_metrics[f"Recall@{k}"] = recall_at_k(ranked_candidates, slice_true_items, k)
-                    item_metrics[f"HitRate@{k}"] = hit_rate_at_k(ranked_candidates, slice_true_items, k)
+                    item_metrics[f"Recall@{k}"] = recall_at_k(
+                        ranked_candidates, slice_true_items, k
+                    )
+                    item_metrics[f"HitRate@{k}"] = hit_rate_at_k(
+                        ranked_candidates, slice_true_items, k
+                    )
                     item_metrics[f"MRR@{k}"] = mrr_at_k(ranked_candidates, slice_true_items, k)
                 for metric_name, value in item_metrics.items():
                     slice_metrics[slice_name][metric_name].append(value)
@@ -282,14 +286,18 @@ def evaluate_impressions(
         results["bootstrap"]["slices"] = {
             name: {
                 "count": total_evaluated if name == "overall" else len(slice_bootstrap_users[name]),
-                "metrics": results["bootstrap"]["metrics"] if name == "overall" else bootstrap_confidence_intervals(
+                "metrics": results["bootstrap"]["metrics"]
+                if name == "overall"
+                else bootstrap_confidence_intervals(
                     user_ids=np.frombuffer(slice_bootstrap_users[name], dtype=np.int64),
                     values=np.frombuffer(slice_bootstrap_values[name], dtype=np.float32).reshape(
                         -1, len(bootstrap_metric_names)
                     ),
                     metric_names=bootstrap_metric_names,
                     settings=settings,
-                ) if slice_bootstrap_users[name] else {},
+                )
+                if slice_bootstrap_users[name]
+                else {},
             }
             for name in slices
         }

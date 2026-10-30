@@ -47,8 +47,12 @@ def test_audit_coverage_uses_first_seen_and_train_priority(tmp_path, monkeypatch
 
     vec_path = tmp_path / "entity_embedding.vec"
     vec_path.write_text(
-        "Q1 " + " ".join(["1"] + ["0"] * 99) + "\n"
-        + "Q2 " + " ".join(["0", "1"] + ["0"] * 98) + "\n",
+        "Q1 "
+        + " ".join(["1"] + ["0"] * 99)
+        + "\n"
+        + "Q2 "
+        + " ".join(["0", "1"] + ["0"] * 98)
+        + "\n",
         encoding="utf-8",
     )
 
@@ -66,9 +70,7 @@ def test_audit_coverage_uses_first_seen_and_train_priority(tmp_path, monkeypatch
     assert rows[("train", "title")]["articles_with_valid_embedding"] == 1
     assert rows[("dev", "title")]["articles_with_valid_embedding"] == 0
     assert rows[("test", "title")]["articles_with_valid_embedding"] == 1
-    complementarity = {
-        row["split"]: row for row in result["complementarity_rows"]
-    }
+    complementarity = {row["split"]: row for row in result["complementarity_rows"]}
     assert complementarity["overall"]["both"] == 1
     assert complementarity["overall"]["title_only"] == 1
     assert complementarity["overall"]["abstract_only"] == 1

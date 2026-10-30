@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
 from itertools import zip_longest
+from pathlib import Path
 from zipfile import ZipFile
 
 from src.submission.io import iter_impressions, iter_original_behaviors, verify_original_row
@@ -25,7 +25,9 @@ def validate_submission(
     txt = Path(prediction_txt)
     if not txt.is_file():
         raise FileNotFoundError(f"Không có prediction.txt: {txt}")
-    original = iter_original_behaviors(original_behaviors, split=split) if original_behaviors else None
+    original = (
+        iter_original_behaviors(original_behaviors, split=split) if original_behaviors else None
+    )
     raw_iter = iter(original) if original is not None else None
     seen_ids: set[int] = set()
     count = 0
@@ -103,7 +105,9 @@ def validate_partial_submission(
     seen: set[int] = set()
     count = 0
     candidates = 0
-    original = iter_original_behaviors(original_behaviors, split=split) if original_behaviors else None
+    original = (
+        iter_original_behaviors(original_behaviors, split=split) if original_behaviors else None
+    )
     with txt.open("r", encoding="utf-8") as source:
         impressions = iter_impressions(impressions_path, batch_size=batch_size)
         for line in source:
@@ -133,7 +137,8 @@ def validate_partial_submission(
             if archive.read("prediction.txt") != txt.read_bytes():
                 raise ValueError("ZIP và TXT Dev sample khác nhau.")
     return {
-        "impressions": count, "candidates": candidates,
+        "impressions": count,
+        "candidates": candidates,
         "txt_sha256": hashlib.sha256(txt.read_bytes()).hexdigest(),
         "zip_valid": prediction_zip is not None,
         "original_order_verified": original_behaviors is not None,

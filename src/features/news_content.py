@@ -358,7 +358,9 @@ def build_features(
             min_document_frequency,
             batch_size,
         )
-        save_feature(output_directory, feature_name, matrix, transformer, compress_sparse=compress_sparse)
+        save_feature(
+            output_directory, feature_name, matrix, transformer, compress_sparse=compress_sparse
+        )
         feature_shapes[feature_name] = list(matrix.shape)
 
     for feature_name, field_name in [
@@ -366,10 +368,16 @@ def build_features(
         ("subcategory_onehot", "subcategory"),
     ]:
         matrix, transformer = build_category_feature(records, train_records, field_name)
-        save_feature(output_directory, feature_name, matrix, transformer, compress_sparse=compress_sparse)
+        save_feature(
+            output_directory, feature_name, matrix, transformer, compress_sparse=compress_sparse
+        )
         feature_shapes[feature_name] = list(matrix.shape)
 
-    entity_fields = ("title_entity_ids", "abstract_entity_ids") if include_abstract_entity else ("title_entity_ids",)
+    entity_fields = (
+        ("title_entity_ids", "abstract_entity_ids")
+        if include_abstract_entity
+        else ("title_entity_ids",)
+    )
     needed_ids = {
         entity_id
         for record in records
@@ -391,7 +399,9 @@ def build_features(
         )
         np.save(output_directory / "abstract_entity_embeddings.npy", abstract_matrix)
         feature_shapes["abstract_entity_embeddings"] = list(abstract_matrix.shape)
-        print(f"Abstract entity: {abstract_matrix.shape}, matched={abstract_stats['articles_with_matched_entities']:,}")
+        print(
+            f"Abstract entity: {abstract_matrix.shape}, matched={abstract_stats['articles_with_matched_entities']:,}"
+        )
         del abstract_matrix
 
     # Ghi chỉ mục gốc để dễ đối chiếu, không tạo lại hoặc thay đổi mapping.

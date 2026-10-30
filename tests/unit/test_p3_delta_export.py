@@ -13,7 +13,8 @@ def _create_result(path: Path, *, impressions: int, with_slice_ci: bool) -> None
     slice_before = {"count": 10, "metrics": {"NDCG@10": 0.5}}
     slice_after = {"count": 10, "metrics": {"NDCG@10": 0.52}}
     boot = {
-        "unit": "user", "num_resamples": 1000,
+        "unit": "user",
+        "num_resamples": 1000,
         "metrics": {"NDCG@10": {"delta": -0.01, "delta_ci": [-0.012, -0.008]}},
     }
     if with_slice_ci:
@@ -53,7 +54,9 @@ def test_p3_delta_export_retains_real_ci(tmp_path: Path) -> None:
     assert cold["delta_ci_low"] == 0.01
     assert cold["delta"] == 0.02
 
-    recall = next(r for r in rows if r["slice"] == "catalog_cold_item" and r["metric"] == "Recall@10")
+    recall = next(
+        r for r in rows if r["slice"] == "catalog_cold_item" and r["metric"] == "Recall@10"
+    )
     assert recall["ci_status"] == "no_data"
     assert recall["delta_ci_low"] == ""
 

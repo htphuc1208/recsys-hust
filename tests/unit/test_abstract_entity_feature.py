@@ -8,14 +8,18 @@ import pytest
 from scipy import sparse
 
 from src.features import news_content
-from src.models.content_based.recommender import ContentBasedRecommender, FEATURE_FILES
+from src.models.content_based.recommender import FEATURE_FILES, ContentBasedRecommender
 
 
 def make_record(idx, title=(), abstract=()):
     return news_content.NewsRecord(
-        item_idx=idx, title="sports football match", abstract="sports football match",
-        category="sports", subcategory="football",
-        title_entity_ids=tuple(title), abstract_entity_ids=tuple(abstract),
+        item_idx=idx,
+        title="sports football match",
+        abstract="sports football match",
+        category="sports",
+        subcategory="football",
+        title_entity_ids=tuple(title),
+        abstract_entity_ids=tuple(abstract),
     )
 
 
@@ -102,18 +106,30 @@ def test_build_feature_store_includes_abstract_when_enabled(tmp_path, monkeypatc
         {"news_id": "N1", "item_idx": 1, "first_seen_split": "dev"},
     ]
     rows = {
-        "train": [{
-            "news_id": "N0", "item_idx": 0, "title": "football team news",
-            "abstract": "match result news", "category": "sports",
-            "subcategory": "football", "title_entity_ids": ["Q1"],
-            "abstract_entity_ids": ["Q2"],
-        }],
-        "dev": [{
-            "news_id": "N1", "item_idx": 1, "title": "match football news",
-            "abstract": "result team news", "category": "sports",
-            "subcategory": "football", "title_entity_ids": [],
-            "abstract_entity_ids": ["Q2"],
-        }],
+        "train": [
+            {
+                "news_id": "N0",
+                "item_idx": 0,
+                "title": "football team news",
+                "abstract": "match result news",
+                "category": "sports",
+                "subcategory": "football",
+                "title_entity_ids": ["Q1"],
+                "abstract_entity_ids": ["Q2"],
+            }
+        ],
+        "dev": [
+            {
+                "news_id": "N1",
+                "item_idx": 1,
+                "title": "match football news",
+                "abstract": "result team news",
+                "category": "sports",
+                "subcategory": "football",
+                "title_entity_ids": [],
+                "abstract_entity_ids": ["Q2"],
+            }
+        ],
     }
 
     def rows_stub(directory, columns):
@@ -131,9 +147,14 @@ def test_build_feature_store_includes_abstract_when_enabled(tmp_path, monkeypatc
     entity_path.write_text("Q1 " + " ".join(v1) + "\nQ2 " + " ".join(v2) + "\n")
     folder = tmp_path / "store"
     news_content.build_features(
-        processed_root=processed_root, entity_path=entity_path,
-        output_directory=folder, title_features=20, abstract_features=20,
-        min_document_frequency=1, batch_size=2, overwrite=False,
+        processed_root=processed_root,
+        entity_path=entity_path,
+        output_directory=folder,
+        title_features=20,
+        abstract_features=20,
+        min_document_frequency=1,
+        batch_size=2,
+        overwrite=False,
         include_abstract_entity=True,
     )
     report = json.loads((folder / "manifest.json").read_text(encoding="utf8"))

@@ -173,6 +173,8 @@ class ServingResources:
             else:
                 # Bundles built before cf_user_vectors existed read factors from the ranker.
                 user_vectors = getattr(ranker, "user_factors", None)
+                if user_vectors is None and branches.collaborative is not None:
+                    user_vectors = getattr(branches.collaborative, "user_factors", None)
                 if user_vectors is None:
                     raise ValueError("collaborative index requires user query vectors")
             retrievers.append(

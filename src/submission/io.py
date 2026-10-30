@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import csv
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 REQUIRED_COLUMNS = (
     "impression_id",
@@ -54,7 +55,9 @@ def iter_original_behaviors(path: str | Path, *, split: str) -> Iterator[tuple[i
             try:
                 impression_id = int(parts[0])
             except ValueError as exc:
-                raise ValueError(f"behaviors.tsv dòng {line_no}: impression ID không hợp lệ.") from exc
+                raise ValueError(
+                    f"behaviors.tsv dòng {line_no}: impression ID không hợp lệ."
+                ) from exc
             news_ids, _ = parse_impressions(parts[4], require_labels=(split == "dev"))
             yield impression_id, news_ids
 
@@ -65,7 +68,10 @@ def original_behavior_path(split: str) -> Path:
 
 
 def verify_original_row(
-    impression_id: int, candidate_news_ids: list[str], reference: tuple[int, list[str]], row_number: int
+    impression_id: int,
+    candidate_news_ids: list[str],
+    reference: tuple[int, list[str]],
+    row_number: int,
 ) -> None:
     expected_id, expected_news_ids = reference
     if impression_id != expected_id:

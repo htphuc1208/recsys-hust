@@ -14,8 +14,12 @@ from src.evaluation.bootstrap import BootstrapSettings
 
 class _Schema:
     names = [
-        "impression_id", "user_idx", "history_item_idxs", "candidate_item_idxs",
-        "labels", "candidate_seen_in_train_mask",
+        "impression_id",
+        "user_idx",
+        "history_item_idxs",
+        "candidate_item_idxs",
+        "labels",
+        "candidate_seen_in_train_mask",
     ]
 
 
@@ -73,23 +77,44 @@ def _load_modules(monkeypatch):
         monkeypatch.setitem(sys.modules, "pyarrow.dataset", stub_dataset)
     import src.evaluate as evaluator
     import src.evaluation.p3_evaluation as p3
+
     return evaluator, p3
 
 
 def _rows():
     return [
-        {"impression_id": 1, "user_idx": 10, "history_item_idxs": [0, 1, 2, 0, 1, 2],
-         "candidate_item_idxs": [0, 1, 2, 3, 4], "labels": [1, 0, 0, 0, 0],
-         "candidate_seen_in_train_mask": [True, True, True, False, False]},
-        {"impression_id": 2, "user_idx": 10, "history_item_idxs": [0, 1, 2, 0, 1, 2],
-         "candidate_item_idxs": [0, 1, 2, 3, 4], "labels": [0, 0, 1, 0, 0],
-         "candidate_seen_in_train_mask": [True, True, True, False, False]},
-        {"impression_id": 3, "user_idx": -1, "history_item_idxs": [0],
-         "candidate_item_idxs": [0, 1, 2, 3, 4], "labels": [0, 0, 0, 1, 0],
-         "candidate_seen_in_train_mask": [True, True, True, False, False]},
-        {"impression_id": 4, "user_idx": -1, "history_item_idxs": [0],
-         "candidate_item_idxs": [0, 1, 2, 3, 4], "labels": [0, 0, 0, 0, 1],
-         "candidate_seen_in_train_mask": [True, True, True, False, False]},
+        {
+            "impression_id": 1,
+            "user_idx": 10,
+            "history_item_idxs": [0, 1, 2, 0, 1, 2],
+            "candidate_item_idxs": [0, 1, 2, 3, 4],
+            "labels": [1, 0, 0, 0, 0],
+            "candidate_seen_in_train_mask": [True, True, True, False, False],
+        },
+        {
+            "impression_id": 2,
+            "user_idx": 10,
+            "history_item_idxs": [0, 1, 2, 0, 1, 2],
+            "candidate_item_idxs": [0, 1, 2, 3, 4],
+            "labels": [0, 0, 1, 0, 0],
+            "candidate_seen_in_train_mask": [True, True, True, False, False],
+        },
+        {
+            "impression_id": 3,
+            "user_idx": -1,
+            "history_item_idxs": [0],
+            "candidate_item_idxs": [0, 1, 2, 3, 4],
+            "labels": [0, 0, 0, 1, 0],
+            "candidate_seen_in_train_mask": [True, True, True, False, False],
+        },
+        {
+            "impression_id": 4,
+            "user_idx": -1,
+            "history_item_idxs": [0],
+            "candidate_item_idxs": [0, 1, 2, 3, 4],
+            "labels": [0, 0, 0, 0, 1],
+            "candidate_seen_in_train_mask": [True, True, True, False, False],
+        },
     ]
 
 
@@ -98,7 +123,9 @@ def test_single_model_ci_by_slice_and_missing_slice(monkeypatch):
     monkeypatch.setattr(evaluator.ds, "dataset", lambda *args, **kwargs: _Dataset(_rows()))
     setting = BootstrapSettings(num_resamples=70, seed=42, unit="user", batch_size=10)
     result = evaluator.evaluate_impressions(
-        _Model(), Path("unused"), k_list=[5, 10],
+        _Model(),
+        Path("unused"),
+        k_list=[5, 10],
         train_click_counts=np.array([10, 5, 1, 0, 0]),
         bootstrap_settings=setting,
     )
@@ -126,11 +153,18 @@ def test_p3_paired_ci_by_slice(monkeypatch):
     monkeypatch.setattr(p3.ds, "dataset", lambda *args, **kwargs: _Dataset(_rows()))
     settings = BootstrapSettings(num_resamples=70, seed=42, unit="user", batch_size=10)
     results = p3.evaluate_p3_impressions(
-        _Model(), Path("unused"), _Pipeline(), k_list=[5, 10],
-        all_catalog_items=set(range(5)), bootstrap_settings=settings,
+        _Model(),
+        Path("unused"),
+        _Pipeline(),
+        k_list=[5, 10],
+        all_catalog_items=set(range(5)),
+        bootstrap_settings=settings,
     )
     per_slice = results["comparison"]["bootstrap"]["slices"]
-    assert per_slice["overall"]["metrics"]["NDCG@10"] == results["comparison"]["bootstrap"]["metrics"]["NDCG@10"]
+    assert (
+        per_slice["overall"]["metrics"]["NDCG@10"]
+        == results["comparison"]["bootstrap"]["metrics"]["NDCG@10"]
+    )
     assert per_slice["catalog_cold_item"]["count"] == 2
     assert per_slice["warm_item"]["metrics"] == {}
     for name, info in per_slice.items():

@@ -112,6 +112,13 @@ class AdaptiveGatingHybrid(BaseRecommender):
                 self.seq_model.item_factors = self.cf_model.item_factors
                 self.seq_model.is_fitted = True
 
+    @property
+    def user_factors(self) -> np.ndarray | None:
+        """Expose CF user factors for FAISS vector index queries."""
+        if hasattr(self.cf_model, "user_factors") and self.cf_model.user_factors is not None:
+            return self.cf_model.user_factors
+        return None
+
     def _get_branch_mask(self) -> torch.Tensor:
         """Return boolean mask tensor for active branches: [CF, SEQ, CONTENT]."""
         if self.mode == "no_cf":

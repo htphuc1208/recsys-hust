@@ -78,6 +78,52 @@ def _write_mappings(tmp_path, num_users: int, num_items: int):
     return users, items
 
 
+def test_legacy_hybrid_index_uses_cf_branch_user_factors(tmp_path):
+    from types import SimpleNamespace
+
+    import numpy as np
+
+    from src.indexing.branches import model_branches
+    from src.indexing.faiss_index import FaissVectorIndex
+    from src.indexing.types import RetrievalQuery, RetrievalSource
+    from src.serving.artifacts import ArtifactSpec, ServingManifest
+
+    item_vectors = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)
+    index = FaissVectorIndex.build(
+        item_vectors,
+        np.array([0, 1], dtype=np.int64),
+        source_model="AdaptiveGatingHybrid",
+        model_version="legacy-hybrid",
+    )
+    index.save(tmp_path / "collaborative.faiss", tmp_path / "collaborative.meta.json")
+    manifest = ServingManifest(
+        model_version="legacy-hybrid",
+        dataset="test",
+        git_commit="test",
+        item_mapping_version="test",
+        num_users=1,
+        num_items=2,
+        artifacts={
+            "collaborative_index": ArtifactSpec(path="collaborative.faiss"),
+            "collaborative_metadata": ArtifactSpec(path="collaborative.meta.json"),
+        },
+    )
+    ranker = SimpleNamespace(
+        cf_model=SimpleNamespace(
+            user_factors=np.array([[0.0, 1.0]], dtype=np.float32),
+            item_factors=item_vectors,
+        )
+    )
+
+    retrievers = ServingResources._vector_retrievers(
+        tmp_path, manifest, ranker, model_branches(ranker)
+    )
+    assert len(retrievers) == 1
+    assert retrievers[0].source == RetrievalSource.COLLABORATIVE
+    hits = retrievers[0].retrieve(RetrievalQuery(user_idx=0), limit=2)
+    assert hits.item_ids.tolist() == [1, 0]
+
+
 def test_hybrid_bundle_serves_all_retrieval_sources(tmp_path):
     import json
 

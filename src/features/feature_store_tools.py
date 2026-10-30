@@ -115,13 +115,15 @@ def benchmark_feature_loading(
             elif not np.array_equal(baseline_scores, scores):
                 raise ValueError(f"Điểm dự đoán thay đổi sau khi đổi Feature Store: {directory}")
 
-            results.append({
-                "feature_dir": str(directory),
-                "load_times_ms": [round(t, 3) for t in timings],
-                "median_ms": round(statistics.median(timings), 3),
-                "min_ms": round(min(timings), 3),
-                "prediction_identical_to_first": True,
-            })
+            results.append(
+                {
+                    "feature_dir": str(directory),
+                    "load_times_ms": [round(t, 3) for t in timings],
+                    "median_ms": round(statistics.median(timings), 3),
+                    "min_ms": round(min(timings), 3),
+                    "prediction_identical_to_first": True,
+                }
+            )
     finally:
         model._features = {}
         model.feature_dir = original_feature_dir
@@ -145,7 +147,9 @@ def main() -> None:
     bench.add_argument("--checkpoint", type=Path, required=True)
     bench.add_argument("--feature-dir", action="append", type=Path, required=True)
     bench.add_argument("--repeats", type=int, default=5)
-    bench.add_argument("--output", type=Path, default=Path("reports/benchmarks/news_feature_store.json"))
+    bench.add_argument(
+        "--output", type=Path, default=Path("reports/benchmarks/news_feature_store.json")
+    )
     args = parser.parse_args()
     if args.command == "convert":
         result = convert_sparse_storage(args.source, args.output, compressed=args.compressed)

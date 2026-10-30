@@ -3,8 +3,6 @@
 import json
 from pathlib import Path
 
-import pytest
-
 from src.evaluation.run_all import collect_reports, evaluate_configs, write_reports
 
 
@@ -12,31 +10,56 @@ def _basic(count: int = 20, ci: bool = False):
     result = {
         "total_evaluated_impressions": count,
         "slices": {
-            "overall": {"count": count, "metrics": {"NDCG@10": 0.5, "Recall@10": 0.7, "MRR@10": 0.3}},
-            "cold_user": {"count": 10, "metrics": {"NDCG@10": 0.4, "Recall@10": 0.6, "MRR@10": 0.2}},
+            "overall": {
+                "count": count,
+                "metrics": {"NDCG@10": 0.5, "Recall@10": 0.7, "MRR@10": 0.3},
+            },
+            "cold_user": {
+                "count": 10,
+                "metrics": {"NDCG@10": 0.4, "Recall@10": 0.6, "MRR@10": 0.2},
+            },
         },
-        "bootstrap": {"unit": "user", "num_resamples": 100,
-                      "metrics": {"NDCG@10": {"mean": 0.5, "ci": [0.45, 0.55]}}},
+        "bootstrap": {
+            "unit": "user",
+            "num_resamples": 100,
+            "metrics": {"NDCG@10": {"mean": 0.5, "ci": [0.45, 0.55]}},
+        },
     }
     if ci:
         result["bootstrap"]["slices"] = {
-            "cold_user": {"count": 10, "metrics": {
-                "NDCG@10": {"mean": 0.4, "ci": [0.32, 0.48]}}}
+            "cold_user": {"count": 10, "metrics": {"NDCG@10": {"mean": 0.4, "ci": [0.32, 0.48]}}}
         }
     return result
 
 
 def _p3():
     return {
-        "evaluation_mode": "paired_baseline_vs_p3", "total_evaluated_impressions": 20,
+        "evaluation_mode": "paired_baseline_vs_p3",
+        "total_evaluated_impressions": 20,
         "baseline": {"slices": _basic()["slices"], "beyond_accuracy": {}},
-        "reranked": {"slices": _basic()["slices"], "beyond_accuracy": {"category_diversity@10": 0.7}},
-        "comparison": {"bootstrap": {
-            "unit": "user", "num_resamples": 100,
-            "metrics": {"NDCG@10": {"baseline_ci": [0.45, 0.55], "reranked_ci": [0.46, 0.56]}},
-            "slices": {"cold_user": {"count": 10, "metrics": {
-                "NDCG@10": {"baseline_ci": [0.31, 0.47], "reranked_ci": [0.32, 0.48], "delta_ci": [-0.02, 0.05]}}}},
-        }},
+        "reranked": {
+            "slices": _basic()["slices"],
+            "beyond_accuracy": {"category_diversity@10": 0.7},
+        },
+        "comparison": {
+            "bootstrap": {
+                "unit": "user",
+                "num_resamples": 100,
+                "metrics": {"NDCG@10": {"baseline_ci": [0.45, 0.55], "reranked_ci": [0.46, 0.56]}},
+                "slices": {
+                    "cold_user": {
+                        "count": 10,
+                        "metrics": {
+                            "NDCG@10": {
+                                "baseline_ci": [0.31, 0.47],
+                                "reranked_ci": [0.32, 0.48],
+                                "delta_ci": [-0.02, 0.05],
+                            }
+                        },
+                    }
+                },
+            }
+        },
     }
 
 
@@ -74,11 +97,21 @@ def test_mismatched_sample_filtered(tmp_path):
 
 def test_missing_checkpoint_skips_without_training(tmp_path):
     import yaml
+
     cfg = tmp_path / "experiment.yaml"
-    cfg.write_text(yaml.safe_dump({
-        "experiment_name": "missing", "model": {"name": "popularity"},
-        "paths": {"artifacts_dir": str(tmp_path / "artifacts"), "reports_dir": str(tmp_path / "reports")},
-    }), encoding="utf-8")
+    cfg.write_text(
+        yaml.safe_dump(
+            {
+                "experiment_name": "missing",
+                "model": {"name": "popularity"},
+                "paths": {
+                    "artifacts_dir": str(tmp_path / "artifacts"),
+                    "reports_dir": str(tmp_path / "reports"),
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     messages = evaluate_configs([cfg], tmp_path / "metrics")
     assert "thiếu checkpoint" in messages[0]
 

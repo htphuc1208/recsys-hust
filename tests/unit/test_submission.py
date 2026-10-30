@@ -5,6 +5,7 @@ from zipfile import ZipFile
 import numpy as np
 import pytest
 
+from src.submission import runner, validate
 from src.submission.inference import infer_ranks
 from src.submission.ranking import (
     format_prediction_line,
@@ -12,7 +13,6 @@ from src.submission.ranking import (
     positions_to_ranks,
     scores_to_ranks,
 )
-from src.submission import runner, validate
 
 
 class DummyModel:
@@ -30,16 +30,20 @@ class DummyP3:
 
 ROWS = [
     {
-        "impression_id": 24481, "user_idx": -1,
+        "impression_id": 24481,
+        "user_idx": -1,
         "candidate_news_ids": ["N1", "N2", "N3", "N4"],
         "candidate_item_idxs": [0, 3, 1, 2],
-        "history_item_idxs": [], "labels": None,
+        "history_item_idxs": [],
+        "labels": None,
     },
     {
-        "impression_id": 24482, "user_idx": 3,
+        "impression_id": 24482,
+        "user_idx": 3,
         "candidate_news_ids": ["N8", "N9"],
         "candidate_item_idxs": [-1, 4],
-        "history_item_idxs": [1], "labels": None,
+        "history_item_idxs": [1],
+        "labels": None,
     },
 ]
 
@@ -53,20 +57,38 @@ def test_official_rank_format_original_candidate_positions():
     assert positions_to_ranks([2, 0, 1], 3) == [2, 3, 1]
 
 
-@pytest.mark.parametrize("line", ["24481 [1,1]", "24481 [0,1]", "24481 [3,1]", "24481 1,2", "N24481 [1,2]", "24481 []"])
+@pytest.mark.parametrize(
+    "line", ["24481 [1,1]", "24481 [0,1]", "24481 [3,1]", "24481 1,2", "N24481 [1,2]", "24481 []"]
+)
 def test_invalid_output_rejected(line):
     with pytest.raises(ValueError):
         parse_prediction_line(line)
 
 
 def test_cold_user_unknown_item_and_p3():
-    base = infer_ranks(DummyModel(), user_idx=-1, candidate_item_idxs=[0, 3, 1, 2], history_item_idxs=[])
+    base = infer_ranks(
+        DummyModel(), user_idx=-1, candidate_item_idxs=[0, 3, 1, 2], history_item_idxs=[]
+    )
     assert base.ranks == [4, 1, 3, 2]
-    reranked = infer_ranks(DummyModel(), user_idx=-1, candidate_item_idxs=[0, 3, 1, 2], history_item_idxs=[], reranker=DummyP3())
+    reranked = infer_ranks(
+        DummyModel(),
+        user_idx=-1,
+        candidate_item_idxs=[0, 3, 1, 2],
+        history_item_idxs=[],
+        reranker=DummyP3(),
+    )
     assert reranked.ranks == [4, 3, 2, 1]
-    unknown = infer_ranks(DummyModel(), user_idx=-1, candidate_item_idxs=[-1, 4], history_item_idxs=[])
+    unknown = infer_ranks(
+        DummyModel(), user_idx=-1, candidate_item_idxs=[-1, 4], history_item_idxs=[]
+    )
     assert unknown.ranks == [2, 1] and unknown.unknown_candidates == 1
-    duplicate = infer_ranks(DummyModel(), user_idx=1, candidate_item_idxs=[2, 2], history_item_idxs=[], reranker=DummyP3())
+    duplicate = infer_ranks(
+        DummyModel(),
+        user_idx=1,
+        candidate_item_idxs=[2, 2],
+        history_item_idxs=[],
+        reranker=DummyP3(),
+    )
     assert duplicate.ranks == [1, 2] and duplicate.p3_fallback_reason
 
 
@@ -86,11 +108,15 @@ def test_full_test_txt_zip_and_validation(tmp_path, monkeypatch):
     raw = tmp_path / "behaviors.tsv"
     raw.write_text(
         "24481\tU1\t11/20/2019 01:00:00 PM\t\tN1 N2 N3 N4\n"
-        "24482\tU2\t11/20/2019 01:00:00 PM\tN1\tN8 N9\n", encoding="utf8"
+        "24482\tU2\t11/20/2019 01:00:00 PM\tN1\tN8 N9\n",
+        encoding="utf8",
     )
     manifest = runner.run_submission(
-        config_path=config, model=DummyModel(),
-        output_dir=tmp_path / "output", raw_behaviors=raw, require_raw=True,
+        config_path=config,
+        model=DummyModel(),
+        output_dir=tmp_path / "output",
+        raw_behaviors=raw,
+        require_raw=True,
     )
     folder = tmp_path / "output"
     assert (folder / "prediction.txt").read_text(encoding="utf8") == (
@@ -98,13 +124,17 @@ def test_full_test_txt_zip_and_validation(tmp_path, monkeypatch):
     )
     with ZipFile(folder / "prediction.zip") as archive:
         assert archive.namelist() == ["prediction.txt"]
-        assert archive.read("prediction.txt").decode() == (folder / "prediction.txt").read_text(encoding="utf8")
+        assert archive.read("prediction.txt").decode() == (folder / "prediction.txt").read_text(
+            encoding="utf8"
+        )
     assert manifest["submission_ready"] is True
     assert manifest["validation"]["original_order_verified"] is True
     assert manifest["unknown_candidates"] == 1
     assert manifest["validation"]["impressions"] == 2
     with pytest.raises(FileExistsError):
-        runner.run_submission(config_path=config, model=DummyModel(), output_dir=folder, raw_behaviors=raw)
+        runner.run_submission(
+            config_path=config, model=DummyModel(), output_dir=folder, raw_behaviors=raw
+        )
 
 
 def test_mismatch_original_candidate_order_rejected(tmp_path, monkeypatch):
@@ -115,7 +145,9 @@ def test_mismatch_original_candidate_order_rejected(tmp_path, monkeypatch):
     raw = tmp_path / "bad.tsv"
     raw.write_text("24481\tU1\tT\t\tN2 N1 N3 N4\n", encoding="utf8")
     with pytest.raises(ValueError, match="candidate order"):
-        runner.run_submission(config_path=cfg, model=DummyModel(), output_dir=tmp_path / "out", raw_behaviors=raw)
+        runner.run_submission(
+            config_path=cfg, model=DummyModel(), output_dir=tmp_path / "out", raw_behaviors=raw
+        )
     assert not (tmp_path / "out" / "prediction.txt").exists()
 
 
@@ -125,13 +157,16 @@ def test_test_split_must_be_unlabeled(tmp_path, monkeypatch):
     bad = [{**ROWS[0], "labels": [1, 0, 0, 0]}]
     monkeypatch.setattr(runner, "iter_impressions", FakeDataset(bad))
     with pytest.raises(ValueError, match="không được có nhãn"):
-        runner.run_submission(config_path=cfg, model=DummyModel(), output_dir=tmp_path / "out", require_raw=False)
+        runner.run_submission(
+            config_path=cfg, model=DummyModel(), output_dir=tmp_path / "out", require_raw=False
+        )
 
 
 def test_model_must_return_finite_and_exact_scores():
     class BadModel:
         def predict(self, *args, **kwargs):
             return [np.nan]
+
     with pytest.raises(ValueError, match="NaN/Inf"):
         infer_ranks(BadModel(), user_idx=1, candidate_item_idxs=[1], history_item_idxs=[])
 
@@ -164,8 +199,13 @@ def test_dev_sample_reports_not_ready(tmp_path, monkeypatch):
         encoding="utf8",
     )
     manifest = runner.run_submission(
-        config_path=cfg, model=DummyModel(), split="dev", limit=1,
-        output_dir=tmp_path / "out", raw_behaviors=raw, require_raw=True,
+        config_path=cfg,
+        model=DummyModel(),
+        split="dev",
+        limit=1,
+        output_dir=tmp_path / "out",
+        raw_behaviors=raw,
+        require_raw=True,
     )
     assert manifest["submission_ready"] is False
     assert manifest["validation"]["partial"] is True
@@ -203,13 +243,16 @@ def test_full_dev_with_labeled_raw_behaviors(tmp_path, monkeypatch):
     cfg.write_text("experiment_name: xx\nmodel: {name: bpr}\n", encoding="utf8")
     raw = tmp_path / "dev.tsv"
     raw.write_text(
-        "24481\tU1\tT\t\tN1-0 N2-1 N3-0 N4-0\n"
-        "24482\tU2\tT\t\tN8-1 N9-0\n",
+        "24481\tU1\tT\t\tN1-0 N2-1 N3-0 N4-0\n24482\tU2\tT\t\tN8-1 N9-0\n",
         encoding="utf8",
     )
     result = runner.run_submission(
-        config_path=cfg, model=DummyModel(), split="dev",
-        output_dir=tmp_path / "full_dev", raw_behaviors=raw, require_raw=True,
+        config_path=cfg,
+        model=DummyModel(),
+        split="dev",
+        output_dir=tmp_path / "full_dev",
+        raw_behaviors=raw,
+        require_raw=True,
     )
     assert result["submission_ready"] is False  # Dev không phải Test nộp leaderboard
     assert result["validation"]["original_order_verified"] is True
@@ -228,12 +271,16 @@ def test_test_sample_exports_prefix_without_being_submittable(tmp_path, monkeypa
     config.write_text("experiment_name: xx\nmodel: {name: bpr}\n", encoding="utf-8")
     raw = tmp_path / "test_behaviors.tsv"
     raw.write_text(
-        "24481\tU1\tT\t\tN1 N2 N3 N4\n"
-        "24482\tU2\tT\t\tN8 N9\n", encoding="utf-8",
+        "24481\tU1\tT\t\tN1 N2 N3 N4\n24482\tU2\tT\t\tN8 N9\n",
+        encoding="utf-8",
     )
     manifest = runner.run_submission(
-        config_path=config, split="test", limit=1, model=DummyModel(),
-        raw_behaviors=raw, require_raw=True,
+        config_path=config,
+        split="test",
+        limit=1,
+        model=DummyModel(),
+        raw_behaviors=raw,
+        require_raw=True,
     )
     folder = tmp_path / "reports/submissions/mind_large/test_samples/xx/first_1"
     assert (folder / "prediction.txt").read_text(encoding="utf-8") == "24481 [4,1,3,2]\n"
@@ -255,16 +302,19 @@ def test_test_sample_rejects_insufficient_impressions(tmp_path, monkeypatch):
     # Dùng TSV giả lập khớp FakeDataset, không tự tìm Test thật của người chạy.
     raw = tmp_path / "test_behaviors.tsv"
     raw.write_text(
-        "24481\tU1\tT\t\tN1 N2 N3 N4\n"
-        "24482\tU2\tT\t\tN8 N9\n",
+        "24481\tU1\tT\t\tN1 N2 N3 N4\n24482\tU2\tT\t\tN8 N9\n",
         encoding="utf-8",
     )
     target = tmp_path / "out"
     with pytest.raises(ValueError, match="Yêu cầu 5000 impressions"):
         runner.run_submission(
-            config_path=cfg, split="test", limit=5000,
-            model=DummyModel(), output_dir=target,
-            raw_behaviors=raw, require_raw=True,
+            config_path=cfg,
+            split="test",
+            limit=5000,
+            model=DummyModel(),
+            output_dir=target,
+            raw_behaviors=raw,
+            require_raw=True,
         )
     assert not (target / "prediction.txt").exists()
     assert not (target / "prediction.txt.part").exists()
@@ -272,6 +322,7 @@ def test_test_sample_rejects_insufficient_impressions(tmp_path, monkeypatch):
 
 def test_test_sample_validate_only_uses_partial_validator(tmp_path, monkeypatch, capsys):
     import sys
+
     from src.submission import __main__ as cli
 
     monkeypatch.setattr(runner, "iter_impressions", FakeDataset(ROWS))
@@ -282,13 +333,30 @@ def test_test_sample_validate_only_uses_partial_validator(tmp_path, monkeypatch,
     raw.write_text("24481\tU1\tT\t\tN1 N2 N3 N4\n24482\tU2\tT\t\tN8 N9\n", encoding="utf8")
     target = tmp_path / "out"
     runner.run_submission(
-        config_path=cfg, split="test", limit=1, model=DummyModel(),
-        output_dir=target, raw_behaviors=raw,
+        config_path=cfg,
+        split="test",
+        limit=1,
+        model=DummyModel(),
+        output_dir=target,
+        raw_behaviors=raw,
     )
-    monkeypatch.setattr(sys, "argv", [
-        "submission", "--config", str(cfg), "--split", "test",
-        "--limit", "1", "--raw-behaviors", str(raw),
-        "--output-dir", str(target), "--validate-only",
-    ])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "submission",
+            "--config",
+            str(cfg),
+            "--split",
+            "test",
+            "--limit",
+            "1",
+            "--raw-behaviors",
+            str(raw),
+            "--output-dir",
+            str(target),
+            "--validate-only",
+        ],
+    )
     cli.main()
     assert '"partial": true' in capsys.readouterr().out

@@ -17,8 +17,12 @@ from src.submission.validate import validate_partial_submission, validate_submis
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Xuất prediction.txt / prediction.zip chuẩn Microsoft MIND")
-    parser.add_argument("--config", required=True, help="YAML thí nghiệm BPR / Content / P3 / Hybrid")
+    parser = argparse.ArgumentParser(
+        description="Xuất prediction.txt / prediction.zip chuẩn Microsoft MIND"
+    )
+    parser.add_argument(
+        "--config", required=True, help="YAML thí nghiệm BPR / Content / P3 / Hybrid"
+    )
     parser.add_argument("--split", choices=("test", "dev"), default="test")
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--impressions", default=None, help="Ghi đè đường dẫn impressions Parquet")
@@ -26,20 +30,36 @@ def main() -> None:
     parser.add_argument("--raw-behaviors", default=None, help="TSV gốc để kiểm tra thứ tự")
     parser.add_argument("--require-raw", action="store_true", help="Bắt buộc đối chiếu TSV gốc")
     parser.add_argument("--batch-size", type=int, default=2048)
-    parser.add_argument("--limit", type=int, default=None, help="Lấy N mẫu đầu Dev/Test để smoke test; không đủ điều kiện nộp")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Lấy N mẫu đầu Dev/Test để smoke test; không đủ điều kiện nộp",
+    )
     parser.add_argument("--overwrite", action="store_true")
-    parser.add_argument("--validate-only", action="store_true", help="Kiểm tra submission đã xuất, không cần checkpoint")
+    parser.add_argument(
+        "--validate-only",
+        action="store_true",
+        help="Kiểm tra submission đã xuất, không cần checkpoint",
+    )
     args = parser.parse_args()
     config = load_config(args.config)
-    target = Path(args.output_dir) if args.output_dir else resolve_output_dir(config, args.split, args.limit)
+    target = (
+        Path(args.output_dir)
+        if args.output_dir
+        else resolve_output_dir(config, args.split, args.limit)
+    )
     if args.validate_only:
-        input_path = Path(args.impressions) if args.impressions else resolve_impressions(config, args.split)
+        input_path = (
+            Path(args.impressions) if args.impressions else resolve_impressions(config, args.split)
+        )
         original = resolve_original_behaviors(
             split=args.split, raw_behaviors=args.raw_behaviors, require_raw=args.require_raw
         )
         if args.limit is None:
             result = validate_submission(
-                target / "prediction.txt", input_path,
+                target / "prediction.txt",
+                input_path,
                 prediction_zip=target / "prediction.zip",
                 original_behaviors=original,
                 batch_size=args.batch_size,
@@ -47,7 +67,8 @@ def main() -> None:
             )
         else:
             result = validate_partial_submission(
-                target / "prediction.txt", input_path,
+                target / "prediction.txt",
+                input_path,
                 prediction_zip=target / "prediction.zip",
                 original_behaviors=original,
                 batch_size=args.batch_size,

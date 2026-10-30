@@ -109,7 +109,9 @@ def run_submission(
         raise ValueError("batch_size/limit phải lớn hơn 0.")
 
     config = load_config(config_path)
-    impression_source = Path(impressions_path) if impressions_path else resolve_impressions(config, split)
+    impression_source = (
+        Path(impressions_path) if impressions_path else resolve_impressions(config, split)
+    )
     target = Path(output_dir) if output_dir else resolve_output_dir(config, split, limit)
     target.mkdir(parents=True, exist_ok=True)
     txt = target / "prediction.txt"
@@ -121,7 +123,9 @@ def run_submission(
     original_path = resolve_original_behaviors(
         split=split, raw_behaviors=raw_behaviors, require_raw=require_raw
     )
-    checkpoint = Path(checkpoint_path) if checkpoint_path is not None else resolve_checkpoint(config)
+    checkpoint = (
+        Path(checkpoint_path) if checkpoint_path is not None else resolve_checkpoint(config)
+    )
     if model is None:
         if not checkpoint.is_file():
             raise FileNotFoundError(f"Checkpoint không tồn tại (không tự train): {checkpoint}")
@@ -135,7 +139,9 @@ def run_submission(
     # Viết file tạm và chỉ thay thế output sau khi đã kiểm tra dữ liệu đầu vào.
     temporary_txt = target / "prediction.txt.part"
     temporary_zip = target / "prediction.zip.part"
-    original_iterator = iter_original_behaviors(original_path, split=split) if original_path else None
+    original_iterator = (
+        iter_original_behaviors(original_path, split=split) if original_path else None
+    )
     total = 0
     unknown_candidates = 0
     p3_fallbacks: Counter[str] = Counter()
@@ -150,12 +156,16 @@ def run_submission(
                 candidate_ids = list(row["candidate_news_ids"] or [])
                 candidate_items = [int(x) for x in (row["candidate_item_idxs"] or [])]
                 if not candidate_ids or len(candidate_ids) != len(candidate_items):
-                    raise ValueError(f"Impression {impression_id}: candidate IDs rỗng hoặc lệch mapping.")
+                    raise ValueError(
+                        f"Impression {impression_id}: candidate IDs rỗng hoặc lệch mapping."
+                    )
                 labels = row["labels"]
                 if split == "test" and labels is not None:
                     raise ValueError(f"Test impression {impression_id} không được có nhãn.")
                 if split == "dev" and labels is not None and len(labels) != len(candidate_items):
-                    raise ValueError(f"Dev impression {impression_id}: labels và candidates không khớp.")
+                    raise ValueError(
+                        f"Dev impression {impression_id}: labels và candidates không khớp."
+                    )
                 if original_iterator is not None:
                     reference = next(original_iterator, None)
                     if reference is None:
@@ -178,7 +188,11 @@ def run_submission(
                     print(f"Đã dự đoán {total:,} impressions")
                 if limit is not None and total >= limit:
                     break
-            if original_iterator is not None and limit is None and next(original_iterator, None) is not None:
+            if (
+                original_iterator is not None
+                and limit is None
+                and next(original_iterator, None) is not None
+            ):
                 raise ValueError("Raw behaviors.tsv có nhiều impression hơn Parquet.")
         if total == 0:
             raise ValueError("Không có impression nào để xuất.")
@@ -189,15 +203,24 @@ def run_submission(
             archive.write(temporary_txt, arcname="prediction.txt")
         if limit is None:
             validation = validate_submission(
-                temporary_txt, impression_source, prediction_zip=temporary_zip,
-                original_behaviors=original_path, batch_size=batch_size, expected_count=total,
+                temporary_txt,
+                impression_source,
+                prediction_zip=temporary_zip,
+                original_behaviors=original_path,
+                batch_size=batch_size,
+                expected_count=total,
                 split=split,
             )
         else:
             from src.submission.validate import validate_partial_submission
+
             validation = validate_partial_submission(
-                temporary_txt, impression_source, prediction_zip=temporary_zip,
-                original_behaviors=original_path, batch_size=batch_size, expected_count=total,
+                temporary_txt,
+                impression_source,
+                prediction_zip=temporary_zip,
+                original_behaviors=original_path,
+                batch_size=batch_size,
+                expected_count=total,
                 split=split,
             )
         os.replace(temporary_txt, txt)

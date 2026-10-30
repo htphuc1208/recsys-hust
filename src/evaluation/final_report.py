@@ -18,7 +18,6 @@ from typing import Any
 
 from src.evaluation.run_all import (
     BEYOND_METRICS,
-    METRICS,
     SLICES,
     collect_p3_delta_rows,
     collect_reports,
@@ -36,10 +35,15 @@ CORE_MODELS = (
 
 # Không buộc các mô hình trong tương lai phải đổi code để được xuất báo cáo.
 def choose_model_ids(
-    metrics_dir: Path, *, profile: str = "core", selected_models: list[str] | None = None,
+    metrics_dir: Path,
+    *,
+    profile: str = "core",
+    selected_models: list[str] | None = None,
 ) -> tuple[set[str] | None, list[str]]:
     if selected_models:
-        requested = {name.removesuffix("_dev.json").removesuffix("_dev") for name in selected_models}
+        requested = {
+            name.removesuffix("_dev.json").removesuffix("_dev") for name in selected_models
+        }
     elif profile == "core":
         requested = set(CORE_MODELS)
     elif profile == "all":
@@ -87,15 +91,19 @@ def build_p3_tradeoff_rows(metrics_dir: Path, included: set[str]) -> list[dict[s
         for metric in BEYOND_METRICS:
             before = _num(baseline.get(metric))
             after = _num(reranked.get(metric))
-            rows.append({
-                "model": model_id,
-                "metric": metric,
-                "baseline": before if before is not None else "",
-                "reranked": after if after is not None else "",
-                "delta": after - before if before is not None and after is not None else "",
-                "status": "available" if before is not None and after is not None else "no_data",
-                "source_file": path.name,
-            })
+            rows.append(
+                {
+                    "model": model_id,
+                    "metric": metric,
+                    "baseline": before if before is not None else "",
+                    "reranked": after if after is not None else "",
+                    "delta": after - before if before is not None and after is not None else "",
+                    "status": "available"
+                    if before is not None and after is not None
+                    else "no_data",
+                    "source_file": path.name,
+                }
+            )
     return rows
 
 
@@ -136,14 +144,19 @@ def _summary_text(
         f"Có **{counts['available']} / {len(slice_rows)}** dòng metric–lát cắt có CI 95%; "
         f"**{counts['not_recorded']}** dòng chưa ghi CI và **{counts['no_data']}** dòng không có dữ liệu."
     )
-    lines.extend([
-        "", "- `available`: khoảng tin cậy lấy từ JSON đã đánh giá.",
-        "- `not_recorded`: có metric nhưng chưa lưu Bootstrap CI; **không được nội suy CI từ mean**.",
-        "- `no_data`: không có metric/lát cắt hợp lệ trong báo cáo nguồn.",
-        "", "## 3. P3: Paired Bootstrap trên cùng impression", "",
-        "| Mô hình | Lát cắt | ΔNDCG@10 | Paired CI 95% | Nhận xét |",
-        "|---|---|---:|---|---|",
-    ])
+    lines.extend(
+        [
+            "",
+            "- `available`: khoảng tin cậy lấy từ JSON đã đánh giá.",
+            "- `not_recorded`: có metric nhưng chưa lưu Bootstrap CI; **không được nội suy CI từ mean**.",
+            "- `no_data`: không có metric/lát cắt hợp lệ trong báo cáo nguồn.",
+            "",
+            "## 3. P3: Paired Bootstrap trên cùng impression",
+            "",
+            "| Mô hình | Lát cắt | ΔNDCG@10 | Paired CI 95% | Nhận xét |",
+            "|---|---|---:|---|---|",
+        ]
+    )
     important = {"overall", "catalog_cold_item", "zero_click_item", "head_item", "long_tail_item"}
     for row in paired:
         if row["metric"] != "NDCG@10" or row["slice"] not in important:
@@ -158,14 +171,20 @@ def _summary_text(
             ci, statement = f"[{low:.5f}, {high:.5f}]", "CI < 0"
         else:
             ci, statement = f"[{low:.5f}, {high:.5f}]", "CI chứa 0"
-        lines.append(f"| `{row['model']}` | `{row['slice']}` | {_fmt(row['delta'])} | {ci} | {statement} |")
+        lines.append(
+            f"| `{row['model']}` | `{row['slice']}` | {_fmt(row['delta'])} | {ci} | {statement} |"
+        )
     if not paired:
         lines.append("| Chưa có thí nghiệm P3 | — | — | — | — |")
-    lines.extend([
-        "", "## 4. Beyond-accuracy và các đánh đổi", "",
-        "| Mô hình P3 | Chỉ số | Trước P3 | Sau P3 | Chênh lệch |",
-        "|---|---|---:|---:|---:|",
-    ])
+    lines.extend(
+        [
+            "",
+            "## 4. Beyond-accuracy và các đánh đổi",
+            "",
+            "| Mô hình P3 | Chỉ số | Trước P3 | Sau P3 | Chênh lệch |",
+            "|---|---|---:|---:|---:|",
+        ]
+    )
     for row in tradeoffs:
         if row["status"] != "available":
             continue
@@ -175,38 +194,56 @@ def _summary_text(
         )
     if not tradeoffs:
         lines.append("| Chưa có thí nghiệm P3 | — | — | — | — |")
-    lines.extend([
-        "", "Giá trị ở bảng này là chênh lệch quan sát được; không suy diễn độ tin cậy "
-        "thống kê cho các chỉ số chưa có Bootstrap CI.",
-        "", "## 5. Phạm vi và giới hạn", "",
-        "- Chỉ đối chiếu các báo cáo cùng số impression Full Dev; mẫu khác được loại khỏi so sánh mặc định.",
-        "- Các lát cắt theo item có thể chồng nhau; không cộng số lượng slice để suy ra tổng số impression.",
-        "- Không suy diễn ý nghĩa thống kê cho chênh lệch **hai model khác nhau** từ hai CI riêng. "
-        "Muốn kết luận cần paired Bootstrap của hiệu số theo cùng impression.",
-        "- Kết quả Dev đã được dùng trong quá trình lựa chọn cấu hình; không coi là Test độc lập.",
-    ])
+    lines.extend(
+        [
+            "",
+            "Giá trị ở bảng này là chênh lệch quan sát được; không suy diễn độ tin cậy "
+            "thống kê cho các chỉ số chưa có Bootstrap CI.",
+            "",
+            "## 5. Phạm vi và giới hạn",
+            "",
+            "- Chỉ đối chiếu các báo cáo cùng số impression Full Dev; mẫu khác được loại khỏi so sánh mặc định.",
+            "- Các lát cắt theo item có thể chồng nhau; không cộng số lượng slice để suy ra tổng số impression.",
+            "- Không suy diễn ý nghĩa thống kê cho chênh lệch **hai model khác nhau** từ hai CI riêng. "
+            "Muốn kết luận cần paired Bootstrap của hiệu số theo cùng impression.",
+            "- Kết quả Dev đã được dùng trong quá trình lựa chọn cấu hình; không coi là Test độc lập.",
+        ]
+    )
     if missing_models:
-        lines.append("- Chưa tìm thấy báo cáo yêu cầu: " + ", ".join(f"`{m}`" for m in missing_models))
+        lines.append(
+            "- Chưa tìm thấy báo cáo yêu cầu: " + ", ".join(f"`{m}`" for m in missing_models)
+        )
     if manifest["excluded_mismatched"]:
-        lines.append("- Đã loại các file lệch số impression: " + ", ".join(r["source"] for r in manifest["excluded_mismatched"]))
-    lines.extend([
-        "", "## 6. Khả năng mở rộng", "",
-        "- `--profile core`: chỉ chọn BPR, Content-Based và hai kết quả P3 hiện có.",
-        "- `--profile all`: tự đọc tất cả JSON `*_dev.json` hợp lệ được thêm vào trong tương lai.",
-        "- `--model <experiment_name>` (lặp lại): chọn một tập mô hình tùy ý, không sửa mã nguồn.",
-        "- Khi thêm một mô hình, chỉ cần chạy evaluator để có `reports/metrics/<experiment_name>_dev.json` "
-        "cùng schema hiện hành rồi chạy lại script; không cần checkpoint khi chỉ xuất báo cáo.",
-        "",
-    ])
+        lines.append(
+            "- Đã loại các file lệch số impression: "
+            + ", ".join(r["source"] for r in manifest["excluded_mismatched"])
+        )
+    lines.extend(
+        [
+            "",
+            "## 6. Khả năng mở rộng",
+            "",
+            "- `--profile core`: chỉ chọn BPR, Content-Based và hai kết quả P3 hiện có.",
+            "- `--profile all`: tự đọc tất cả JSON `*_dev.json` hợp lệ được thêm vào trong tương lai.",
+            "- `--model <experiment_name>` (lặp lại): chọn một tập mô hình tùy ý, không sửa mã nguồn.",
+            "- Khi thêm một mô hình, chỉ cần chạy evaluator để có `reports/metrics/<experiment_name>_dev.json` "
+            "cùng schema hiện hành rồi chạy lại script; không cần checkpoint khi chỉ xuất báo cáo.",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
 def plot_figures(
-    models: list[dict[str, Any]], slices: list[dict[str, Any]],
-    deltas: list[dict[str, Any]], tradeoffs: list[dict[str, Any]], output_dir: Path,
+    models: list[dict[str, Any]],
+    slices: list[dict[str, Any]],
+    deltas: list[dict[str, Any]],
+    tradeoffs: list[dict[str, Any]],
+    output_dir: Path,
 ) -> dict[str, Path]:
     """Vẽ biểu đồ riêng; không giả định sẵn số lượng hoặc tên mô hình."""
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
@@ -238,13 +275,17 @@ def plot_figures(
     non_p3 = [m for m in model_names if "p3" not in m.lower()]
     selected = non_p3 if non_p3 else model_names[: min(4, len(model_names))]
     data = {(r["model"], r["slice"]): _num(r["mean"]) for r in n_rows}
-    active_slices = [s for s in SLICES if s != "overall" and any(data.get((m, s)) is not None for m in selected)]
+    active_slices = [
+        s for s in SLICES if s != "overall" and any(data.get((m, s)) is not None for m in selected)
+    ]
     if selected and active_slices:
         x = np.arange(len(active_slices))
         fig, ax = plt.subplots(figsize=(12.8, 7.2))
         width = 0.74 / len(selected)
         for i, m in enumerate(selected):
-            vals = [data.get((m, s)) if data.get((m, s)) is not None else np.nan for s in active_slices]
+            vals = [
+                data.get((m, s)) if data.get((m, s)) is not None else np.nan for s in active_slices
+            ]
             ax.bar(x - 0.37 + (i + 0.5) * width, vals, width, label=m)
         ax.set_xticks(x, [s.replace("_", "\n") for s in active_slices], fontsize=9)
         ax.set_ylim(0, 1)
@@ -257,7 +298,11 @@ def plot_figures(
         fig.savefig(saved["slices"], dpi=170)
         plt.close(fig)
 
-    filtered = [r for r in deltas if r["metric"] == "NDCG@10" and r["slice"] != "overall" and _num(r["delta"]) is not None]
+    filtered = [
+        r
+        for r in deltas
+        if r["metric"] == "NDCG@10" and r["slice"] != "overall" and _num(r["delta"]) is not None
+    ]
     if filtered:
         p3s = list(dict.fromkeys(r["model"] for r in filtered))
         unique_slices = list(dict.fromkeys(r["slice"] for r in filtered))
@@ -285,8 +330,13 @@ def plot_figures(
                 if low is not None and high is not None:
                     # Vẽ đoạn CI thực thay vì giả định estimate nằm giữa hai cận.
                     ax.vlines(positions[j], low, high, color="black", linewidth=0.9)
-                    ax.hlines([low, high], positions[j] - width * 0.07,
-                              positions[j] + width * 0.07, color="black", linewidth=0.9)
+                    ax.hlines(
+                        [low, high],
+                        positions[j] - width * 0.07,
+                        positions[j] + width * 0.07,
+                        color="black",
+                        linewidth=0.9,
+                    )
         ax.axhline(0, color="black", linewidth=0.9)
         ax.set_xticks(x, [s.replace("_", "\n") for s in unique_slices], fontsize=9)
         ax.set_ylabel("Delta NDCG@10 (P3 - baseline)")
@@ -298,9 +348,17 @@ def plot_figures(
         fig.savefig(saved["p3_delta"], dpi=170)
         plt.close(fig)
 
-    active_tradeoffs = [r for r in tradeoffs if r["metric"] in (
-        "category_diversity@10", "long_tail_exposure@10", "zero_click_exposure@10",
-    ) and r["status"] == "available"]
+    active_tradeoffs = [
+        r
+        for r in tradeoffs
+        if r["metric"]
+        in (
+            "category_diversity@10",
+            "long_tail_exposure@10",
+            "zero_click_exposure@10",
+        )
+        and r["status"] == "available"
+    ]
     if active_tradeoffs:
         groups = list(dict.fromkeys(r["model"] for r in active_tradeoffs))
         names = ["Category diversity", "Long-tail exposure", "Zero-click exposure"]
@@ -309,14 +367,22 @@ def plot_figures(
         base, rerank = [], []
         for group in groups:
             for metric in metrics:
-                r = next((r for r in active_tradeoffs if r["model"] == group and r["metric"] == metric), None)
+                r = next(
+                    (r for r in active_tradeoffs if r["model"] == group and r["metric"] == metric),
+                    None,
+                )
                 base.append(_num(r["baseline"]) if r else np.nan)
                 rerank.append(_num(r["reranked"]) if r else np.nan)
         fig, ax = plt.subplots(figsize=(12.8, 7.2))
         ax.bar(x - 0.18, base, 0.36, label="Before P3")
         ax.bar(x + 0.18, rerank, 0.36, label="After P3")
-        ax.set_xticks(x, [f"{group}\n{names[i % len(names)]}" for group in groups for i in range(len(metrics))],
-                      fontsize=8, rotation=12, ha="right")
+        ax.set_xticks(
+            x,
+            [f"{group}\n{names[i % len(names)]}" for group in groups for i in range(len(metrics))],
+            fontsize=8,
+            rotation=12,
+            ha="right",
+        )
         ax.set_ylim(0, 1)
         ax.set_ylabel("Exposure / diversity ratio")
         ax.set_title("Beyond-accuracy tradeoff before and after P3")
@@ -340,17 +406,28 @@ def build_final_report(
     allow_mixed_counts: bool = False,
     generate_figures: bool = True,
 ) -> dict[str, Path]:
-    model_filter, missing = choose_model_ids(metrics_dir, profile=profile, selected_models=selected_models)
+    model_filter, missing = choose_model_ids(
+        metrics_dir, profile=profile, selected_models=selected_models
+    )
     if model_filter is not None and not model_filter:
         raise FileNotFoundError("Không tìm thấy JSON đánh giá cho bất kỳ model nào được chọn.")
     models, slices, manifest = collect_reports(
-        metrics_dir, selected_models=model_filter, allow_mixed_counts=allow_mixed_counts,
+        metrics_dir,
+        selected_models=model_filter,
+        allow_mixed_counts=allow_mixed_counts,
     )
     included = {m["model"] for m in models}
-    manifest.update({"profile": profile, "missing_requested_models": missing, "selected_models": sorted(included)})
+    manifest.update(
+        {
+            "profile": profile,
+            "missing_requested_models": missing,
+            "selected_models": sorted(included),
+        }
+    )
     files = write_reports(output_dir, models, slices, manifest)
     p3_rows = collect_p3_delta_rows(
-        metrics_dir, reference_impressions=manifest["reference_impressions"],
+        metrics_dir,
+        reference_impressions=manifest["reference_impressions"],
         selected_models=included,
     )
     files["p3_paired_deltas"] = write_p3_delta_report(output_dir, p3_rows)
@@ -371,40 +448,71 @@ def build_final_report(
     manifest_path.replace(named_manifest)
     files["manifest"] = named_manifest
     tradeoff_path = output_dir / "task2_p3_tradeoff.csv"
-    _csv(tradeoff_path, tradeoff_rows, ["model", "metric", "baseline", "reranked", "delta", "status", "source_file"])
+    _csv(
+        tradeoff_path,
+        tradeoff_rows,
+        ["model", "metric", "baseline", "reranked", "delta", "status", "source_file"],
+    )
     files["p3_tradeoff"] = tradeoff_path
     summary_path = output_dir / "task2_summary.md"
     summary_path.write_text(
-        _summary_text(models, slices, p3_rows, tradeoff_rows, manifest, profile=profile, missing_models=missing),
+        _summary_text(
+            models,
+            slices,
+            p3_rows,
+            tradeoff_rows,
+            manifest,
+            profile=profile,
+            missing_models=missing,
+        ),
         encoding="utf-8",
     )
     files["summary"] = summary_path
     if generate_figures:
-        files.update({f"figure_{k}": v for k, v in plot_figures(models, slices, p3_rows, tradeoff_rows, figures_dir).items()})
+        files.update(
+            {
+                f"figure_{k}": v
+                for k, v in plot_figures(
+                    models, slices, p3_rows, tradeoff_rows, figures_dir
+                ).items()
+            }
+        )
     return files
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Báo cáo cuối Task 2, hỗ trợ model mới tự động")
     parser.add_argument("--profile", choices=("core", "all"), default="core")
-    parser.add_argument("--model", action="append", default=[], help="Tên thí nghiệm, lặp lại để chọn nhiều model")
+    parser.add_argument(
+        "--model", action="append", default=[], help="Tên thí nghiệm, lặp lại để chọn nhiều model"
+    )
     parser.add_argument("--metrics-dir", type=Path, default=Path("reports/metrics"))
     parser.add_argument("--output-dir", type=Path, default=Path("reports/tables/task2_final"))
     parser.add_argument("--figures-dir", type=Path, default=Path("reports/figures/task2_final"))
-    parser.add_argument("--allow-mixed-counts", action="store_true", help="Không khuyến nghị: chấp nhận so sánh kết quả khác sample size")
+    parser.add_argument(
+        "--allow-mixed-counts",
+        action="store_true",
+        help="Không khuyến nghị: chấp nhận so sánh kết quả khác sample size",
+    )
     parser.add_argument("--no-figures", action="store_true")
     args = parser.parse_args()
     outputs = build_final_report(
-        args.metrics_dir, args.output_dir, args.figures_dir,
-        profile=args.profile, selected_models=args.model or None,
-        allow_mixed_counts=args.allow_mixed_counts, generate_figures=not args.no_figures,
+        args.metrics_dir,
+        args.output_dir,
+        args.figures_dir,
+        profile=args.profile,
+        selected_models=args.model or None,
+        allow_mixed_counts=args.allow_mixed_counts,
+        generate_figures=not args.no_figures,
     )
     for kind, path in outputs.items():
         print(f"{kind}: {path}")
     manifest = json.loads(outputs["manifest"].read_text(encoding="utf-8"))
-    print(f"Đã tổng hợp {manifest['model_rows']} model, "
-          f"{manifest['ci_available_rows']}/{manifest['slice_metric_rows']} CI theo lát cắt, "
-          f"Full Dev {manifest['reference_impressions']:,} impressions")
+    print(
+        f"Đã tổng hợp {manifest['model_rows']} model, "
+        f"{manifest['ci_available_rows']}/{manifest['slice_metric_rows']} CI theo lát cắt, "
+        f"Full Dev {manifest['reference_impressions']:,} impressions"
+    )
     if manifest["missing_requested_models"]:
         print("LƯU Ý - chưa có kết quả:", ", ".join(manifest["missing_requested_models"]))
 

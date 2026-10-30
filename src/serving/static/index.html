@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecSys HUST — Hệ Thống Gợi Ý Tin Tức Đa Tầng Thông Minh</title>
+    <meta name="description" content="Giao diện trải nghiệm hệ thống gợi ý tin tức đa tầng Microsoft News Dataset (MIND Large) của nhóm RecSys HUST kết hợp Collaborative Filtering, SASRec, Content-based và P3 Reranking.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <!-- Navigation Header -->
+    <header class="app-header" id="app-header">
+        <div class="header-inner container">
+            <div class="brand">
+                <div class="brand-logo">
+                    <span class="logo-icon">⚡</span>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-title">RecSys <span class="highlight">HUST</span></div>
+                    <div class="brand-subtitle">AI News Discovery & Serving Portal</div>
+                </div>
+                <span class="badge badge-version">v0.2.0 Hybrid</span>
+            </div>
+
+            <div class="system-status-group">
+                <div class="status-pill status-healthy" id="system-health-pill">
+                    <span class="pulse-dot"></span>
+                    <span class="status-label" id="system-health-text">Hệ Thống Sẵn Sàng</span>
+                </div>
+                <button class="btn btn-ghost" id="btn-toggle-inspector" title="Xem kiến trúc & số liệu kỹ thuật">
+                    <span class="icon">🔍</span> Pipeline Inspector
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content container">
+        <!-- Hero & Architecture Overview Bar -->
+        <section class="hero-section">
+            <div class="hero-badge">
+                <span class="sparkle">✨</span> Powered by Microsoft News Dataset (MIND Large) & Multi-Stage Pipeline
+            </div>
+            <h1 class="hero-title">Khám Phá Tin Tức Cá Nhân Hóa Thời Gian Thực</h1>
+            <p class="hero-desc">
+                Hệ thống dung hợp đa kênh: <strong>FAISS Collaborative</strong> + <strong>SASRec Sequential Attention</strong> + <strong>Content TF-IDF</strong> với mạng chọn trọng số thích ứng <strong>Adaptive Gating Softmax</strong> và bảo vệ đạo đức AI bằng <strong>P3 Diversity Reranking</strong>.
+            </p>
+        </section>
+
+        <!-- Persona Selection Section -->
+        <section class="persona-section" id="persona-section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">1. Chọn Hồ Sơ Độc Giả Thử Nghiệm (Reader Persona)</h2>
+                    <p class="section-subtitle">Chọn người dùng mẫu để quan sát cách AI cá nhân hóa theo từng sở thích và lịch sử đọc:</p>
+                </div>
+                <button class="btn btn-outline" id="btn-custom-user">
+                    <span class="icon">✏️</span> Nhập User Tuỳ Chọn
+                </button>
+            </div>
+
+            <div class="personas-grid" id="personas-grid">
+                <!-- Dynamically populated via JS -->
+                <div class="persona-card skeleton"></div>
+                <div class="persona-card skeleton"></div>
+                <div class="persona-card skeleton"></div>
+                <div class="persona-card skeleton"></div>
+            </div>
+        </section>
+
+        <!-- Active User Profile & Control Bar -->
+        <section class="active-profile-section" id="active-profile-card">
+            <div class="profile-card-header">
+                <div class="profile-user-info">
+                    <div class="user-avatar-large" id="current-user-avatar">🏃‍♂️</div>
+                    <div>
+                        <div class="user-meta-row">
+                            <h3 class="user-name-large" id="current-user-name">Đang tải người dùng...</h3>
+                            <span class="badge badge-user-id" id="current-user-id-badge">ID: U134050</span>
+                            <span class="badge badge-persona-role" id="current-user-role">Sports Reader</span>
+                        </div>
+                        <p class="user-desc-text" id="current-user-desc">Lịch sử đọc tin nổi bật gần đây:</p>
+                    </div>
+                </div>
+
+                <div class="recommendation-controls">
+                    <div class="control-item">
+                        <label for="topk-select" class="control-label">Số lượng gợi ý (Top-K):</label>
+                        <select id="topk-select" class="form-select">
+                            <option value="5">Top 5 bài</option>
+                            <option value="10" selected>Top 10 bài (Chuẩn)</option>
+                            <option value="15">Top 15 bài</option>
+                            <option value="20">Top 20 bài</option>
+                        </select>
+                    </div>
+
+                    <div class="control-item toggle-item">
+                        <label class="switch" for="filter-seen-toggle">
+                            <input type="checkbox" id="filter-seen-toggle" checked>
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="toggle-label" title="Không gợi ý lại những bài đã đọc trong lịch sử">Lọc bài đã đọc</span>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-run-recommendation">
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-text">Gợi Ý Tin Tức Mới</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reading History Ribbon -->
+            <div class="history-ribbon" id="history-ribbon">
+                <div class="history-label">
+                    <span>📖 Lịch sử tương tác gần nhất:</span>
+                    <button class="btn-clear-history" id="btn-clear-history" title="Xóa lịch sử để thử nghiệm Cold-start">[Xóa lịch sử]</button>
+                </div>
+                <div class="history-chips-wrapper" id="history-chips-container">
+                    <!-- Chips inserted here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Performance HUD -->
+        <section class="hud-stats-bar" id="hud-stats-bar">
+            <div class="hud-item">
+                <span class="hud-label">Chiến Lược Serving</span>
+                <span class="hud-value highlight-cyan" id="hud-strategy">Hybrid Two-Stage</span>
+            </div>
+            <div class="hud-divider"></div>
+            <div class="hud-item">
+                <span class="hud-label">Độ Trễ Phục Vụ (SLA < 100ms)</span>
+                <span class="hud-value highlight-green" id="hud-latency">-- ms</span>
+            </div>
+            <div class="hud-divider"></div>
+            <div class="hud-item">
+                <span class="hud-label">Trạng Thái Cầu Dao (Circuit Breaker)</span>
+                <span class="hud-value" id="hud-breaker">Bình thường (Normal)</span>
+            </div>
+            <div class="hud-divider"></div>
+            <div class="hud-item">
+                <span class="hud-label">Ứng Viên Khảo Sát</span>
+                <span class="hud-value highlight-purple" id="hud-candidates">800 Candidates</span>
+            </div>
+        </section>
+
+        <!-- Recommendation Results Feed -->
+        <section class="results-section" id="results-section">
+            <div class="results-header">
+                <div>
+                    <h2 class="section-title">2. Bảng Tin Gợi Ý Dành Riêng Cho Bạn</h2>
+                    <p class="section-subtitle">Mỗi bài báo được gán nhãn giải thích nguồn gốc (Provenance Reason) minh bạch:</p>
+                </div>
+                <div class="category-filter-pills" id="category-filter-pills">
+                    <button class="filter-pill active" data-cat="all">Tất cả</button>
+                    <button class="filter-pill" data-cat="sports">Thể thao</button>
+                    <button class="filter-pill" data-cat="news">Thời sự</button>
+                    <button class="filter-pill" data-cat="health">Sức khỏe</button>
+                    <button class="filter-pill" data-cat="lifestyle">Lối sống</button>
+                    <button class="filter-pill" data-cat="foodanddrink">Ẩm thực</button>
+                </div>
+            </div>
+
+            <!-- News Grid -->
+            <div class="news-grid" id="news-grid">
+                <!-- Dynamically rendered cards -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Technical Inspector Drawer -->
+    <aside class="inspector-drawer" id="inspector-drawer">
+        <div class="inspector-header">
+            <h3>🔬 Pipeline Inspector & Model Telemetry</h3>
+            <button class="btn-close-drawer" id="btn-close-drawer">✕</button>
+        </div>
+        <div class="inspector-body">
+            <div class="inspector-card">
+                <h4>Kiến Trúc Thu Nhận & Xếp Hạng</h4>
+                <div class="pipeline-flow">
+                    <div class="flow-step">
+                        <div class="flow-badge">Giai đoạn 1</div>
+                        <div class="flow-title">Multi-Source Candidate Retrieval</div>
+                        <div class="flow-desc">Thu nạp 800 ứng viên từ 4 kênh song song (FAISS CF, Content, Sequential SASRec, Popularity) dung hợp qua RRF.</div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-step">
+                        <div class="flow-badge">Giai đoạn 2</div>
+                        <div class="flow-title">Adaptive Gating Hybrid Ranking</div>
+                        <div class="flow-desc">Mạng nơ-ron Gating Network tính trọng số thích ứng softmax dựa trên ngữ cảnh người đọc.</div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-step">
+                        <div class="flow-badge">Giai đoạn 3</div>
+                        <div class="flow-title">P3 Responsible Re-ranking</div>
+                        <div class="flow-desc">Cân bằng Pareto: 75% Điểm khớp + 15% Đa dạng thể loại + 10% Tin bài ngách (Long-tail).</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="inspector-card">
+                <h4>Phản Hồi Trực Tiếp Từ API (/recommend)</h4>
+                <pre class="json-viewer" id="inspector-json-viewer">Chưa có lượt suy luận nào...</pre>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Modal Article Preview -->
+    <div class="modal-backdrop" id="article-modal-backdrop">
+        <div class="modal-dialog">
+            <button class="modal-close-btn" id="btn-close-modal">✕</button>
+            <div class="modal-badge-row">
+                <span class="badge" id="modal-category">CATEGORY</span>
+                <span class="badge badge-reason" id="modal-reason">REASON</span>
+            </div>
+            <h2 class="modal-title" id="modal-title">Tiêu đề bài viết</h2>
+            <div class="modal-meta-row">
+                <span id="modal-news-id">ID: N12345</span>
+                <span>•</span>
+                <span id="modal-score">Độ liên quan: 0.000</span>
+            </div>
+            <p class="modal-abstract" id="modal-abstract">Nội dung tóm tắt...</p>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-modal-add-history">
+                    <span class="icon">➕</span> Giả lập Đọc (Thêm vào Lịch sử)
+                </button>
+                <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="btn-modal-open-url">
+                    <span class="icon">🔗</span> Xem Bài Viết Gốc Trên MSN
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom User Modal -->
+    <div class="modal-backdrop" id="custom-user-modal-backdrop">
+        <div class="modal-dialog">
+            <button class="modal-close-btn" id="btn-close-custom-modal">✕</button>
+            <h2 class="modal-title">Thiết Lập Người Dùng Tuỳ Chọn</h2>
+            <p class="modal-subtitle">Nhập mã định danh người dùng và danh sách ID bài báo trong lịch sử:</p>
+            <div class="form-group">
+                <label for="custom-input-user-id" class="form-label">User ID (Ví dụ: U123456):</label>
+                <input type="text" id="custom-input-user-id" class="form-input" placeholder="U87243">
+            </div>
+            <div class="form-group">
+                <label for="custom-input-history" class="form-label">History News IDs (Cách nhau bằng dấu phẩy):</label>
+                <textarea id="custom-input-history" class="form-textarea" rows="3" placeholder="N98178, N88753, N23144"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-cancel-custom-user">Hủy</button>
+                <button class="btn btn-primary" id="btn-apply-custom-user">Áp Dụng & Gợi Ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="app-toast">Thông báo</div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

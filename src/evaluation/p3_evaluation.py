@@ -423,19 +423,22 @@ def evaluate_p3_impressions(
             name: {
                 "count": total_evaluated if name == "overall" else len(slice_boot_users[name]),
                 "metrics": {
-                    key: comparison["bootstrap"]["metrics"][key]
-                    for key in ranking_boot_names
-                } if name == "overall" else paired_bootstrap_comparison(
+                    key: comparison["bootstrap"]["metrics"][key] for key in ranking_boot_names
+                }
+                if name == "overall"
+                else paired_bootstrap_comparison(
                     user_ids=np.frombuffer(slice_boot_users[name], dtype=np.int64),
-                    baseline_values=np.frombuffer(slice_boot_before[name], dtype=np.float32).reshape(
-                        -1, len(ranking_boot_names)
-                    ),
+                    baseline_values=np.frombuffer(
+                        slice_boot_before[name], dtype=np.float32
+                    ).reshape(-1, len(ranking_boot_names)),
                     reranked_values=np.frombuffer(slice_boot_after[name], dtype=np.float32).reshape(
                         -1, len(ranking_boot_names)
                     ),
                     metric_names=ranking_boot_names,
                     settings=settings,
-                ) if slice_boot_users[name] else {},
+                )
+                if slice_boot_users[name]
+                else {},
             }
             for name in ALL_SLICES
         }

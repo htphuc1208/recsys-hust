@@ -64,7 +64,9 @@ def infer_ranks(
             reordered_ids = reranker.rerank(known_ids, scores)
             if Counter(reordered_ids) != Counter(known_ids):
                 raise ValueError("P3 thay đổi tập ứng viên; không thể xuất submission hợp lệ.")
-            index_by_id = {item_id: int(known_positions[pos]) for pos, item_id in enumerate(known_ids)}
+            index_by_id = {
+                item_id: int(known_positions[pos]) for pos, item_id in enumerate(known_ids)
+            }
             ordered_known = [index_by_id[item_id] for item_id in reordered_ids]
 
     order = ordered_known + unknown_positions.tolist()

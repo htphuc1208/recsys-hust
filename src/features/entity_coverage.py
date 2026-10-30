@@ -103,15 +103,11 @@ class CoverageCounts:
             "unique_entity_ids": len(self.unique_entity_ids),
             "matched_unique_entity_ids": len(self.matched_unique_entity_ids),
             "entity_presence_pct": percent(self.articles_with_entity_ids, self.articles),
-            "embedding_coverage_pct": percent(
-                self.articles_with_valid_embedding, self.articles
-            ),
+            "embedding_coverage_pct": percent(self.articles_with_valid_embedding, self.articles),
             "match_among_articles_with_entities_pct": percent(
                 self.articles_with_matched_ids, self.articles_with_entity_ids
             ),
-            "mention_match_pct": percent(
-                self.matched_entity_mentions, self.entity_mentions
-            ),
+            "mention_match_pct": percent(self.matched_entity_mentions, self.entity_mentions),
         }
 
 
@@ -241,9 +237,7 @@ def analyze_coverage(processed_root: Path, entity_path: Path) -> dict[str, objec
         for split in ("overall", *SPLITS)
         for field_name in ("title", "abstract")
     }
-    complementary_groups = {
-        split: ComplementarityCounts() for split in ("overall", *SPLITS)
-    }
+    complementary_groups = {split: ComplementarityCounts() for split in ("overall", *SPLITS)}
     missing_metadata = 0
     for item_idx, record in enumerate(records):
         if record is None:
@@ -327,17 +321,13 @@ def save_report(result: dict[str, object], csv_path: Path, json_path: Path) -> N
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Audit Wikidata Entity Coverage")
-    parser.add_argument(
-        "--processed-root", type=Path, default=Path("data/processed/mind_large")
-    )
+    parser.add_argument("--processed-root", type=Path, default=Path("data/processed/mind_large"))
     parser.add_argument(
         "--entity-path",
         type=Path,
         default=Path("data/raw/mind_large/MINDlarge_train/entity_embedding.vec"),
     )
-    parser.add_argument(
-        "--csv", type=Path, default=Path("reports/tables/news_entity_coverage.csv")
-    )
+    parser.add_argument("--csv", type=Path, default=Path("reports/tables/news_entity_coverage.csv"))
     parser.add_argument(
         "--json", type=Path, default=Path("reports/metrics/news_entity_coverage.json")
     )

@@ -86,8 +86,10 @@ class ContentBasedRecommender(BaseRecommender):
     ) -> None:
         """Nạp feature cần thiết; sweep 6 chiều có thể yêu cầu cả optional có weight 0."""
         required_names = (
-            set(FEATURE_FILES) | {
-                name for name in OPTIONAL_FEATURE_FILES
+            set(FEATURE_FILES)
+            | {
+                name
+                for name in OPTIONAL_FEATURE_FILES
                 if include_optional or self.feature_weights.get(name, 0.0) > 0.0
             }
             if load_all

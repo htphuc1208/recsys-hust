@@ -15,8 +15,8 @@ import yaml
 from src.evaluation.ranking_metrics import mrr_at_k, ndcg_at_k, recall_at_k
 from src.models.base import BaseRecommender
 from src.models.content_based.recommender import (
-    FEATURE_FILES,
     AVAILABLE_FEATURE_FILES,
+    FEATURE_FILES,
     ContentBasedRecommender,
 )
 
@@ -97,9 +97,10 @@ def _normalize_weight_bounds(
             raise ValueError(f"Max bound của {name}={upper} không nằm trên lưới step={step}.")
         normalized[name] = (lower_units, upper_units)
 
-    if sum(v[0] for v in normalized.values()) > divisions or sum(
-        v[1] for v in normalized.values()
-    ) < divisions:
+    if (
+        sum(v[0] for v in normalized.values()) > divisions
+        or sum(v[1] for v in normalized.values()) < divisions
+    ):
         raise ValueError("Các bounds không thể tạo được bộ trọng số có tổng bằng 1.")
     return normalized
 
@@ -117,9 +118,12 @@ def generate_weight_grid(
     def add_units(index: int, remaining: int, assigned: list[int]) -> None:
         if index == len(feature_names):
             if remaining == 0:
-                configurations.append({
-                    name: value / divisions for name, value in zip(feature_names, assigned)
-                })
+                configurations.append(
+                    {
+                        name: value / divisions
+                        for name, value in zip(feature_names, assigned, strict=True)
+                    }
+                )
                 if len(configurations) > MAX_SWEEP_CONFIGS:
                     raise ValueError(
                         f"Lưới vượt {MAX_SWEEP_CONFIGS:,} cấu hình; hãy siết bounds hoặc tăng step."
@@ -128,7 +132,7 @@ def generate_weight_grid(
 
         name = feature_names[index]
         low, high = bound_units[name]
-        others = feature_names[index + 1:]
+        others = feature_names[index + 1 :]
         others_min = sum(bound_units[k][0] for k in others)
         others_max = sum(bound_units[k][1] for k in others)
         for units in range(max(low, remaining - others_max), min(high, remaining - others_min) + 1):
@@ -381,7 +385,10 @@ def run_weight_sweep(
     feature_names = (
         FEATURE_NAMES_WITH_ABSTRACT_ENTITY if settings.include_abstract_entity else FEATURE_NAMES
     )
-    if not settings.include_abstract_entity and model.feature_weights.get("abstract_entity", 0.0) > 0:
+    if (
+        not settings.include_abstract_entity
+        and model.feature_weights.get("abstract_entity", 0.0) > 0
+    ):
         raise ValueError("Checkpoint đang dùng abstract_entity; hãy bật --include-abstract-entity.")
 
     print(
@@ -522,7 +529,9 @@ def run_weight_sweep(
 
 def parse_args() -> argparse.Namespace:
     """Đọc tham số dòng lệnh."""
-    parser = argparse.ArgumentParser(description="Quét 5 hoặc 6 trọng số của Content-based recommender.")
+    parser = argparse.ArgumentParser(
+        description="Quét 5 hoặc 6 trọng số của Content-based recommender."
+    )
     parser.add_argument(
         "--config",
         default="configs/experiment/exp05_mind_content.yaml",
@@ -547,7 +556,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
-        "--include-abstract-entity", action="store_true",
+        "--include-abstract-entity",
+        action="store_true",
         help="Quét đủ 6 feature; yêu cầu Feature Store có abstract_entity_embeddings.npy.",
     )
     parser.add_argument("--top-k", type=int, default=10)
