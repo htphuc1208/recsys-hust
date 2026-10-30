@@ -1,0 +1,134 @@
+{
+  "environment": {
+    "python": "3.13.8 (tags/v3.13.8:a15ae61, Oct  7 2025, 12:34:25) [MSC v.1944 64 bit (AMD64)]",
+    "cpu_count": 16,
+    "bundle": "exp10-hybrid",
+    "note": "Instrumented direct calls, all 512 warm-user payloads warmed first; not HTTP."
+  },
+  "levels": [
+    {
+      "variant": "cached_sources_rrf_only_frozen",
+      "concurrency": 1,
+      "requests": 1879,
+      "elapsed_s": 4.002,
+      "rps": 469.5,
+      "latency_ms": {
+        "p50": 2.043,
+        "p95": 2.767,
+        "p99": 3.865,
+        "max": 6.666
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 98.4,
+      "stages_ms": {
+        "retrieval_queue": {
+          "count": 7516,
+          "p50": 0.076,
+          "p95": 0.162,
+          "p99": 0.256,
+          "max": 1.251
+        },
+        "retrieval_submit": {
+          "count": 7516,
+          "p50": 0.008,
+          "p95": 0.023,
+          "p99": 0.04,
+          "max": 0.328
+        },
+        "retrieval_total": {
+          "count": 1879,
+          "p50": 1.932,
+          "p95": 2.589,
+          "p99": 3.578,
+          "max": 6.292
+        }
+      }
+    },
+    {
+      "variant": "cached_sources_rrf_only_frozen",
+      "concurrency": 20,
+      "requests": 1422,
+      "elapsed_s": 4.044,
+      "rps": 351.65,
+      "latency_ms": {
+        "p50": 55.499,
+        "p95": 72.317,
+        "p99": 83.86,
+        "max": 103.025
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 97.8,
+      "stages_ms": {
+        "retrieval_queue": {
+          "count": 5534,
+          "p50": 13.28,
+          "p95": 26.066,
+          "p99": 33.075,
+          "max": 47.803
+        },
+        "retrieval_submit": {
+          "count": 5688,
+          "p50": 12.778,
+          "p95": 26.831,
+          "p99": 33.149,
+          "max": 47.785
+        },
+        "retrieval_total": {
+          "count": 1422,
+          "p50": 55.275,
+          "p95": 72.112,
+          "p99": 83.619,
+          "max": 102.823
+        }
+      }
+    },
+    {
+      "variant": "cached_sources_inline_rrf",
+      "concurrency": 1,
+      "requests": 2060,
+      "elapsed_s": 4.0,
+      "rps": 514.95,
+      "latency_ms": {
+        "p50": 1.835,
+        "p95": 2.698,
+        "p99": 3.862,
+        "max": 6.151
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 99.2,
+      "stages_ms": {
+        "retrieval_total": {
+          "count": 2060,
+          "p50": 1.728,
+          "p95": 2.488,
+          "p99": 3.642,
+          "max": 5.782
+        }
+      }
+    },
+    {
+      "variant": "cached_sources_inline_rrf",
+      "concurrency": 20,
+      "requests": 1791,
+      "elapsed_s": 4.017,
+      "rps": 445.9,
+      "latency_ms": {
+        "p50": 1.914,
+        "p95": 120.374,
+        "p99": 393.298,
+        "max": 2034.746
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 97.3,
+      "stages_ms": {
+        "retrieval_total": {
+          "count": 1791,
+          "p50": 1.787,
+          "p95": 120.125,
+          "p99": 393.068,
+          "max": 2034.55
+        }
+      }
+    }
+  ]
+}

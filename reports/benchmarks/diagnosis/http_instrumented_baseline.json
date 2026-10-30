@@ -1,0 +1,205 @@
+{
+  "variant": "baseline",
+  "server_pid": 9580,
+  "payload_count": 512,
+  "duration_per_level_s": 8.0,
+  "note": "Separate localhost server/client; warmed histories; no access logging.",
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 498,
+      "rps": 62.15,
+      "http_ms": {
+        "p50": 16.445,
+        "p95": 20.962,
+        "p99": 23.324,
+        "max": 27.622
+      },
+      "pipeline_ms": {
+        "p50": 12.648,
+        "p95": 16.549,
+        "p99": 19.102,
+        "max": 22.834
+      },
+      "outside_pipeline_ms": {
+        "p50": 3.543,
+        "p95": 5.159,
+        "p99": 5.7,
+        "max": 7.027
+      },
+      "statuses": {
+        "200": 498
+      },
+      "fallback_reasons": {},
+      "server_timings": {
+        "offload_queue_ms": {
+          "p50": 0.123,
+          "p95": 0.257,
+          "p99": 0.359,
+          "max": 0.598
+        },
+        "execution_ms": {
+          "p50": 12.928,
+          "p95": 16.818,
+          "p99": 19.474,
+          "max": 23.112
+        },
+        "event_loop_resume_ms": {
+          "p50": 0.24,
+          "p95": 0.374,
+          "p99": 0.442,
+          "max": 0.657
+        }
+      }
+    },
+    {
+      "concurrency": 5,
+      "requests": 594,
+      "rps": 73.91,
+      "http_ms": {
+        "p50": 67.142,
+        "p95": 85.797,
+        "p99": 102.833,
+        "max": 113.947
+      },
+      "pipeline_ms": {
+        "p50": 51.18,
+        "p95": 70.388,
+        "p99": 83.268,
+        "max": 99.381
+      },
+      "outside_pipeline_ms": {
+        "p50": 15.271,
+        "p95": 28.991,
+        "p99": 36.576,
+        "max": 47.923
+      },
+      "statuses": {
+        "200": 594
+      },
+      "fallback_reasons": {
+        "RETRIEVER_TIMEOUT": 1
+      },
+      "server_timings": {
+        "offload_queue_ms": {
+          "p50": 0.798,
+          "p95": 7.549,
+          "p99": 13.133,
+          "max": 25.041
+        },
+        "execution_ms": {
+          "p50": 51.402,
+          "p95": 70.679,
+          "p99": 83.513,
+          "max": 99.695
+        },
+        "event_loop_resume_ms": {
+          "p50": 0.591,
+          "p95": 2.131,
+          "p99": 4.399,
+          "max": 8.327
+        }
+      }
+    },
+    {
+      "concurrency": 10,
+      "requests": 496,
+      "rps": 61.62,
+      "http_ms": {
+        "p50": 153.653,
+        "p95": 245.688,
+        "p99": 339.414,
+        "max": 359.454
+      },
+      "pipeline_ms": {
+        "p50": 117.23,
+        "p95": 158.34,
+        "p99": 177.76,
+        "max": 191.065
+      },
+      "outside_pipeline_ms": {
+        "p50": 40.648,
+        "p95": 104.971,
+        "p99": 177.323,
+        "max": 204.164
+      },
+      "statuses": {
+        "200": 496
+      },
+      "fallback_reasons": {
+        "RANKER_TIMEOUT": 162,
+        "RETRIEVER_TIMEOUT": 3
+      },
+      "server_timings": {
+        "offload_queue_ms": {
+          "p50": 4.79,
+          "p95": 26.863,
+          "p99": 47.475,
+          "max": 64.015
+        },
+        "execution_ms": {
+          "p50": 117.569,
+          "p95": 158.606,
+          "p99": 177.978,
+          "max": 191.486
+        },
+        "event_loop_resume_ms": {
+          "p50": 7.26,
+          "p95": 33.567,
+          "p99": 52.795,
+          "max": 66.061
+        }
+      }
+    },
+    {
+      "concurrency": 20,
+      "requests": 549,
+      "rps": 67.64,
+      "http_ms": {
+        "p50": 292.868,
+        "p95": 349.97,
+        "p99": 420.907,
+        "max": 613.316
+      },
+      "pipeline_ms": {
+        "p50": 133.949,
+        "p95": 160.896,
+        "p99": 177.593,
+        "max": 206.75
+      },
+      "outside_pipeline_ms": {
+        "p50": 155.895,
+        "p95": 213.799,
+        "p99": 310.567,
+        "max": 467.708
+      },
+      "statuses": {
+        "200": 549
+      },
+      "fallback_reasons": {
+        "RANKER_TIMEOUT": 492,
+        "RETRIEVER_TIMEOUT": 1
+      },
+      "server_timings": {
+        "offload_queue_ms": {
+          "p50": 37.655,
+          "p95": 64.649,
+          "p99": 77.818,
+          "max": 95.128
+        },
+        "execution_ms": {
+          "p50": 134.354,
+          "p95": 161.207,
+          "p99": 177.891,
+          "max": 207.091
+        },
+        "event_loop_resume_ms": {
+          "p50": 36.566,
+          "p95": 65.513,
+          "p99": 75.082,
+          "max": 87.362
+        }
+      }
+    }
+  ]
+}

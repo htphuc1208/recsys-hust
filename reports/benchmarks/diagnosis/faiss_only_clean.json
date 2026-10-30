@@ -1,0 +1,48 @@
+{
+  "levels": [
+    {
+      "variant": "content_faiss_only_clean",
+      "concurrency": 1,
+      "requests": 1317,
+      "elapsed_s": 4.001,
+      "rps": 329.19,
+      "latency_ms": {
+        "p50": 3.017,
+        "p95": 4.257,
+        "p99": 4.839,
+        "max": 5.406
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 96.5,
+      "stages_ms": {}
+    },
+    {
+      "variant": "content_faiss_only_clean",
+      "concurrency": 20,
+      "requests": 8085,
+      "elapsed_s": 4.006,
+      "rps": 2018.07,
+      "latency_ms": {
+        "p50": 9.726,
+        "p95": 13.159,
+        "p99": 15.134,
+        "max": 21.184
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 1454.7,
+      "stages_ms": {}
+    }
+  ],
+  "sasrec_uncached_single_thread_ms": {
+    "p50": 1.422,
+    "p95": 2.855,
+    "p99": 3.38,
+    "max": 5.731
+  },
+  "sasrec_cached_single_thread_ms": {
+    "p50": 0.003,
+    "p95": 0.005,
+    "p99": 0.009,
+    "max": 0.017
+  }
+}
