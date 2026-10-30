@@ -23,10 +23,11 @@ retrieval:
       timeout_ms: 50
     popular:
       enabled: true
-      limit: 1000
+      limit: 500
       weight: 0.5
       timeout_ms: 20
 
 rank_timeout_ms: 100
-rerank_limit: 200
+rerank_limit: 100
+rank_workers: 8
 

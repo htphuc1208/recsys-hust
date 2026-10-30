@@ -1,7 +1,7 @@
 .PHONY: help install install-dev lint format test clean serve serve-dev \
 	train-baseline evaluate-baseline evaluate-random train-itemknn evaluate-itemknn \
 	train-mf evaluate-mf train-bpr evaluate-bpr train-baselines train-proposed \
-	build-serving-bundle evaluate evaluate-retrieval benchmark-serving
+	build-serving-bundle evaluate evaluate-retrieval benchmark-payloads benchmark-serving
 
 PROPOSED_CONFIG ?= configs/experiment/exp10_mind_hybrid.yaml
 SERVING_CONFIG ?= configs/serving/mind_production.yaml
@@ -31,6 +31,7 @@ help:
 	@echo "  make train-proposed    : Train proposed model using PROPOSED_CONFIG"
 	@echo "  make build-serving-bundle : Package checkpoint, mappings, popularity and FAISS"
 	@echo "  make evaluate          : Evaluate proposed ranker and candidate retrieval"
+	@echo "  make benchmark-payloads : Sample real dev requests for the serving benchmark"
 	@echo "  make benchmark-serving : Benchmark a running recommendation API"
 	@echo "  make serve             : Run production-style FastAPI serving"
 	@echo "  make serve-dev         : Run FastAPI with auto-reload"
@@ -101,7 +102,15 @@ evaluate:
 evaluate-retrieval:
 	python -m src.indexing.evaluate_retrieval --config $(SERVING_CONFIG)
 
-benchmark-serving:
+BENCHMARK_PAYLOADS ?= data/processed/mind_large/benchmark/serving_payloads.jsonl
+
+$(BENCHMARK_PAYLOADS):
+	python -m src.serving.benchmark_payloads --output $(BENCHMARK_PAYLOADS)
+
+benchmark-payloads:
+	python -m src.serving.benchmark_payloads --output $(BENCHMARK_PAYLOADS)
+
+benchmark-serving: $(BENCHMARK_PAYLOADS)
 	python -m src.serving.benchmark --config configs/benchmark/serving.yaml $(if $(SERVER_PID),--server-pid $(SERVER_PID),)
 
 serve:

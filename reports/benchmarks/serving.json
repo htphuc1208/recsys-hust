@@ -1,0 +1,111 @@
+{
+  "environment": {
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.13.8",
+    "cpu_count": 16,
+    "server_pid": 23060,
+    "resource_measurements_enabled": true
+  },
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 3295,
+      "successful_requests": 3295,
+      "error_rate": 0.0,
+      "fallback_rate": 0.131715,
+      "fallback_reasons": {
+        "COLD_USER": 434
+      },
+      "rps": 109.812,
+      "latency_ms": {
+        "p50": 9.116,
+        "p95": 11.82,
+        "p99": 16.55
+      },
+      "resources": {
+        "rss_mb_peak": 1287.465,
+        "cpu_percent_mean": 100.385,
+        "gpu_memory_mb_peak": 0.0
+      },
+      "status_counts": {
+        "200": 3295
+      }
+    },
+    {
+      "concurrency": 5,
+      "requests": 4450,
+      "successful_requests": 4450,
+      "error_rate": 0.0,
+      "fallback_rate": 0.135955,
+      "fallback_reasons": {
+        "COLD_USER": 591,
+        "RETRIEVER_TIMEOUT": 14
+      },
+      "rps": 148.268,
+      "latency_ms": {
+        "p50": 34.921,
+        "p95": 46.867,
+        "p99": 59.228
+      },
+      "resources": {
+        "rss_mb_peak": 1303.625,
+        "cpu_percent_mean": 181.968,
+        "gpu_memory_mb_peak": 0.0
+      },
+      "status_counts": {
+        "200": 4450
+      }
+    },
+    {
+      "concurrency": 10,
+      "requests": 3945,
+      "successful_requests": 3945,
+      "error_rate": 0.0,
+      "fallback_rate": 0.187833,
+      "fallback_reasons": {
+        "COLD_USER": 490,
+        "RETRIEVER_TIMEOUT": 251
+      },
+      "rps": 131.403,
+      "latency_ms": {
+        "p50": 77.984,
+        "p95": 108.697,
+        "p99": 134.899
+      },
+      "resources": {
+        "rss_mb_peak": 1313.559,
+        "cpu_percent_mean": 201.629,
+        "gpu_memory_mb_peak": 0.0
+      },
+      "status_counts": {
+        "200": 3945
+      }
+    },
+    {
+      "concurrency": 20,
+      "requests": 3794,
+      "successful_requests": 3794,
+      "error_rate": 0.0,
+      "fallback_rate": 0.332367,
+      "fallback_reasons": {
+        "COLD_USER": 423,
+        "RANKER_TIMEOUT": 117,
+        "RETRIEVER_TIMEOUT": 721
+      },
+      "rps": 126.086,
+      "latency_ms": {
+        "p50": 160.551,
+        "p95": 216.924,
+        "p99": 244.451
+      },
+      "resources": {
+        "rss_mb_peak": 1316.664,
+        "cpu_percent_mean": 168.386,
+        "gpu_memory_mb_peak": 0.0
+      },
+      "status_counts": {
+        "200": 3794
+      }
+    }
+  ]
+}

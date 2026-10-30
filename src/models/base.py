@@ -49,10 +49,19 @@ class BaseRecommender(ABC):
     @classmethod
     def load(cls, path: Any) -> "BaseRecommender":
         """Deserialize model checkpoint from disk."""
+        import os
+        import pathlib
         import pickle
         from pathlib import Path
 
+        class _PortableUnpickler(pickle.Unpickler):
+            # Checkpoints trained on Linux/Colab pickle PosixPath, which Windows cannot build.
+            def find_class(self, module: str, name: str) -> Any:
+                if os.name == "nt" and module == "pathlib" and name == "PosixPath":
+                    return pathlib.WindowsPath
+                return super().find_class(module, name)
+
         file_path = Path(path)
         with open(file_path, "rb") as f:
-            model = pickle.load(f)
+            model = _PortableUnpickler(f).load()
         return model

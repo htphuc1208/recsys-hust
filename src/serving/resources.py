@@ -1,8 +1,11 @@
 """Load and own all immutable resources used by the online pipeline."""
 
+import gc
 import logging
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +24,21 @@ from src.serving.config import ServingConfig
 logger = logging.getLogger(__name__)
 
 QueryEncoder = Callable[[RetrievalQuery], np.ndarray | None]
+
+
+def _limit_intra_op_threads(num_threads: int) -> None:
+    """Cap per-call threading in FAISS, BLAS and torch to avoid oversubscription."""
+    from threadpoolctl import threadpool_limits
+
+    from src.indexing.faiss_index import _import_faiss
+
+    threadpool_limits(limits=num_threads)
+    _import_faiss().omp_set_num_threads(num_threads)
+    try:
+        import torch
+    except ImportError:
+        return
+    torch.set_num_threads(num_threads)
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +74,22 @@ def _collaborative_encoder(user_vectors: np.ndarray) -> QueryEncoder:
     return encode
 
 
+def _cache_history_encoding(model: Any, maxsize: int = 4096) -> None:
+    """Memoize ``encode_history`` on the instance.
+
+    Retrieval, the gating network and the sequential branch each encode the same history
+    within one request; the SASRec forward pass is the dominant per-request cost.
+    Callers must treat the returned vector as read-only since it is shared.
+    """
+    encode = model.encode_history
+
+    @lru_cache(maxsize=maxsize)
+    def cached(history: tuple[int, ...]) -> np.ndarray:
+        return encode(history)
+
+    model.encode_history = lambda history_item_idxs: cached(tuple(history_item_idxs))
+
+
 def _sequential_encoder(model: Any) -> QueryEncoder:
     def encode(query: RetrievalQuery) -> np.ndarray | None:
         if not query.history_item_idxs:
@@ -82,6 +116,14 @@ class ServingResources:
     retriever: MultiSourceRetriever
     ranker: BaseRecommender | None = None
     config: ServingConfig | None = None
+    ranker_executor: ThreadPoolExecutor | None = None
+
+    def __post_init__(self) -> None:
+        if self.ranker_executor is None:
+            workers = self.config.rank_workers if self.config is not None else 4
+            self.ranker_executor = ThreadPoolExecutor(
+                max_workers=workers, thread_name_prefix="ranker"
+            )
 
     @staticmethod
     def _artifact_path(
@@ -167,6 +209,7 @@ class ServingResources:
 
     @classmethod
     def load(cls, config: ServingConfig) -> "ServingResources":
+        _limit_intra_op_threads(config.intra_op_threads)
         root = config.bundle_dir.resolve()
         manifest = ServingManifest.load(root)
         manifest.validate_files(root)
@@ -184,6 +227,8 @@ class ServingResources:
         ranker_path = cls._artifact_path(root, manifest, "ranker", required=False)
         ranker = BaseRecommender.load(ranker_path) if ranker_path is not None else None
         branches = model_branches(ranker)
+        if branches.sequential is not None:
+            _cache_history_encoding(branches.sequential)
         features_manifest = cls._artifact_path(
             root, manifest, "content_feature:manifest.json", required=False
         )
@@ -203,18 +248,22 @@ class ServingResources:
         )
         if config.warmup:
             resources.warm_up()
+        # Model objects live for the whole process; exclude them from cyclic GC scans,
+        # which otherwise cause multi-hundred-millisecond tail-latency pauses.
+        gc.collect()
+        gc.freeze()
         return resources
 
     def warm_up(self) -> None:
         """Run one request through retrieval and ranking so lazy loads happen at startup."""
-        popular = self.retriever.retrieve(RetrievalQuery(user_idx=None)).candidates
-        history = tuple(candidate.item_idx for candidate in popular[:5])
+        popular = self.retriever.retrieve(RetrievalQuery(user_idx=None)).item_ids
+        history = tuple(int(item_idx) for item_idx in popular[:5])
         query = RetrievalQuery(user_idx=0, history_item_idxs=history)
         try:
-            candidates = self.retriever.retrieve(query).candidates
-            if self.ranker is not None and candidates:
+            retrieval = self.retriever.retrieve(query)
+            if self.ranker is not None and len(retrieval):
                 limit = self.config.rerank_limit if self.config is not None else 200
-                item_ids = np.array([c.item_idx for c in candidates[:limit]], dtype=np.int64)
+                item_ids = retrieval.item_ids[:limit]
                 self.ranker.predict(
                     np.array([0], dtype=np.int64), item_ids, history_item_idxs=list(history)
                 )
@@ -223,3 +272,5 @@ class ServingResources:
 
     def close(self) -> None:
         self.retriever.close()
+        if self.ranker_executor is not None:
+            self.ranker_executor.shutdown(wait=False, cancel_futures=True)

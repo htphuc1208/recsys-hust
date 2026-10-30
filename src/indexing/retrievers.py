@@ -6,13 +6,13 @@ from typing import Protocol
 import numpy as np
 
 from src.indexing.faiss_index import FaissVectorIndex
-from src.indexing.types import Candidate, RetrievalQuery, RetrievalSource
+from src.indexing.types import RetrievalQuery, RetrievalSource, SourceHits
 
 
 class Retriever(Protocol):
     source: RetrievalSource
 
-    def retrieve(self, query: RetrievalQuery, limit: int) -> list[Candidate]: ...
+    def retrieve(self, query: RetrievalQuery, limit: int) -> SourceHits: ...
 
 
 class PopularRetriever:
@@ -21,24 +21,17 @@ class PopularRetriever:
     def __init__(self, ranked_items: Sequence[int], scores: Sequence[float] | None = None):
         if scores is not None and len(scores) != len(ranked_items):
             raise ValueError("popularity scores must align with ranked_items")
-        self._ranked_items = tuple(int(item) for item in ranked_items)
-        self._scores = tuple(float(score) for score in scores) if scores is not None else None
+        self._ranked_items = np.asarray(ranked_items, dtype=np.int64)
+        self._scores = (
+            np.asarray(scores, dtype=np.float32)
+            if scores is not None
+            else 1.0 / np.arange(1, len(self._ranked_items) + 1, dtype=np.float32)
+        )
 
-    def retrieve(self, query: RetrievalQuery, limit: int) -> list[Candidate]:
-        candidates: list[Candidate] = []
-        for original_rank, item_idx in enumerate(self._ranked_items, start=1):
-            if item_idx in query.filter_item_idxs:
-                continue
-            rank = len(candidates) + 1
-            raw_score = (
-                self._scores[original_rank - 1] if self._scores is not None else 1.0 / original_rank
-            )
-            candidate = Candidate(item_idx=item_idx)
-            candidate.add_source(self.source, raw_score, rank)
-            candidates.append(candidate)
-            if len(candidates) >= limit:
-                break
-        return candidates
+    def retrieve(self, query: RetrievalQuery, limit: int) -> SourceHits:
+        # Over-fetch so filtering seen items still leaves ``limit`` results.
+        end = limit + len(query.filter_item_idxs)
+        return SourceHits.build(self._ranked_items[:end], self._scores[:end], query, limit)
 
 
 class VectorRetriever:
@@ -56,10 +49,10 @@ class VectorRetriever:
         self._index = index
         self._query_encoder = query_encoder
 
-    def retrieve(self, query: RetrievalQuery, limit: int) -> list[Candidate]:
+    def retrieve(self, query: RetrievalQuery, limit: int) -> SourceHits:
         vector = self._query_encoder(query)
         if vector is None:
-            return []
+            return SourceHits()
 
         # Ask for additional neighbors because filtering happens after ANN search.
         search_limit = min(
@@ -67,18 +60,7 @@ class VectorRetriever:
             limit + len(query.filter_item_idxs),
         )
         result = self._index.search(vector, search_limit)
-        candidates: list[Candidate] = []
-        for item_idx, score in zip(result.item_ids[0], result.scores[0], strict=True):
-            item = int(item_idx)
-            if item < 0 or item in query.filter_item_idxs:
-                continue
-            rank = len(candidates) + 1
-            candidate = Candidate(item_idx=item)
-            candidate.add_source(self.source, float(score), rank)
-            candidates.append(candidate)
-            if len(candidates) >= limit:
-                break
-        return candidates
+        return SourceHits.build(result.item_ids[0], result.scores[0], query, limit)
 
 
 class CallableRetriever:
@@ -92,16 +74,9 @@ class CallableRetriever:
         self.source = source
         self._retrieve_fn = retrieve_fn
 
-    def retrieve(self, query: RetrievalQuery, limit: int) -> list[Candidate]:
-        candidates: list[Candidate] = []
-        for item_idx, score in self._retrieve_fn(query, limit):
-            item = int(item_idx)
-            if item < 0 or item in query.filter_item_idxs:
-                continue
-            rank = len(candidates) + 1
-            candidate = Candidate(item_idx=item)
-            candidate.add_source(self.source, float(score), rank)
-            candidates.append(candidate)
-            if len(candidates) >= limit:
-                break
-        return candidates
+    def retrieve(self, query: RetrievalQuery, limit: int) -> SourceHits:
+        pairs = list(self._retrieve_fn(query, limit))
+        if not pairs:
+            return SourceHits()
+        item_ids, scores = zip(*pairs, strict=True)
+        return SourceHits.build(item_ids, scores, query, limit)
