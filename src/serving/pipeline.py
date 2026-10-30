@@ -38,6 +38,7 @@ class RecommendationPipeline:
         )
         retrieval = self.resources.retriever.retrieve(query)
         scores = retrieval.scores.copy()
+        ranking_positions = np.arange(len(retrieval))
         ranker_failed = False
         ranker_timed_out = False
 
@@ -52,7 +53,7 @@ class RecommendationPipeline:
 
         if self.resources.ranker is not None and user_idx is not None and len(retrieval):
             # Retrieval output is already sorted by fused score; rerank only its head.
-            item_ids = retrieval.item_ids[:rerank_limit]
+            item_ids = retrieval.item_ids[: max(rerank_limit, request.top_k)]
 
             assert self.resources.ranker_executor is not None
             future = self.resources.ranker_executor.submit(
@@ -67,6 +68,9 @@ class RecommendationPipeline:
                 if len(ranker_scores) != len(item_ids) or not np.isfinite(ranker_scores).all():
                     raise ValueError("ranker returned invalid scores")
                 scores[: len(item_ids)] = ranker_scores
+                # Model scores and RRF scores have unrelated scales. Once ranking
+                # succeeds, select only among candidates scored by the model.
+                ranking_positions = np.arange(len(item_ids))
             except TimeoutError:
                 # Drop it if still queued so an overloaded pool doesn't build a backlog.
                 future.cancel()
@@ -74,7 +78,8 @@ class RecommendationPipeline:
             except Exception:  # noqa: BLE001 - fused retrieval score is the safe fallback
                 ranker_failed = True
 
-        top_positions = np.lexsort((retrieval.item_ids, -scores))[: request.top_k]
+        order = np.lexsort((retrieval.item_ids[ranking_positions], -scores[ranking_positions]))
+        top_positions = ranking_positions[order[: request.top_k]]
         ranked = [retrieval.candidate(int(position)) for position in top_positions]
         recommendations: list[RecommendedItem] = []
         for position, candidate in zip(top_positions, ranked, strict=True):

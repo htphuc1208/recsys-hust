@@ -1,3 +1,5 @@
+import numpy as np
+import pytest
 from fastapi.testclient import TestClient
 
 from src.indexing.multi_source import MultiSourceRetriever
@@ -5,7 +7,7 @@ from src.indexing.retrievers import CallableRetriever, PopularRetriever
 from src.indexing.types import RetrievalSource
 from src.serving.app import create_app
 from src.serving.artifacts import ServingManifest
-from src.serving.config import RetrievalConfig
+from src.serving.config import RetrievalConfig, ServingConfig
 from src.serving.pipeline import RecommendationPipeline
 from src.serving.resources import IdMappings, ServingResources
 from src.serving.schemas import FallbackReason, ReasonCode, RecommendationRequest
@@ -74,6 +76,44 @@ def test_unknown_user_falls_back_to_popularity():
     assert all(item.reason_code == ReasonCode.POPULAR_NOW for item in response.recommendations)
     assert response.fallback_reason == FallbackReason.COLD_USER
     assert response.degraded is True
+
+
+@pytest.mark.parametrize("top_k", [1, 3])
+def test_reranking_never_compares_model_scores_with_unranked_rrf_scores(top_k):
+    class NegativeRanker:
+        def predict(self, user_ids, item_ids, **kwargs):
+            # Every score is below the positive RRF scores of unranked candidates.
+            return -np.arange(len(item_ids), 0, -1, dtype=float)
+
+    pipeline = _pipeline()
+    resources = pipeline.resources
+    resources.ranker = NegativeRanker()
+    resources.config = ServingConfig(retrieval=resources.retriever._config, rerank_limit=2)
+    try:
+        response = pipeline.recommend(RecommendationRequest(user_id="U1", top_k=top_k))
+    finally:
+        resources.close()
+
+    # Retrieval is N1, N2, N0. Rank only the head (expanded to cover top_k).
+    expected = ["N2"] if top_k == 1 else ["N0", "N2", "N1"]
+    assert [item.news_id for item in response.recommendations] == expected
+    assert all(item.score < 0 for item in response.recommendations)
+
+
+def test_ranker_error_preserves_retrieval_order():
+    class BrokenRanker:
+        def predict(self, *args, **kwargs):
+            raise ValueError("ranking unavailable")
+
+    pipeline = _pipeline()
+    pipeline.resources.ranker = BrokenRanker()
+    try:
+        response = pipeline.recommend(RecommendationRequest(user_id="U1", top_k=3))
+    finally:
+        pipeline.resources.close()
+
+    assert [item.news_id for item in response.recommendations] == ["N1", "N2", "N0"]
+    assert response.fallback_reason == FallbackReason.RANKER_ERROR
 
 
 def test_api_readiness_and_recommendation_contract():
