@@ -3,108 +3,109 @@
     "platform": "Windows-11-10.0.26300-SP0",
     "python": "3.13.8",
     "cpu_count": 16,
-    "server_pid": 23060,
+    "server_pid": 21884,
     "resource_measurements_enabled": true
   },
   "levels": [
     {
       "concurrency": 1,
-      "requests": 3295,
-      "successful_requests": 3295,
+      "requests": 2951,
+      "successful_requests": 2951,
       "error_rate": 0.0,
-      "fallback_rate": 0.131715,
+      "fallback_rate": 0.129448,
       "fallback_reasons": {
-        "COLD_USER": 434
+        "COLD_USER": 382
       },
-      "rps": 109.812,
+      "rps": 98.323,
       "latency_ms": {
-        "p50": 9.116,
-        "p95": 11.82,
-        "p99": 16.55
+        "p50": 9.686,
+        "p95": 15.612,
+        "p99": 24.675
       },
       "resources": {
-        "rss_mb_peak": 1287.465,
-        "cpu_percent_mean": 100.385,
+        "rss_mb_peak": 1287.266,
+        "cpu_percent_mean": 99.719,
         "gpu_memory_mb_peak": 0.0
       },
       "status_counts": {
-        "200": 3295
+        "200": 2951
       }
     },
     {
       "concurrency": 5,
-      "requests": 4450,
-      "successful_requests": 4450,
+      "requests": 2747,
+      "successful_requests": 2747,
       "error_rate": 0.0,
-      "fallback_rate": 0.135955,
+      "fallback_rate": 0.157262,
       "fallback_reasons": {
-        "COLD_USER": 591,
-        "RETRIEVER_TIMEOUT": 14
+        "COLD_USER": 354,
+        "RETRIEVER_TIMEOUT": 78
       },
-      "rps": 148.268,
+      "rps": 91.509,
       "latency_ms": {
-        "p50": 34.921,
-        "p95": 46.867,
-        "p99": 59.228
+        "p50": 53.534,
+        "p95": 88.832,
+        "p99": 113.845
       },
       "resources": {
-        "rss_mb_peak": 1303.625,
-        "cpu_percent_mean": 181.968,
+        "rss_mb_peak": 1302.09,
+        "cpu_percent_mean": 162.304,
         "gpu_memory_mb_peak": 0.0
       },
       "status_counts": {
-        "200": 4450
+        "200": 2747
       }
     },
     {
       "concurrency": 10,
-      "requests": 3945,
-      "successful_requests": 3945,
+      "requests": 2626,
+      "successful_requests": 2626,
       "error_rate": 0.0,
-      "fallback_rate": 0.187833,
+      "fallback_rate": 0.361767,
       "fallback_reasons": {
-        "COLD_USER": 490,
-        "RETRIEVER_TIMEOUT": 251
+        "COLD_USER": 289,
+        "RANKER_TIMEOUT": 105,
+        "RETRIEVER_TIMEOUT": 556
       },
-      "rps": 131.403,
+      "rps": 87.375,
       "latency_ms": {
-        "p50": 77.984,
-        "p95": 108.697,
-        "p99": 134.899
+        "p50": 110.187,
+        "p95": 191.157,
+        "p99": 225.292
       },
       "resources": {
-        "rss_mb_peak": 1313.559,
-        "cpu_percent_mean": 201.629,
+        "rss_mb_peak": 1312.082,
+        "cpu_percent_mean": 183.615,
         "gpu_memory_mb_peak": 0.0
       },
       "status_counts": {
-        "200": 3945
+        "200": 2626
       }
     },
     {
       "concurrency": 20,
-      "requests": 3794,
-      "successful_requests": 3794,
+      "requests": 1909,
+      "successful_requests": 1909,
       "error_rate": 0.0,
-      "fallback_rate": 0.332367,
+      "fallback_rate": 0.680461,
       "fallback_reasons": {
-        "COLD_USER": 423,
-        "RANKER_TIMEOUT": 117,
-        "RETRIEVER_TIMEOUT": 721
+        "COLD_USER": 144,
+        "RANKER_TIMEOUT": 686,
+        "RETRIEVER_TIMEOUT": 469
       },
-      "rps": 126.086,
+      "rps": 63.397,
       "latency_ms": {
-        "p50": 160.551,
-        "p95": 216.924,
-        "p99": 244.451
+        "p50": 238.915,
+        "p95": 687.988,
+        "p99": 779.015
       },
       "resources": {
-        "rss_mb_peak": 1316.664,
-        "cpu_percent_mean": 168.386,
+        "rss_mb_peak": 1314.695,
+        "cpu_percent_mean": 156.535,
         "gpu_memory_mb_peak": 0.0
       },
       "status_counts": {
-        "200": 3794
+        "200": 1909
       }
     }
   ]

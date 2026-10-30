@@ -202,45 +202,177 @@ confirm this before committing with `git status`.
 make test
 ```
 
+PowerShell (Windows), dùng backend vẽ biểu đồ không cần Tcl/Tk:
+
+```powershell
+$env:MPLBACKEND = "Agg"
+python -m pytest tests -q
+```
+
 ### 6. Run Recommendation Serving API
 
-Build a versioned serving bundle from a trained checkpoint before starting the API. The
-default command uses the unified BPR checkpoint; override `SERVING_CHECKPOINT` when the
-proposed ranker is available:
+#### 6.1. Chuẩn bị môi trường PowerShell
 
-```bash
-make build-serving-bundle \
-  SERVING_CHECKPOINT=artifacts/checkpoints/exp04_mind_bpr_bpr.pkl \
-  MODEL_VERSION=bpr-v1
+Chạy tại thư mục gốc dự án. Thay đường dẫn nếu checkout ở vị trí khác:
+
+```powershell
+cd D:\RecSys\recsys-hust
+.\.venv\Scripts\Activate.ps1
 ```
 
-The bundle contains external-ID mappings, popularity fallback data, the ranker, a FAISS
-collaborative index when the model exposes item factors, and a checksummed manifest.
+Nếu terminal đã hiện `(.venv)` thì môi trường đã được kích hoạt. Khi cài trên
+máy mới, tạo môi trường bằng `python -m venv .venv` trước bước kích hoạt. Cài
+thư viện phục vụ API và kiểm thử khi cần:
+
+```powershell
+python -m pip install -e ".[dev,serving]"
+```
+
+#### 6.2. Chuẩn bị serving bundle
+
+API mặc định nạp bundle tại `artifacts/serving/current/`, theo cấu hình
+`configs/serving/mind_production.yaml`. Cần đầy đủ manifest, model, mappings,
+features và indexes được khai báo trong bundle. Dataset, checkpoint và serving
+bundle không được lưu trong Git.
+
+**Nếu máy đã có bundle hợp lệ thì chuyển sang bước 6.3.** Kiểm tra manifest:
+
+```powershell
+Test-Path artifacts/serving/current/manifest.json
+```
+
+Nếu chưa có bundle, cần checkpoint Hybrid đã huấn luyện, mappings và content
+features tương ứng, sau đó chạy:
+
+```powershell
+python -m src.indexing.build_bundle `
+    --checkpoint artifacts/checkpoints/exp10_mind_hybrid_hybrid.pkl `
+    --users-mapping data/processed/mind_large/mappings/users `
+    --items-mapping data/processed/mind_large/mappings/items `
+    --output-dir artifacts/serving/current `
+    --model-version exp10-hybrid
+```
+
+Thêm `--overwrite` khi chủ động muốn xây lại bundle đang có. Bundle Hybrid chứa
+ranker, popularity fallback và các index collaborative, sequential, content
+tương ứng với những nhánh hiện có của model.
+
+#### 6.3. Chạy API và giao diện trực tiếp trên Windows
+
+**Terminal 1:**
+
+```powershell
+python -m uvicorn src.serving.app:app --host 127.0.0.1 --port 8000
+```
+
+Giữ terminal này chạy và chờ dòng `Application startup complete.`. Mở:
+
+| Địa chỉ | Chức năng |
+|---|---|
+| http://127.0.0.1:8000/ | Giao diện web, chọn người đọc mẫu và lấy gợi ý |
+| http://127.0.0.1:8000/docs | Swagger để thử API |
+| http://127.0.0.1:8000/health | Kiểm tra tiến trình hoạt động |
+| http://127.0.0.1:8000/ready | Kiểm tra bundle đã được nạp thành công |
+
+`/ready` cần trả HTTP 200 và phiên bản model trước khi chạy benchmark. Nếu trả
+503, xem lỗi nạp bundle trong terminal server. Dừng server bằng **Ctrl+C**.
+
+Với môi trường có Make, các lệnh tương đương là:
 
 ```bash
+make build-serving-bundle MODEL_VERSION=exp10-hybrid
 make serve
-# API will be available at http://localhost:8000
-# Interactive Swagger docs: http://localhost:8000/docs
 ```
 
-The process liveness endpoint is `/health`; `/ready` returns success only after a valid
-serving bundle has loaded. Run the same service in a clean container with:
+Makefile mặc định đóng gói checkpoint Hybrid; có thể đổi model bằng biến
+`SERVING_CHECKPOINT`. Chỉ chạy bước build khi cần tạo hoặc cập nhật bundle.
 
-```bash
+#### 6.4. Chạy HTTP benchmark
+
+**Terminal 2:** mở terminal mới trong khi Terminal 1 vẫn chạy server:
+
+```powershell
+cd D:\RecSys\recsys-hust
+.\.venv\Scripts\Activate.ps1
+
+Invoke-RestMethod http://127.0.0.1:8000/ready
+```
+
+Tạo bộ request từ dữ liệu Dev đã xử lý; bước này cần
+`data/processed/mind_large/dev/impressions/`:
+
+```powershell
+python -m src.serving.benchmark_payloads
+```
+
+Lệnh tạo mặc định 2.000 payload tại
+`data/processed/mind_large/benchmark/serving_payloads.jsonl`, gồm user ID và
+history thật. Cấu hình benchmark hiện tại đọc file này để chạy cả retrieval và
+ranker cho các request có user được mapping.
+
+Để đo thêm RAM/CPU của server chạy trực tiếp trên Windows, lấy PID từ log
+**Terminal 1**, ví dụ:
+
+```text
+Started server process [12345]
+```
+
+Nhập PID thực tế rồi chạy benchmark trong Terminal 2:
+
+```powershell
+$servingProcessId = [int](Read-Host "Nhap PID tu dong Started server process")
+python -m src.serving.benchmark --config configs/benchmark/serving.yaml --server-pid $servingProcessId
+```
+
+PID thay đổi mỗi lần khởi động lại server. Nếu `Get-NetTCPConnection -LocalPort
+8000 -State Listen` không tìm thấy listener dù `/ready` trả 200, dùng PID từ log
+như trên. Biến PID rỗng sẽ gây lỗi `--server-pid: expected one argument`.
+
+Nếu chỉ cần latency, throughput và fallback, chạy không truyền PID:
+
+```powershell
+python -m src.serving.benchmark --config configs/benchmark/serving.yaml
+```
+
+Theo `configs/benchmark/serving.yaml`, benchmark chạy concurrency **1, 5, 10, 20**,
+mỗi mức **30 giây**, sau bước warmup. Kết quả gồm p50/p95/p99 latency, RPS,
+error rate và fallback rate tại **`reports/benchmarks/serving.json`**. Chạy lại
+sẽ ghi đè file này. Các trường tài nguyên là `null` khi không truyền PID; số đo
+GPU phụ thuộc khả năng đọc `nvidia-smi`.
+
+Với Make, dùng `make benchmark-serving SERVER_PID=<pid>`; target này tự tạo
+payloads nếu file chưa tồn tại.
+
+Đánh giá candidate recall trên Dev bằng:
+
+```powershell
+python -m src.indexing.evaluate_retrieval --config configs/serving/mind_production.yaml
+```
+
+#### 6.5. Chạy bằng Docker
+
+Chạy trực tiếp bằng `.venv` ở bước 6.3 không cần Docker. Nếu muốn chạy container,
+mở **Docker Desktop** và chờ engine sẵn sàng. Dừng server Windows bằng Ctrl+C
+để giải phóng cổng 8000, rồi chạy tại thư mục gốc dự án:
+
+```powershell
 docker compose up --build
 ```
 
-Evaluate full-catalog candidate recall and benchmark a running API with:
+Docker Compose mount thư mục `artifacts/` trên máy vào container; vẫn cần bundle
+đã chuẩn bị ở bước 6.2. Mở http://localhost:8000/ và kiểm tra
+http://localhost:8000/ready sau khi container khởi động.
 
-```bash
-make evaluate-retrieval
-make benchmark-serving
+Benchmark HTTP từ Windows vẫn dùng lệnh ở bước 6.4 **không truyền
+`--server-pid`**. PID Python trong container không phải PID của tiến trình server
+Windows; phần đo tài nguyên bằng `psutil` của benchmark cần chạy trong cùng môi
+trường với server.
+
+Dừng container bằng Ctrl+C trong terminal chạy Compose, hoặc:
+
+```powershell
+docker compose down
 ```
-
-The HTTP benchmark writes p50/p95/p99 latency, throughput, and errors to
-`reports/benchmarks/serving.json`. Pass `SERVER_PID=<pid>` to `make benchmark-serving`
-(or set `server_pid` in the benchmark YAML) to additionally measure serving RAM, CPU,
-and available GPU memory. Resource fields remain null when no server PID is provided.
 
 ## Matrix Factorization
 
