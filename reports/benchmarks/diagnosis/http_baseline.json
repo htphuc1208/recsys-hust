@@ -1,0 +1,97 @@
+{
+  "variant": "baseline",
+  "server_pid": 4304,
+  "payload_count": 512,
+  "duration_per_level_s": 6.0,
+  "note": "Separate localhost server/client; warmed histories; no access logging.",
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 537,
+      "rps": 89.46,
+      "http_ms": {
+        "p50": 10.873,
+        "p95": 13.328,
+        "p99": 15.599,
+        "max": 20.635
+      },
+      "pipeline_ms": {
+        "p50": 8.302,
+        "p95": 10.331,
+        "p99": 12.126,
+        "max": 16.704
+      },
+      "statuses": {
+        "200": 537
+      },
+      "fallback_reasons": {}
+    },
+    {
+      "concurrency": 5,
+      "requests": 613,
+      "rps": 101.47,
+      "http_ms": {
+        "p50": 47.64,
+        "p95": 62.305,
+        "p99": 82.362,
+        "max": 99.851
+      },
+      "pipeline_ms": {
+        "p50": 35.946,
+        "p95": 49.937,
+        "p99": 69.449,
+        "max": 93.903
+      },
+      "statuses": {
+        "200": 613
+      },
+      "fallback_reasons": {}
+    },
+    {
+      "concurrency": 10,
+      "requests": 572,
+      "rps": 94.5,
+      "http_ms": {
+        "p50": 104.779,
+        "p95": 143.984,
+        "p99": 171.963,
+        "max": 231.644
+      },
+      "pipeline_ms": {
+        "p50": 79.079,
+        "p95": 108.031,
+        "p99": 131.602,
+        "max": 143.022
+      },
+      "statuses": {
+        "200": 572
+      },
+      "fallback_reasons": {
+        "RANKER_TIMEOUT": 17
+      }
+    },
+    {
+      "concurrency": 20,
+      "requests": 517,
+      "rps": 84.97,
+      "http_ms": {
+        "p50": 232.301,
+        "p95": 285.687,
+        "p99": 340.733,
+        "max": 406.844
+      },
+      "pipeline_ms": {
+        "p50": 124.001,
+        "p95": 147.681,
+        "p99": 157.136,
+        "max": 173.391
+      },
+      "statuses": {
+        "200": 517
+      },
+      "fallback_reasons": {
+        "RANKER_TIMEOUT": 345
+      }
+    }
+  ]
+}

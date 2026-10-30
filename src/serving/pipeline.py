@@ -1,12 +1,11 @@
 """Two-stage online recommendation pipeline."""
 
 import time
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from concurrent.futures import TimeoutError
 
 import numpy as np
 
 from src.indexing.types import RetrievalQuery, RetrievalSource
-from src.reranking.rules import stable_top_k
 from src.serving.reasons import reason_for
 from src.serving.resources import ServingResources
 from src.serving.schemas import (
@@ -38,9 +37,7 @@ class RecommendationPipeline:
             context=request.context.model_dump(exclude_none=True),
         )
         retrieval = self.resources.retriever.retrieve(query)
-        candidates = list(retrieval.candidates)
-
-        scores = {candidate.item_idx: candidate.retrieval_score for candidate in candidates}
+        scores = retrieval.scores.copy()
         ranker_failed = False
         ranker_timed_out = False
 
@@ -53,35 +50,34 @@ class RecommendationPipeline:
             else 0.1
         )
 
-        if self.resources.ranker is not None and user_idx is not None and candidates:
-            # Only rerank top rerank_limit candidates sorted by retrieval score
-            sorted_candidates = sorted(candidates, key=lambda c: -c.retrieval_score)
-            to_rerank = sorted_candidates[:rerank_limit]
-            item_ids = np.array([candidate.item_idx for candidate in to_rerank], dtype=np.int64)
+        if self.resources.ranker is not None and user_idx is not None and len(retrieval):
+            # Retrieval output is already sorted by fused score; rerank only its head.
+            item_ids = retrieval.item_ids[:rerank_limit]
 
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                try:
-                    future = executor.submit(
-                        self.resources.ranker.predict,
-                        np.array([user_idx], dtype=np.int64),
-                        item_ids,
-                        history_item_idxs=list(history),
-                        retrieval_candidates=to_rerank,
-                        context=query.context,
-                    )
-                    ranker_scores = future.result(timeout=rank_timeout_s)
-                    if len(ranker_scores) != len(item_ids) or not np.isfinite(ranker_scores).all():
-                        raise ValueError("ranker returned invalid scores")
-                    for item_idx, score in zip(item_ids, ranker_scores, strict=True):
-                        scores[int(item_idx)] = float(score)
-                except TimeoutError:
-                    ranker_timed_out = True
-                except Exception:  # noqa: BLE001 - fused retrieval score is the safe fallback
-                    ranker_failed = True
+            assert self.resources.ranker_executor is not None
+            future = self.resources.ranker_executor.submit(
+                self.resources.ranker.predict,
+                np.array([user_idx], dtype=np.int64),
+                item_ids,
+                history_item_idxs=list(history),
+                context=query.context,
+            )
+            try:
+                ranker_scores = np.asarray(future.result(timeout=rank_timeout_s), dtype=np.float64)
+                if len(ranker_scores) != len(item_ids) or not np.isfinite(ranker_scores).all():
+                    raise ValueError("ranker returned invalid scores")
+                scores[: len(item_ids)] = ranker_scores
+            except TimeoutError:
+                # Drop it if still queued so an overloaded pool doesn't build a backlog.
+                future.cancel()
+                ranker_timed_out = True
+            except Exception:  # noqa: BLE001 - fused retrieval score is the safe fallback
+                ranker_failed = True
 
-        ranked = stable_top_k(candidates, scores, request.top_k)
+        top_positions = np.lexsort((retrieval.item_ids, -scores))[: request.top_k]
+        ranked = [retrieval.candidate(int(position)) for position in top_positions]
         recommendations: list[RecommendedItem] = []
-        for candidate in ranked:
+        for position, candidate in zip(top_positions, ranked, strict=True):
             news_id = mappings.idx_to_news.get(candidate.item_idx)
             if news_id is None:
                 continue
@@ -89,7 +85,7 @@ class RecommendationPipeline:
             recommendations.append(
                 RecommendedItem(
                     news_id=news_id,
-                    score=scores[candidate.item_idx],
+                    score=float(scores[position]),
                     rank=len(recommendations) + 1,
                     reason_code=reason_code,
                     reason_evidence=evidence,

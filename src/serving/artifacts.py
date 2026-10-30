@@ -8,6 +8,19 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+def sha256_file(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def restore_path(posix_path: str) -> Path:
+    """Unpickle hook for paths written by the bundle builder on any OS."""
+    return Path(posix_path)
+
+
 class ArtifactSpec(BaseModel):
     path: str = Field(min_length=1)
     sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
@@ -23,6 +36,8 @@ class ServingManifest(BaseModel):
     num_users: int = Field(ge=0)
     num_items: int = Field(gt=0)
     embedding_dimension: int | None = Field(default=None, gt=0)
+    model_type: str | None = None
+    retrieval_sources: list[str] = Field(default_factory=list)
     artifacts: dict[str, ArtifactSpec]
 
     @classmethod
@@ -45,6 +60,5 @@ class ServingManifest(BaseModel):
                     )
                 continue
             if verify_checksums and spec.sha256:
-                digest = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
-                if digest != spec.sha256:
+                if sha256_file(artifact_path) != spec.sha256:
                     raise ValueError(f"checksum mismatch for artifact '{name}'")
