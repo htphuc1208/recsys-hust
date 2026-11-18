@@ -1,5 +1,7 @@
 """Fast metadata and sample user provider for the RecSys serving UI."""
 
+from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -7,6 +9,20 @@ import pyarrow.dataset as ds
 
 _NEWS_CACHE: dict[str, dict[str, Any]] = {}
 _COMBINED_NEWS_DATASET: ds.Dataset | None = None
+
+# Display names are aliases; IDs and reading histories come from MIND.
+_DEMO_READERS = (
+    ("U134050", "Nguyễn Minh Tuấn", "🏃‍♂️"),
+    ("U107107", "Lê Mai Phương", "🍕"),
+    ("U254959", "Trần Quốc Hưng", "📰"),
+    ("U375076", "Phạm Đức Anh", "⚽"),
+    ("U655197", "Đặng Thu Hà", "📈"),
+    ("U470220", "Vũ Ngọc Lan", "💚"),
+    ("U670770", "Hoàng Bảo Ngọc", "🍲"),
+    ("U623970", "Đỗ Hải Nam", "✈️"),
+    ("U122329", "Bùi Gia Huy", "🚗"),
+    ("U102682", "Trịnh Khánh Linh", "🎬"),
+)
 
 
 def _get_news_dataset() -> ds.Dataset | None:
@@ -72,126 +88,65 @@ def get_news_metadata_batch(news_ids: list[str]) -> dict[str, dict[str, Any]]:
     return results
 
 
-def get_sample_personas() -> list[dict[str, Any]]:
-    """Return pre-configured reader personas for UI demonstration."""
-    sample_news_ids = [
-        "N88753",
-        "N23144",
-        "N98178",
-        "N122287",
-        "N94572",
-        "N16403",
-        "N32154",
-        "N86255",
-    ]
-    meta = get_news_metadata_batch(sample_news_ids)
+@lru_cache(maxsize=1)
+def _sample_histories() -> dict[str, list[str]]:
+    """Use a real impression history for each demo user, preferring dev."""
+    user_ids = [uid for uid, _name, _avatar in _DEMO_READERS]
+    histories: dict[str, list[str]] = {}
+    for split in ("dev", "train"):
+        remaining = [uid for uid in user_ids if uid not in histories]
+        path = Path(f"data/processed/mind_large/{split}/impressions")
+        if not remaining or not path.exists():
+            continue
+        table = ds.dataset(str(path), format="parquet").to_table(
+            columns=["user_id", "history_news_ids"],
+            filter=ds.field("user_id").isin(remaining),
+        )
+        for row in table.to_pylist():
+            uid = row["user_id"]
+            history = list(row["history_news_ids"] or [])[-500:]
+            if uid not in histories and history:
+                histories[uid] = history
+    return histories
 
-    return [
-        {
-            "id": "U134050",
-            "name": "Nguyễn Minh Tuấn",
-            "role": "Active Sports & Travel Reader",
-            "avatar": "🏃‍♂️",
-            "category_pref": "Thể thao & Khám phá",
-            "history_news_ids": ["N98178", "N88753", "N23144"],
-            "history": [
-                meta.get(
-                    "N98178",
-                    {
-                        "news_id": "N98178",
-                        "title": "Charles Rogers, NFL star dead at 38",
-                        "category": "sports",
-                    },
-                ),
-                meta.get(
-                    "N88753",
-                    {
-                        "news_id": "N88753",
-                        "title": "The Brands Queen Elizabeth Swears By",
-                        "category": "lifestyle",
-                    },
-                ),
-                meta.get(
-                    "N23144",
-                    {
-                        "news_id": "N23144",
-                        "title": "50 Worst Habits For Belly Fat",
-                        "category": "health",
-                    },
-                ),
-            ],
-            "description": "Người đọc thường xuyên theo dõi các tin thể thao NFL, chế độ dinh dưỡng và lối sống.",
-        },
-        {
-            "id": "U107107",
-            "name": "Lê Mai Phương",
-            "role": "Pop Culture & Food Enthusiast",
-            "avatar": "🍕",
-            "category_pref": "Ẩm thực & Giải trí",
-            "history_news_ids": ["N88753", "N94572", "N23144"],
-            "history": [
-                meta.get(
-                    "N88753",
-                    {
-                        "news_id": "N88753",
-                        "title": "The Brands Queen Elizabeth Swears By",
-                        "category": "lifestyle",
-                    },
-                ),
-                meta.get(
-                    "N94572",
-                    {
-                        "news_id": "N94572",
-                        "title": "Sarah Palin says she is fighting to repair marriage",
-                        "category": "news",
-                    },
-                ),
-                meta.get(
-                    "N23144",
-                    {
-                        "news_id": "N23144",
-                        "title": "50 Worst Habits For Belly Fat",
-                        "category": "health",
-                    },
-                ),
-            ],
-            "description": "Quan tâm đến xu hướng ẩm thực, giới nghệ sĩ và các bài viết phong cách sống.",
-        },
-        {
-            "id": "U254959",
-            "name": "Trần Quốc Hưng",
-            "role": "Current Affairs & Sports Fan",
-            "avatar": "📰",
-            "category_pref": "Thời sự & Tin nóng",
-            "history_news_ids": ["N98178", "N94572"],
-            "history": [
-                meta.get(
-                    "N98178",
-                    {
-                        "news_id": "N98178",
-                        "title": "Charles Rogers, Detroit Lions star, dead at 38",
-                        "category": "sports",
-                    },
-                ),
-                meta.get(
-                    "N94572",
-                    {
-                        "news_id": "N94572",
-                        "title": "Sarah Palin says she is fighting to repair marriage",
-                        "category": "news",
-                    },
-                ),
-            ],
-            "description": "Theo dõi các sự kiện xã hội trong ngày và tin tức bóng bầu dục.",
-        },
-        {
-            "id": "NEW_USER_COLD",
-            "name": "Độc giả Mới (Cold User)",
-            "role": "Lần đầu truy cập (Zero History)",
-            "avatar": "❄️",
-            "category_pref": "Chưa xác định (Popularity Fallback)",
-            "history_news_ids": [],
-            "history": [],
-            "description": "Chưa có lịch sử click. Hệ thống sẽ kích hoạt Circuit Breaker hạ cấp an toàn sang Popularity.",
-        },
-    ]
+
+def get_sample_personas() -> list[dict[str, Any]]:
+    """Show real user histories and derive interest labels from those articles."""
+    category_names = {
+        "sports": "Thể thao", "news": "Thời sự", "finance": "Tài chính",
+        "health": "Sức khỏe", "lifestyle": "Đời sống", "foodanddrink": "Ẩm thực",
+        "travel": "Du lịch", "tv": "Truyền hình", "entertainment": "Giải trí",
+        "movies": "Điện ảnh", "music": "Âm nhạc", "autos": "Xe",
+        "weather": "Thời tiết", "video": "Video", "kids": "Gia đình",
+    }
+    histories = _sample_histories()
+    meta = get_news_metadata_batch([nid for history in histories.values() for nid in history])
+    personas = []
+    for uid, name, avatar in _DEMO_READERS:
+        history_ids = list(histories.get(uid, []))
+        articles = [meta[nid] for nid in history_ids]
+        categories = Counter(a["category"] for a in articles if a["category"] != "general")
+        preference = " & ".join(
+            category_names.get(category, category) for category, _ in categories.most_common(2)
+        ) or "Chưa có lịch sử"
+        personas.append({
+            "id": uid,
+            "name": name,
+            "role": "Độc giả từ dữ liệu MIND",
+            "avatar": avatar,
+            "category_pref": preference,
+            "history_news_ids": history_ids,
+            "history": articles,
+            "description": f"Chuyên mục thường đọc trong lịch sử: {preference}.",
+        })
+    personas.append({
+        "id": "NEW_USER_COLD",
+        "name": "Độc giả Mới (Cold User)",
+        "role": "Lần đầu truy cập (Zero History)",
+        "avatar": "❄️",
+        "category_pref": "Chưa xác định (Popularity Fallback)",
+        "history_news_ids": [],
+        "history": [],
+        "description": "Chưa có lịch sử đọc. Hệ thống gợi ý các bài phổ biến.",
+    })
+    return personas

@@ -1,5 +1,7 @@
 import time
 
+import pytest
+
 from src.indexing.multi_source import MultiSourceRetriever
 from src.indexing.retrievers import CallableRetriever, PopularRetriever
 from src.indexing.types import RetrievalQuery, RetrievalSource
@@ -47,6 +49,56 @@ def test_multi_source_deduplicates_filters_and_preserves_provenance():
         RetrievalSource.CONTENT,
         RetrievalSource.POPULAR,
     }
+
+
+def test_multi_source_rrf_scores_and_order_match_reference():
+    collaborative = CallableRetriever(
+        RetrievalSource.COLLABORATIVE, lambda _query, _limit: [(1, 0.9), (2, 0.8), (3, 0.7)]
+    )
+    content = CallableRetriever(
+        RetrievalSource.CONTENT, lambda _query, _limit: [(3, 0.95), (2, 0.9), (3, 0.1)]
+    )
+    retriever = MultiSourceRetriever([collaborative, content, PopularRetriever([4, 1])], _config())
+    try:
+        result = retriever.retrieve(RetrievalQuery(user_idx=10))
+    finally:
+        retriever.close()
+
+    # weight / (rrf_constant=10 + rank); the duplicate item 3 in content keeps rank 1 only.
+    expected = {
+        1: 1.0 / 11 + 0.1 / 12,
+        2: 1.0 / 12 + 0.5 / 12,
+        3: 1.0 / 13 + 0.5 / 11,
+        4: 0.1 / 11,
+    }
+    ordered = sorted(expected, key=lambda item: (-expected[item], item))
+    assert result.item_ids.tolist() == ordered
+    assert result.scores.tolist() == pytest.approx([expected[item] for item in ordered])
+    item_three = result.candidate(ordered.index(3))
+    assert item_three.source_ranks == {
+        RetrievalSource.COLLABORATIVE: 3,
+        RetrievalSource.CONTENT: 1,
+    }
+    assert item_three.source_scores[RetrievalSource.CONTENT] == pytest.approx(0.95)
+
+
+def test_source_latency_is_not_inflated_by_slower_earlier_source():
+    def slow_source(_query, _limit):
+        time.sleep(0.05)
+        return [(1, 1.0)]
+
+    collaborative = CallableRetriever(RetrievalSource.COLLABORATIVE, slow_source)
+    content = CallableRetriever(RetrievalSource.CONTENT, lambda _query, _limit: [(2, 1.0)])
+    retriever = MultiSourceRetriever(
+        [collaborative, content, PopularRetriever([10])], _config(timeout_ms=500)
+    )
+    try:
+        result = retriever.retrieve(RetrievalQuery(user_idx=10))
+    finally:
+        retriever.close()
+
+    assert result.source_latencies_ms[RetrievalSource.COLLABORATIVE] >= 45
+    assert result.source_latencies_ms[RetrievalSource.CONTENT] < 25
 
 
 def test_multi_source_isolates_timeout_and_uses_popularity():

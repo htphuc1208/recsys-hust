@@ -1,0 +1,1216 @@
+{
+  "environment": {
+    "python": "3.13.8 (tags/v3.13.8:a15ae61, Oct  7 2025, 12:34:25) [MSC v.1944 64 bit (AMD64)]",
+    "cpu_count": 16,
+    "bundle": "exp10-hybrid",
+    "note": "Instrumented direct calls, all 512 warm-user payloads warmed first; not HTTP."
+  },
+  "levels": [
+    {
+      "variant": "rank_workers_1",
+      "concurrency": 5,
+      "requests": 238,
+      "elapsed_s": 3.023,
+      "rps": 78.74,
+      "latency_ms": {
+        "p50": 59.264,
+        "p95": 99.765,
+        "p99": 132.281,
+        "max": 139.625
+      },
+      "fallback_reasons": {
+        "FallbackReason.RANKER_TIMEOUT": 6
+      },
+      "process_cpu_percent": 225.4,
+      "stages_ms": {
+        "content_profile": {
+          "count": 235,
+          "p50": 3.96,
+          "p95": 11.38,
+          "p99": 16.493,
+          "max": 43.763
+        },
+        "content_scores": {
+          "count": 235,
+          "p50": 1.849,
+          "p95": 7.573,
+          "p99": 10.556,
+          "max": 20.374
+        },
+        "encode_collaborative": {
+          "count": 238,
+          "p50": 0.055,
+          "p95": 0.734,
+          "p99": 2.014,
+          "max": 2.883
+        },
+        "encode_content": {
+          "count": 238,
+          "p50": 0.137,
+          "p95": 3.056,
+          "p99": 6.093,
+          "max": 6.393
+        },
+        "encode_sequential": {
+          "count": 238,
+          "p50": 0.038,
+          "p95": 0.078,
+          "p99": 0.143,
+          "max": 0.172
+        },
+        "gating_forward": {
+          "count": 235,
+          "p50": 0.809,
+          "p95": 6.1,
+          "p99": 10.538,
+          "max": 33.472
+        },
+        "rank_cf": {
+          "count": 235,
+          "p50": 0.119,
+          "p95": 2.629,
+          "p99": 4.817,
+          "max": 6.815
+        },
+        "rank_content": {
+          "count": 235,
+          "p50": 6.908,
+          "p95": 14.766,
+          "p99": 23.948,
+          "max": 64.259
+        },
+        "rank_seq": {
+          "count": 235,
+          "p50": 0.081,
+          "p95": 2.263,
+          "p99": 4.615,
+          "max": 6.276
+        },
+        "ranker_queue": {
+          "count": 235,
+          "p50": 35.418,
+          "p95": 55.265,
+          "p99": 85.311,
+          "max": 105.275
+        },
+        "ranker_total": {
+          "count": 235,
+          "p50": 11.481,
+          "p95": 21.511,
+          "p99": 35.769,
+          "max": 102.049
+        },
+        "retrieval_queue": {
+          "count": 952,
+          "p50": 0.774,
+          "p95": 5.802,
+          "p99": 12.052,
+          "max": 23.019
+        },
+        "retrieval_total": {
+          "count": 238,
+          "p50": 9.994,
+          "p95": 21.544,
+          "p99": 43.445,
+          "max": 54.363
+        },
+        "search_collaborative": {
+          "count": 238,
+          "p50": 1.349,
+          "p95": 4.391,
+          "p99": 6.028,
+          "max": 10.823
+        },
+        "search_content": {
+          "count": 238,
+          "p50": 3.838,
+          "p95": 7.697,
+          "p99": 10.004,
+          "max": 43.662
+        },
+        "search_sequential": {
+          "count": 238,
+          "p50": 0.878,
+          "p95": 3.953,
+          "p99": 5.544,
+          "max": 7.884
+        },
+        "source_collaborative": {
+          "count": 238,
+          "p50": 2.16,
+          "p95": 5.838,
+          "p99": 7.69,
+          "max": 11.283
+        },
+        "source_content": {
+          "count": 238,
+          "p50": 4.915,
+          "p95": 10.411,
+          "p99": 12.619,
+          "max": 44.938
+        },
+        "source_popular": {
+          "count": 238,
+          "p50": 0.675,
+          "p95": 2.013,
+          "p99": 5.035,
+          "max": 13.022
+        },
+        "source_sequential": {
+          "count": 238,
+          "p50": 1.369,
+          "p95": 5.147,
+          "p99": 8.285,
+          "max": 31.225
+        }
+      }
+    },
+    {
+      "variant": "rank_workers_1",
+      "concurrency": 20,
+      "requests": 326,
+      "elapsed_s": 3.169,
+      "rps": 102.89,
+      "latency_ms": {
+        "p50": 188.349,
+        "p95": 226.447,
+        "p99": 231.416,
+        "max": 246.52
+      },
+      "fallback_reasons": {
+        "FallbackReason.RANKER_TIMEOUT": 311,
+        "FallbackReason.RETRIEVER_TIMEOUT": 6
+      },
+      "process_cpu_percent": 141.5,
+      "stages_ms": {
+        "content_profile": {
+          "count": 57,
+          "p50": 7.513,
+          "p95": 26.493,
+          "p99": 48.625,
+          "max": 53.554
+        },
+        "content_scores": {
+          "count": 57,
+          "p50": 3.131,
+          "p95": 20.458,
+          "p99": 28.184,
+          "max": 34.583
+        },
+        "encode_collaborative": {
+          "count": 326,
+          "p50": 0.065,
+          "p95": 0.163,
+          "p99": 5.344,
+          "max": 24.368
+        },
+        "encode_content": {
+          "count": 326,
+          "p50": 0.165,
+          "p95": 7.247,
+          "p99": 18.095,
+          "max": 42.388
+        },
+        "encode_sequential": {
+          "count": 326,
+          "p50": 0.049,
+          "p95": 0.083,
+          "p99": 0.111,
+          "max": 0.159
+        },
+        "gating_forward": {
+          "count": 57,
+          "p50": 31.466,
+          "p95": 75.61,
+          "p99": 85.838,
+          "max": 96.466
+        },
+        "rank_cf": {
+          "count": 57,
+          "p50": 0.132,
+          "p95": 3.531,
+          "p99": 9.433,
+          "max": 10.101
+        },
+        "rank_content": {
+          "count": 57,
+          "p50": 13.922,
+          "p95": 37.776,
+          "p99": 67.091,
+          "max": 69.2
+        },
+        "rank_seq": {
+          "count": 57,
+          "p50": 0.094,
+          "p95": 6.538,
+          "p99": 14.645,
+          "max": 17.97
+        },
+        "ranker_queue": {
+          "count": 57,
+          "p50": 99.756,
+          "p95": 113.29,
+          "p99": 126.313,
+          "max": 130.036
+        },
+        "ranker_total": {
+          "count": 57,
+          "p50": 53.437,
+          "p95": 113.355,
+          "p99": 145.031,
+          "max": 155.851
+        },
+        "retrieval_queue": {
+          "count": 1169,
+          "p50": 17.644,
+          "p95": 36.509,
+          "p99": 46.185,
+          "max": 50.949
+        },
+        "retrieval_total": {
+          "count": 326,
+          "p50": 79.593,
+          "p95": 113.107,
+          "p99": 119.911,
+          "max": 132.945
+        },
+        "search_collaborative": {
+          "count": 326,
+          "p50": 2.671,
+          "p95": 12.912,
+          "p99": 22.858,
+          "max": 26.986
+        },
+        "search_content": {
+          "count": 326,
+          "p50": 7.102,
+          "p95": 20.812,
+          "p99": 27.311,
+          "max": 30.571
+        },
+        "search_sequential": {
+          "count": 326,
+          "p50": 1.101,
+          "p95": 11.795,
+          "p99": 17.408,
+          "max": 20.812
+        },
+        "source_collaborative": {
+          "count": 326,
+          "p50": 3.837,
+          "p95": 15.044,
+          "p99": 26.475,
+          "max": 44.535
+        },
+        "source_content": {
+          "count": 326,
+          "p50": 8.84,
+          "p95": 23.664,
+          "p99": 31.165,
+          "max": 46.133
+        },
+        "source_popular": {
+          "count": 191,
+          "p50": 0.714,
+          "p95": 5.403,
+          "p99": 20.682,
+          "max": 24.304
+        },
+        "source_sequential": {
+          "count": 326,
+          "p50": 1.884,
+          "p95": 12.872,
+          "p99": 17.838,
+          "max": 21.268
+        }
+      }
+    },
+    {
+      "variant": "numpy_gate",
+      "concurrency": 1,
+      "requests": 204,
+      "elapsed_s": 3.005,
+      "rps": 67.9,
+      "latency_ms": {
+        "p50": 14.268,
+        "p95": 21.656,
+        "p99": 35.263,
+        "max": 51.975
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 113.4,
+      "stages_ms": {
+        "content_profile": {
+          "count": 204,
+          "p50": 2.305,
+          "p95": 3.84,
+          "p99": 5.442,
+          "max": 9.398
+        },
+        "content_scores": {
+          "count": 204,
+          "p50": 0.95,
+          "p95": 1.607,
+          "p99": 4.046,
+          "max": 7.528
+        },
+        "encode_collaborative": {
+          "count": 204,
+          "p50": 0.06,
+          "p95": 0.149,
+          "p99": 1.119,
+          "max": 1.607
+        },
+        "encode_content": {
+          "count": 204,
+          "p50": 0.142,
+          "p95": 1.442,
+          "p99": 2.046,
+          "max": 3.663
+        },
+        "encode_sequential": {
+          "count": 204,
+          "p50": 0.042,
+          "p95": 0.093,
+          "p99": 0.107,
+          "max": 0.262
+        },
+        "rank_cf": {
+          "count": 204,
+          "p50": 0.145,
+          "p95": 0.232,
+          "p99": 0.29,
+          "max": 0.388
+        },
+        "rank_content": {
+          "count": 204,
+          "p50": 3.285,
+          "p95": 5.491,
+          "p99": 8.783,
+          "max": 13.674
+        },
+        "rank_seq": {
+          "count": 204,
+          "p50": 0.053,
+          "p95": 0.088,
+          "p99": 0.102,
+          "max": 0.223
+        },
+        "ranker_queue": {
+          "count": 204,
+          "p50": 0.074,
+          "p95": 0.168,
+          "p99": 0.272,
+          "max": 0.745
+        },
+        "ranker_total": {
+          "count": 204,
+          "p50": 4.413,
+          "p95": 7.239,
+          "p99": 12.201,
+          "max": 19.127
+        },
+        "retrieval_queue": {
+          "count": 816,
+          "p50": 0.491,
+          "p95": 1.738,
+          "p99": 2.81,
+          "max": 5.616
+        },
+        "retrieval_total": {
+          "count": 204,
+          "p50": 8.651,
+          "p95": 13.66,
+          "p99": 18.842,
+          "max": 35.303
+        },
+        "search_collaborative": {
+          "count": 204,
+          "p50": 0.893,
+          "p95": 2.482,
+          "p99": 4.555,
+          "max": 5.173
+        },
+        "search_content": {
+          "count": 204,
+          "p50": 3.221,
+          "p95": 5.066,
+          "p99": 9.252,
+          "max": 13.401
+        },
+        "search_sequential": {
+          "count": 204,
+          "p50": 0.385,
+          "p95": 1.79,
+          "p99": 3.887,
+          "max": 5.616
+        },
+        "source_collaborative": {
+          "count": 204,
+          "p50": 1.61,
+          "p95": 3.616,
+          "p99": 5.819,
+          "max": 6.467
+        },
+        "source_content": {
+          "count": 204,
+          "p50": 4.199,
+          "p95": 6.465,
+          "p99": 12.799,
+          "max": 17.582
+        },
+        "source_popular": {
+          "count": 204,
+          "p50": 0.661,
+          "p95": 1.149,
+          "p99": 3.548,
+          "max": 4.031
+        },
+        "source_sequential": {
+          "count": 204,
+          "p50": 0.867,
+          "p95": 2.491,
+          "p99": 5.288,
+          "max": 8.048
+        }
+      }
+    },
+    {
+      "variant": "numpy_gate",
+      "concurrency": 5,
+      "requests": 230,
+      "elapsed_s": 3.044,
+      "rps": 75.55,
+      "latency_ms": {
+        "p50": 64.702,
+        "p95": 95.229,
+        "p99": 113.629,
+        "max": 134.784
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 135.0,
+      "stages_ms": {
+        "content_profile": {
+          "count": 230,
+          "p50": 8.479,
+          "p95": 23.715,
+          "p99": 29.56,
+          "max": 38.694
+        },
+        "content_scores": {
+          "count": 230,
+          "p50": 5.177,
+          "p95": 16.729,
+          "p99": 27.429,
+          "max": 33.606
+        },
+        "encode_collaborative": {
+          "count": 230,
+          "p50": 0.053,
+          "p95": 0.102,
+          "p99": 0.608,
+          "max": 1.456
+        },
+        "encode_content": {
+          "count": 230,
+          "p50": 0.155,
+          "p95": 6.813,
+          "p99": 11.589,
+          "max": 21.539
+        },
+        "encode_sequential": {
+          "count": 230,
+          "p50": 0.038,
+          "p95": 0.073,
+          "p99": 0.099,
+          "max": 0.116
+        },
+        "rank_cf": {
+          "count": 230,
+          "p50": 0.2,
+          "p95": 6.089,
+          "p99": 9.722,
+          "max": 16.861
+        },
+        "rank_content": {
+          "count": 230,
+          "p50": 14.938,
+          "p95": 31.97,
+          "p99": 44.429,
+          "max": 49.018
+        },
+        "rank_seq": {
+          "count": 230,
+          "p50": 0.1,
+          "p95": 7.082,
+          "p99": 12.153,
+          "max": 19.441
+        },
+        "ranker_queue": {
+          "count": 230,
+          "p50": 0.449,
+          "p95": 7.31,
+          "p99": 12.366,
+          "max": 15.347
+        },
+        "ranker_total": {
+          "count": 230,
+          "p50": 42.549,
+          "p95": 70.859,
+          "p99": 86.105,
+          "max": 97.242
+        },
+        "retrieval_queue": {
+          "count": 920,
+          "p50": 1.492,
+          "p95": 8.735,
+          "p99": 15.79,
+          "max": 23.203
+        },
+        "retrieval_total": {
+          "count": 230,
+          "p50": 16.12,
+          "p95": 31.312,
+          "p99": 35.138,
+          "max": 43.084
+        },
+        "search_collaborative": {
+          "count": 230,
+          "p50": 2.443,
+          "p95": 10.874,
+          "p99": 14.227,
+          "max": 16.258
+        },
+        "search_content": {
+          "count": 230,
+          "p50": 5.632,
+          "p95": 12.851,
+          "p99": 18.38,
+          "max": 23.318
+        },
+        "search_sequential": {
+          "count": 230,
+          "p50": 1.397,
+          "p95": 9.004,
+          "p99": 12.389,
+          "max": 13.341
+        },
+        "source_collaborative": {
+          "count": 230,
+          "p50": 3.248,
+          "p95": 12.202,
+          "p99": 15.423,
+          "max": 17.033
+        },
+        "source_content": {
+          "count": 230,
+          "p50": 7.243,
+          "p95": 16.098,
+          "p99": 25.758,
+          "max": 32.418
+        },
+        "source_popular": {
+          "count": 230,
+          "p50": 0.767,
+          "p95": 2.067,
+          "p99": 2.946,
+          "max": 5.318
+        },
+        "source_sequential": {
+          "count": 230,
+          "p50": 1.947,
+          "p95": 9.616,
+          "p99": 13.166,
+          "max": 14.063
+        }
+      }
+    },
+    {
+      "variant": "numpy_gate",
+      "concurrency": 20,
+      "requests": 229,
+      "elapsed_s": 3.232,
+      "rps": 70.85,
+      "latency_ms": {
+        "p50": 278.385,
+        "p95": 396.703,
+        "p99": 427.106,
+        "max": 441.854
+      },
+      "fallback_reasons": {
+        "FallbackReason.RANKER_TIMEOUT": 165,
+        "FallbackReason.RETRIEVER_TIMEOUT": 51
+      },
+      "process_cpu_percent": 138.7,
+      "stages_ms": {
+        "content_profile": {
+          "count": 225,
+          "p50": 15.668,
+          "p95": 46.796,
+          "p99": 60.453,
+          "max": 74.583
+        },
+        "content_scores": {
+          "count": 225,
+          "p50": 12.535,
+          "p95": 36.473,
+          "p99": 45.059,
+          "max": 49.098
+        },
+        "encode_collaborative": {
+          "count": 229,
+          "p50": 0.051,
+          "p95": 0.142,
+          "p99": 2.493,
+          "max": 19.21
+        },
+        "encode_content": {
+          "count": 229,
+          "p50": 0.178,
+          "p95": 8.105,
+          "p99": 12.198,
+          "max": 21.845
+        },
+        "encode_sequential": {
+          "count": 229,
+          "p50": 0.039,
+          "p95": 0.085,
+          "p99": 0.116,
+          "max": 0.19
+        },
+        "rank_cf": {
+          "count": 225,
+          "p50": 0.998,
+          "p95": 12.948,
+          "p99": 16.725,
+          "max": 23.239
+        },
+        "rank_content": {
+          "count": 225,
+          "p50": 31.807,
+          "p95": 70.785,
+          "p99": 88.513,
+          "max": 100.365
+        },
+        "rank_seq": {
+          "count": 225,
+          "p50": 0.358,
+          "p95": 10.596,
+          "p99": 19.989,
+          "max": 28.2
+        },
+        "ranker_queue": {
+          "count": 225,
+          "p50": 27.364,
+          "p95": 77.533,
+          "p99": 95.053,
+          "max": 111.568
+        },
+        "ranker_total": {
+          "count": 225,
+          "p50": 103.22,
+          "p95": 161.548,
+          "p99": 214.72,
+          "max": 231.157
+        },
+        "retrieval_queue": {
+          "count": 714,
+          "p50": 38.642,
+          "p95": 83.406,
+          "p99": 108.763,
+          "max": 140.307
+        },
+        "retrieval_total": {
+          "count": 229,
+          "p50": 171.686,
+          "p95": 292.443,
+          "p99": 313.976,
+          "max": 322.367
+        },
+        "search_collaborative": {
+          "count": 229,
+          "p50": 2.915,
+          "p95": 17.239,
+          "p99": 24.657,
+          "max": 31.349
+        },
+        "search_content": {
+          "count": 229,
+          "p50": 6.768,
+          "p95": 22.222,
+          "p99": 31.901,
+          "max": 49.111
+        },
+        "search_sequential": {
+          "count": 229,
+          "p50": 1.911,
+          "p95": 14.497,
+          "p99": 26.965,
+          "max": 42.451
+        },
+        "source_collaborative": {
+          "count": 229,
+          "p50": 3.945,
+          "p95": 18.735,
+          "p99": 25.353,
+          "max": 32.031
+        },
+        "source_content": {
+          "count": 229,
+          "p50": 9.14,
+          "p95": 25.073,
+          "p99": 39.264,
+          "max": 49.87
+        },
+        "source_popular": {
+          "count": 27,
+          "p50": 0.612,
+          "p95": 4.977,
+          "p99": 14.372,
+          "max": 17.42
+        },
+        "source_sequential": {
+          "count": 229,
+          "p50": 2.427,
+          "p95": 15.655,
+          "p99": 27.895,
+          "max": 42.897
+        }
+      }
+    },
+    {
+      "variant": "numpy_gate_and_warm_profile_cache",
+      "concurrency": 1,
+      "requests": 190,
+      "elapsed_s": 3.008,
+      "rps": 63.17,
+      "latency_ms": {
+        "p50": 13.082,
+        "p95": 29.792,
+        "p99": 41.816,
+        "max": 48.568
+      },
+      "fallback_reasons": {},
+      "process_cpu_percent": 110.7,
+      "stages_ms": {
+        "content_scores": {
+          "count": 190,
+          "p50": 1.158,
+          "p95": 3.357,
+          "p99": 6.372,
+          "max": 8.273
+        },
+        "encode_collaborative": {
+          "count": 190,
+          "p50": 0.068,
+          "p95": 0.165,
+          "p99": 1.243,
+          "max": 1.727
+        },
+        "encode_content": {
+          "count": 190,
+          "p50": 0.167,
+          "p95": 1.959,
+          "p99": 4.137,
+          "max": 7.744
+        },
+        "encode_sequential": {
+          "count": 190,
+          "p50": 0.052,
+          "p95": 0.125,
+          "p99": 0.227,
+          "max": 0.332
+        },
+        "rank_cf": {
+          "count": 190,
+          "p50": 0.154,
+          "p95": 0.317,
+          "p99": 0.517,
+          "max": 0.683
+        },
+        "rank_content": {
+          "count": 190,
+          "p50": 1.204,
+          "p95": 3.454,
+          "p99": 6.583,
+          "max": 8.531
+        },
+        "rank_seq": {
+          "count": 190,
+          "p50": 0.055,
+          "p95": 0.14,
+          "p99": 0.256,
+          "max": 0.328
+        },
+        "ranker_queue": {
+          "count": 190,
+          "p50": 0.089,
+          "p95": 0.24,
+          "p99": 0.352,
+          "max": 0.394
+        },
+        "ranker_total": {
+          "count": 190,
+          "p50": 2.398,
+          "p95": 6.66,
+          "p99": 10.819,
+          "max": 12.851
+        },
+        "retrieval_queue": {
+          "count": 760,
+          "p50": 0.509,
+          "p95": 1.934,
+          "p99": 3.141,
+          "max": 8.494
+        },
+        "retrieval_total": {
+          "count": 190,
+          "p50": 9.252,
+          "p95": 22.731,
+          "p99": 31.632,
+          "max": 38.847
+        },
+        "search_collaborative": {
+          "count": 190,
+          "p50": 1.312,
+          "p95": 2.793,
+          "p99": 4.977,
+          "max": 7.311
+        },
+        "search_content": {
+          "count": 190,
+          "p50": 3.66,
+          "p95": 8.801,
+          "p99": 12.363,
+          "max": 13.112
+        },
+        "search_sequential": {
+          "count": 190,
+          "p50": 0.587,
+          "p95": 2.832,
+          "p99": 5.438,
+          "max": 9.28
+        },
+        "source_collaborative": {
+          "count": 190,
+          "p50": 2.046,
+          "p95": 5.243,
+          "p99": 8.162,
+          "max": 8.601
+        },
+        "source_content": {
+          "count": 190,
+          "p50": 4.69,
+          "p95": 12.577,
+          "p99": 16.67,
+          "max": 19.001
+        },
+        "source_popular": {
+          "count": 190,
+          "p50": 0.763,
+          "p95": 1.335,
+          "p99": 4.049,
+          "max": 7.924
+        },
+        "source_sequential": {
+          "count": 190,
+          "p50": 1.145,
+          "p95": 4.592,
+          "p99": 9.287,
+          "max": 11.839
+        }
+      }
+    },
+    {
+      "variant": "numpy_gate_and_warm_profile_cache",
+      "concurrency": 5,
+      "requests": 178,
+      "elapsed_s": 3.025,
+      "rps": 58.85,
+      "latency_ms": {
+        "p50": 82.835,
+        "p95": 118.695,
+        "p99": 141.074,
+        "max": 163.34
+      },
+      "fallback_reasons": {
+        "FallbackReason.RETRIEVER_TIMEOUT": 4
+      },
+      "process_cpu_percent": 135.9,
+      "stages_ms": {
+        "content_scores": {
+          "count": 178,
+          "p50": 8.527,
+          "p95": 31.937,
+          "p99": 46.862,
+          "max": 69.626
+        },
+        "encode_collaborative": {
+          "count": 178,
+          "p50": 0.087,
+          "p95": 0.403,
+          "p99": 2.386,
+          "max": 5.811
+        },
+        "encode_content": {
+          "count": 178,
+          "p50": 0.249,
+          "p95": 13.311,
+          "p99": 23.885,
+          "max": 46.601
+        },
+        "encode_sequential": {
+          "count": 178,
+          "p50": 0.063,
+          "p95": 0.113,
+          "p99": 0.17,
+          "max": 0.2
+        },
+        "rank_cf": {
+          "count": 178,
+          "p50": 0.257,
+          "p95": 7.313,
+          "p99": 12.629,
+          "max": 13.883
+        },
+        "rank_content": {
+          "count": 178,
+          "p50": 8.59,
+          "p95": 32.045,
+          "p99": 46.996,
+          "max": 69.697
+        },
+        "rank_seq": {
+          "count": 178,
+          "p50": 0.148,
+          "p95": 7.771,
+          "p99": 11.781,
+          "max": 20.692
+        },
+        "ranker_queue": {
+          "count": 178,
+          "p50": 0.442,
+          "p95": 9.843,
+          "p99": 17.299,
+          "max": 22.004
+        },
+        "ranker_total": {
+          "count": 178,
+          "p50": 52.801,
+          "p95": 82.109,
+          "p99": 93.222,
+          "max": 109.408
+        },
+        "retrieval_queue": {
+          "count": 710,
+          "p50": 2.642,
+          "p95": 15.323,
+          "p99": 23.631,
+          "max": 52.078
+        },
+        "retrieval_total": {
+          "count": 178,
+          "p50": 24.42,
+          "p95": 44.863,
+          "p99": 65.561,
+          "max": 70.089
+        },
+        "search_collaborative": {
+          "count": 178,
+          "p50": 3.401,
+          "p95": 13.222,
+          "p99": 17.045,
+          "max": 30.561
+        },
+        "search_content": {
+          "count": 178,
+          "p50": 7.749,
+          "p95": 22.265,
+          "p99": 28.25,
+          "max": 32.945
+        },
+        "search_sequential": {
+          "count": 178,
+          "p50": 2.712,
+          "p95": 15.284,
+          "p99": 27.724,
+          "max": 40.386
+        },
+        "source_collaborative": {
+          "count": 178,
+          "p50": 4.69,
+          "p95": 15.63,
+          "p99": 17.885,
+          "max": 31.392
+        },
+        "source_content": {
+          "count": 178,
+          "p50": 10.503,
+          "p95": 27.674,
+          "p99": 42.485,
+          "max": 73.493
+        },
+        "source_popular": {
+          "count": 176,
+          "p50": 1.097,
+          "p95": 2.824,
+          "p99": 4.619,
+          "max": 6.535
+        },
+        "source_sequential": {
+          "count": 178,
+          "p50": 3.748,
+          "p95": 16.234,
+          "p99": 29.243,
+          "max": 43.33
+        }
+      }
+    },
+    {
+      "variant": "numpy_gate_and_warm_profile_cache",
+      "concurrency": 20,
+      "requests": 275,
+      "elapsed_s": 3.155,
+      "rps": 87.15,
+      "latency_ms": {
+        "p50": 215.046,
+        "p95": 288.632,
+        "p99": 307.469,
+        "max": 315.928
+      },
+      "fallback_reasons": {
+        "FallbackReason.RETRIEVER_TIMEOUT": 226,
+        "FallbackReason.RANKER_TIMEOUT": 31
+      },
+      "process_cpu_percent": 136.7,
+      "stages_ms": {
+        "content_scores": {
+          "count": 275,
+          "p50": 10.005,
+          "p95": 27.261,
+          "p99": 36.573,
+          "max": 57.752
+        },
+        "encode_collaborative": {
+          "count": 275,
+          "p50": 0.06,
+          "p95": 0.121,
+          "p99": 2.678,
+          "max": 6.865
+        },
+        "encode_content": {
+          "count": 275,
+          "p50": 0.171,
+          "p95": 6.896,
+          "p99": 14.611,
+          "max": 21.652
+        },
+        "encode_sequential": {
+          "count": 275,
+          "p50": 0.045,
+          "p95": 0.087,
+          "p99": 0.1,
+          "max": 0.258
+        },
+        "rank_cf": {
+          "count": 275,
+          "p50": 0.248,
+          "p95": 8.318,
+          "p99": 21.325,
+          "max": 30.668
+        },
+        "rank_content": {
+          "count": 275,
+          "p50": 10.063,
+          "p95": 27.321,
+          "p99": 36.658,
+          "max": 57.809
+        },
+        "rank_seq": {
+          "count": 275,
+          "p50": 0.125,
+          "p95": 9.104,
+          "p99": 14.894,
+          "max": 18.896
+        },
+        "ranker_queue": {
+          "count": 275,
+          "p50": 1.668,
+          "p95": 60.628,
+          "p99": 90.507,
+          "max": 98.514
+        },
+        "ranker_total": {
+          "count": 275,
+          "p50": 65.494,
+          "p95": 116.651,
+          "p99": 139.592,
+          "max": 151.005
+        },
+        "retrieval_queue": {
+          "count": 845,
+          "p50": 36.949,
+          "p95": 60.1,
+          "p99": 70.915,
+          "max": 93.975
+        },
+        "retrieval_total": {
+          "count": 275,
+          "p50": 142.677,
+          "p95": 198.786,
+          "p99": 209.581,
+          "max": 213.813
+        },
+        "search_collaborative": {
+          "count": 275,
+          "p50": 2.487,
+          "p95": 11.028,
+          "p99": 17.277,
+          "max": 30.083
+        },
+        "search_content": {
+          "count": 275,
+          "p50": 6.371,
+          "p95": 17.396,
+          "p99": 26.801,
+          "max": 30.781
+        },
+        "search_sequential": {
+          "count": 275,
+          "p50": 1.605,
+          "p95": 9.882,
+          "p99": 16.036,
+          "max": 41.96
+        },
+        "source_collaborative": {
+          "count": 275,
+          "p50": 3.633,
+          "p95": 12.559,
+          "p99": 19.326,
+          "max": 31.393
+        },
+        "source_content": {
+          "count": 275,
+          "p50": 8.178,
+          "p95": 22.968,
+          "p99": 30.107,
+          "max": 33.341
+        },
+        "source_popular": {
+          "count": 20,
+          "p50": 0.87,
+          "p95": 1.472,
+          "p99": 3.402,
+          "max": 3.885
+        },
+        "source_sequential": {
+          "count": 275,
+          "p50": 2.509,
+          "p95": 11.153,
+          "p99": 17.398,
+          "max": 42.479
+        }
+      }
+    }
+  ]
+}

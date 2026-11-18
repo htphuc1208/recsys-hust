@@ -92,6 +92,11 @@ artifacts/serving/*
 *.bin
 *.index
 
+# Local smoke-test configs, scripts and serving bundles (not shared)
+configs/experiment/smoke/
+scripts/smoke/
+artifacts/serving/
+
 # Generated MIND submission artifacts are local, not source code
 reports/submissions/
 

@@ -68,6 +68,7 @@ async def _run_level(
 ) -> dict[str, object]:
     latencies_ms: list[float] = []
     statuses: dict[int, int] = {}
+    fallback_reasons: dict[str, int] = {}
     stop_resources = asyncio.Event()
     resource_samples: list[dict[str, float | None]] = []
     sampler = (
@@ -86,6 +87,11 @@ async def _run_level(
             try:
                 response = await client.post(endpoint, json=payload)
                 status = response.status_code
+                if 200 <= status < 300:
+                    body = response.json()
+                    if body.get("degraded"):
+                        reason = str(body.get("fallback_reason"))
+                        fallback_reasons[reason] = fallback_reasons.get(reason, 0) + 1
             except httpx.HTTPError:
                 status = 0
             latencies_ms.append((time.perf_counter() - started) * 1000.0)
@@ -116,6 +122,9 @@ async def _run_level(
         "requests": len(latencies_ms),
         "successful_requests": successes,
         "error_rate": round(1.0 - successes / max(1, len(latencies_ms)), 6),
+        # COLD_USER is expected for unknown users; the other reasons mean a broken budget.
+        "fallback_rate": round(sum(fallback_reasons.values()) / max(1, successes), 6),
+        "fallback_reasons": dict(sorted(fallback_reasons.items())),
         "rps": round(successes / elapsed, 3),
         "latency_ms": {
             "p50": round(float(np.percentile(values, 50)), 3),

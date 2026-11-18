@@ -1,0 +1,73 @@
+         3026093 function calls (3016512 primitive calls) in 2.951 seconds
+
+   Ordered by: cumulative time
+   List reduced from 265 to 65 due to restriction <65>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+ 1604/200    0.060    0.000    3.120    0.016 diagnose_serving_latency.py:50(measured)
+  108/100    0.067    0.001    3.100    0.031 pipeline.py:24(recommend)
+  104/100    0.405    0.004    2.603    0.026 multi_source.py:25(retrieve)
+  503/500    0.005    0.000    2.330    0.005 _base.py:428(result)
+  269/266    0.010    0.000    2.303    0.009 threading.py:327(wait)
+  500/212    0.004    0.000    1.786    0.008 thread.py:54(run)
+  500/212    0.003    0.000    1.721    0.008 diagnose_serving_latency.py:66(run)
+  300/103    0.339    0.001    1.222    0.012 retrievers.py:59(retrieve)
+  300/112    0.010    0.000    0.968    0.009 faiss_index.py:109(search)
+  300/113    0.005    0.000    0.608    0.005 class_wrappers.py:421(replacement_search)
+  300/113    0.009    0.000    0.596    0.005 swigfaiss.py:13654(search)
+300000/299462    0.355    0.000    0.515    0.000 types.py:51(add_source)
+      100    0.013    0.000    0.467    0.005 recommender.py:153(predict)
+      100    0.118    0.001    0.325    0.003 retrievers.py:27(retrieve)
+      100    0.004    0.000    0.271    0.003 recommender.py:261(predict)
+      100    0.001    0.000    0.264    0.003 recommender.py:245(_score_one_user)
+      100    0.003    0.000    0.262    0.003 recommender.py:215(_score_candidates)
+      100    0.004    0.000    0.259    0.003 recommender.py:227(_score_candidates_by_feature)
+   756900    0.233    0.000    0.233    0.000 {method 'get' of 'dict' objects}
+      100    0.027    0.000    0.205    0.002 {built-in method builtins.sum}
+   113226    0.083    0.000    0.178    0.000 multi_source.py:71(<genexpr>)
+      300    0.109    0.000    0.172    0.001 {built-in method builtins.sorted}
+1500/1200    0.013    0.000    0.136    0.000 _compressed.py:30(__init__)
+      300    0.001    0.000    0.123    0.000 _base.py:1006(__matmul__)
+      300    0.002    0.000    0.120    0.000 _base.py:875(_matmul_dispatch)
+      300    0.006    0.000    0.115    0.000 _compressed.py:415(_matmul_sparse)
+      100    0.002    0.000    0.113    0.001 resources.py:103(encode)
+115026/114926    0.063    0.000    0.105    0.000 {built-in method builtins.any}
+      300    0.003    0.000    0.096    0.000 _index.py:29(__getitem__)
+   301500    0.077    0.000    0.077    0.000 {method 'add' of 'set' objects}
+   335011    0.073    0.000    0.073    0.000 {built-in method builtins.len}
+      300    0.001    0.000    0.071    0.000 _csr.py:283(_get_arrayXslice)
+     2400    0.010    0.000    0.070    0.000 _base.py:1695(_get_index_dtype)
+      300    0.015    0.000    0.067    0.000 _compressed.py:579(_major_index_fancy)
+      100    0.001    0.000    0.065    0.001 module.py:1779(_wrapped_call_impl)
+      100    0.001    0.000    0.064    0.001 module.py:1787(_call_impl)
+      100    0.011    0.000    0.063    0.001 diagnose_serving_latency.py:239(forward)
+ 1032/534    0.018    0.000    0.057    0.000 {method 'acquire' of '_thread.lock' objects}
+     2400    0.040    0.000    0.056    0.000 _sputils.py:263(get_index_dtype)
+      100    0.001    0.000    0.052    0.001 rules.py:6(stable_top_k)
+      300    0.001    0.000    0.051    0.000 _base.py:471(asformat)
+   152800    0.050    0.000    0.050    0.000 {method 'append' of 'list' objects}
+      300    0.005    0.000    0.050    0.000 _csc.py:44(tocsr)
+   263126    0.047    0.000    0.047    0.000 types.py:47(__post_init__)
+  200/193    0.007    0.000    0.045    0.000 memmap.py:358(__getitem__)
+  300/113    0.061    0.000    0.044    0.000 {built-in method faiss._swigfaiss.IndexIDMap_search}
+   162748    0.038    0.000    0.038    0.000 multi_source.py:72(<genexpr>)
+      100    0.000    0.000    0.036    0.000 module.py:2916(eval)
+      300    0.036    0.000    0.036    0.000 diagnose_serving_latency.py:233(mlp)
+ 1600/100    0.006    0.000    0.036    0.000 module.py:2894(train)
+     1500    0.010    0.000    0.035    0.000 _compressed.py:166(check_format)
+      400    0.006    0.000    0.035    0.000 _methods.py:115(_mean)
+      300    0.004    0.000    0.032    0.000 recommender.py:25(_standardize_scores)
+      100    0.000    0.000    0.030    0.000 {method 'mean' of 'numpy.ndarray' objects}
+      300    0.000    0.000    0.028    0.000 _base.py:397(T)
+      300    0.002    0.000    0.028    0.000 _csr.py:22(transpose)
+   113126    0.027    0.000    0.027    0.000 multi_source.py:76(<lambda>)
+3300/3288    0.024    0.000    0.024    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+    80000    0.023    0.000    0.023    0.000 rules.py:10(<lambda>)
+24300/21100    0.012    0.000    0.022    0.000 {built-in method builtins.isinstance}
+      100    0.000    0.000    0.022    0.000 extra_wrappers.py:147(normalize_L2)
+     1500    0.010    0.000    0.022    0.000 _compressed.py:1132(prune)
+      100    0.002    0.000    0.022    0.000 recommender.py:412(predict)
+     1600    0.009    0.000    0.021    0.000 module.py:1976(__setattr__)
+      100    0.000    0.000    0.021    0.000 swigfaiss.py:1504(fvec_renorm_L2)
+
+

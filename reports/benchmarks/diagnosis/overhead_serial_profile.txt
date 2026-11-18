@@ -1,0 +1,73 @@
+         2452052 function calls (2440752 primitive calls) in 1.720 seconds
+
+   Ordered by: cumulative time
+   List reduced from 320 to 65 due to restriction <65>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  108/100    0.045    0.000    1.620    0.016 pipeline.py:24(recommend)
+ 1204/200    0.012    0.000    1.564    0.008 diagnose_serving_latency.py:50(measured)
+  104/100    0.255    0.002    0.874    0.009 multi_source.py:25(retrieve)
+  504/500    0.002    0.000    0.730    0.001 _base.py:428(result)
+  226/222    0.007    0.000    0.727    0.003 threading.py:327(wait)
+      500    0.001    0.000    0.694    0.001 thread.py:54(run)
+      500    0.001    0.000    0.684    0.001 diagnose_serving_latency.py:66(run)
+      100    0.010    0.000    0.680    0.007 recommender.py:153(predict)
+      100    0.002    0.000    0.529    0.005 recommender.py:261(predict)
+      100    0.000    0.000    0.525    0.005 recommender.py:245(_score_one_user)
+      100    0.005    0.000    0.362    0.004 recommender.py:190(_build_profiles)
+4500/4200    0.029    0.000    0.280    0.000 _compressed.py:30(__init__)
+   150000    0.114    0.000    0.165    0.000 types.py:51(add_source)
+      100    0.002    0.000    0.162    0.002 recommender.py:215(_score_candidates)
+      100    0.002    0.000    0.160    0.002 recommender.py:227(_score_candidates_by_feature)
+      100    0.019    0.000    0.136    0.001 {built-in method builtins.sum}
+      300    0.068    0.000    0.127    0.000 {built-in method builtins.sorted}
+   113126    0.112    0.000    0.125    0.000 <string>:2(__init__)
+   607500    0.121    0.000    0.121    0.000 {method 'get' of 'dict' objects}
+   113226    0.054    0.000    0.117    0.000 multi_source.py:71(<genexpr>)
+      900    0.005    0.000    0.115    0.000 _base.py:875(_matmul_dispatch)
+      600    0.004    0.000    0.113    0.000 _index.py:29(__getitem__)
+     6000    0.015    0.000    0.103    0.000 _base.py:1695(_get_index_dtype)
+      300    0.003    0.000    0.100    0.000 _base.py:1523(mean)
+  900/600    0.002    0.000    0.084    0.000 _compressed.py:492(sum)
+      600    0.002    0.000    0.083    0.000 _csr.py:283(_get_arrayXslice)
+  900/600    0.008    0.000    0.082    0.000 _base.py:1439(sum)
+     6000    0.058    0.000    0.081    0.000 _sputils.py:263(get_index_dtype)
+      300    0.000    0.000    0.080    0.000 _base.py:1006(__matmul__)
+      600    0.017    0.000    0.078    0.000 _compressed.py:579(_major_index_fancy)
+      300    0.004    0.000    0.075    0.000 _compressed.py:415(_matmul_sparse)
+118426/118326    0.044    0.000    0.074    0.000 {built-in method builtins.any}
+     1200    0.003    0.000    0.071    0.000 _compressed.py:1189(_with_data)
+     4500    0.018    0.000    0.067    0.000 _compressed.py:166(check_format)
+ 1600/100    0.002    0.000    0.065    0.001 module.py:1779(_wrapped_call_impl)
+ 1600/100    0.004    0.000    0.065    0.001 module.py:1787(_call_impl)
+      100    0.003    0.000    0.063    0.001 gating.py:64(forward)
+      300    0.000    0.000    0.062    0.000 _base.py:1074(__truediv__)
+      300    0.002    0.000    0.061    0.000 _base.py:1022(_divide)
+      300    0.001    0.000    0.048    0.000 _base.py:511(multiply)
+      300    0.001    0.000    0.045    0.000 _compressed.py:263(_multiply_2d_with_broadcasting)
+      300    0.002    0.000    0.044    0.000 container.py:254(forward)
+     4800    0.020    0.000    0.044    0.000 _compressed.py:1132(prune)
+      300    0.005    0.000    0.043    0.000 _coo.py:32(__init__)
+      900    0.002    0.000    0.040    0.000 _data.py:69(astype)
+      300    0.000    0.000    0.040    0.000 _base.py:1012(__rmatmul__)
+      100    0.000    0.000    0.039    0.000 rules.py:6(stable_top_k)
+      600    0.003    0.000    0.038    0.000 _data.py:140(_mul_scalar)
+      300    0.001    0.000    0.038    0.000 _base.py:988(_rmatmul_dispatch)
+      600    0.002    0.000    0.038    0.000 _csr.py:22(transpose)
+      300    0.004    0.000    0.037    0.000 _compressed.py:1203(_binopt)
+      900    0.001    0.000    0.032    0.000 _base.py:471(asformat)
+      300    0.003    0.000    0.031    0.000 _csc.py:44(tocsr)
+   113126    0.028    0.000    0.028    0.000 multi_source.py:76(<lambda>)
+55800/52600    0.016    0.000    0.028    0.000 {built-in method builtins.isinstance}
+     3600    0.014    0.000    0.027    0.000 _sputils.py:443(check_shape)
+   151500    0.025    0.000    0.025    0.000 {method 'add' of 'set' objects}
+   163126    0.025    0.000    0.025    0.000 multi_source.py:72(<genexpr>)
+      600    0.010    0.000    0.024    0.000 _index.py:298(_validate_indices)
+      100    0.000    0.000    0.023    0.000 module.py:2916(eval)
+ 1600/100    0.004    0.000    0.023    0.000 module.py:2894(train)
+      300    0.000    0.000    0.022    0.000 _matrix.py:54(__mul__)
+    80000    0.022    0.000    0.022    0.000 rules.py:10(<lambda>)
+      300    0.003    0.000    0.021    0.000 recommender.py:25(_standardize_scores)
+    21600    0.009    0.000    0.021    0.000 _base.py:372(nnz)
+
+

@@ -21,6 +21,8 @@ class RetrievalConfig(BaseModel):
     min_candidates: int = Field(default=500, ge=1)
     max_candidates: int = Field(default=1000, ge=1)
     rrf_constant: int = Field(default=60, ge=1)
+    # Shared by all in-flight requests; each request submits one task per enabled source.
+    max_workers: int = Field(default=16, ge=1, le=512)
     sources: dict[RetrievalSource, SourceConfig]
 
     @model_validator(mode="after")
@@ -40,6 +42,10 @@ class ServingConfig(BaseModel):
     retrieval: RetrievalConfig
     rank_timeout_ms: int = Field(default=100, ge=1, le=60_000)
     rerank_limit: int = Field(default=200, ge=1, le=10_000)
+    rank_workers: int = Field(default=8, ge=1, le=256)
+    warmup: bool = True
+    # Threads per FAISS/BLAS/torch call. Requests already run in parallel, so >1 oversubscribes.
+    intra_op_threads: int = Field(default=1, ge=1, le=256)
 
 
 def load_serving_config(path: str | Path | None = None) -> ServingConfig:
