@@ -287,6 +287,42 @@ make serve
 Makefile mặc định đóng gói checkpoint Hybrid; có thể đổi model bằng biến
 `SERVING_CHECKPOINT`. Chỉ chạy bước build khi cần tạo hoặc cập nhật bundle.
 
+#### 6.3.1. Sử dụng giao diện web
+
+Tóm tắt nhanh (PowerShell, tại thư mục gốc dự án):
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn src.serving.app:app --host 127.0.0.1 --port 8000
+# Chờ "Application startup complete." rồi mở http://127.0.0.1:8000/
+```
+
+Ngoài serving bundle (bước 6.2), giao diện cần dữ liệu đã xử lý trong
+`data/processed/mind_large/{dev,train}/news` và `.../impressions` để hiển thị
+tiêu đề, tóm tắt bài viết và lịch sử của các người đọc mẫu. Thiếu dữ liệu này
+thì gợi ý vẫn chạy nhưng bài viết chỉ hiện mã `N...`.
+
+Cách dùng:
+
+1. **Chọn người đọc** ở cột trái. Mỗi hồ sơ là lịch sử đọc thật từ MIND;
+   chọn *Người đọc mới* để xem gợi ý cho người chưa có lịch sử (cold start).
+   Nút *Tự nhập hồ sơ của bạn* cho phép nhập mã người đọc và/hoặc danh sách mã
+   bài đã đọc (`N98178, N88753, ...`).
+2. **Xem bảng tin**: mỗi thẻ bài có chuyên mục, thứ hạng và lý do được gợi ý.
+   Lọc theo chuyên mục bằng các nút phía trên danh sách; bấm vào thẻ để đọc
+   tóm tắt và mở bài gốc.
+3. **Thay đổi sở thích**: bấm *Đánh dấu đã đọc* để thêm bài vào lịch sử (hoặc
+   bấm `×` ở cột trái để bỏ bớt), rồi bấm *Cập nhật ngay* để thấy gợi ý thay
+   đổi. Đổi *Số bài* hoặc công tắc *Ẩn bài đã đọc* sẽ tự lấy lại gợi ý.
+
+Nút *Hướng dẫn* ở góc trên mở lại phần giải thích các bước; *Thông số kỹ thuật*
+ở chân trang hiển thị phiên bản model, chiến lược, độ trễ và JSON phản hồi của
+lượt gợi ý gần nhất.
+
+Khi chỉnh sửa giao diện (`src/serving/static/`), file được phục vụ trực tiếp
+nên chỉ cần tải lại trang bằng **Ctrl+F5**; dùng `make serve-dev` (thêm
+`--reload`) nếu sửa cả code Python.
+
 #### 6.4. Chạy HTTP benchmark
 
 **Terminal 2:** mở terminal mới trong khi Terminal 1 vẫn chạy server:

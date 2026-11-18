@@ -5,131 +5,205 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Chọn hồ sơ người đọc và khám phá những bài viết phù hợp với lịch sử đọc của bạn.">
-    <meta name="theme-color" content="#f6f5f0">
+    <meta name="theme-color" content="#f7f4ee">
     <title>Bản tin của bạn · RecSys HUST</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="/static/style.css?v=2">
-    <script src="/static/app.js?v=2" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lora:wght@500;600&display=swap">
+    <link rel="stylesheet" href="/static/style.css?v=3">
+    <script src="/static/app.js?v=3" defer></script>
 </head>
 
 <body>
     <a class="skip-link" href="#news-feed">Chuyển đến bảng tin</a>
+
     <header class="site-header">
         <div class="page-width header-inner">
-            <a class="brand" href="/" aria-label="RecSys HUST, trang chủ"><span class="brand-mark"
-                    aria-hidden="true">r.</span><span class="brand-name">RecSys <span>HUST</span></span></a>
-            <span class="header-description">Top 1 recommendation system</span>
-            <span class="connection-status" id="connection-status" role="status" data-state="checking"><span
-                    class="status-dot" aria-hidden="true"></span><span id="connection-label">Đang kết nối</span></span>
+            <a class="brand" href="/" aria-label="RecSys HUST, trang chủ">
+                <span class="brand-mark" aria-hidden="true">r.</span>
+                <span class="brand-copy"><span class="brand-name">RecSys HUST</span><span class="brand-tagline">Bắt nhịp
+                        thế giới theo cách của bạn</span></span>
+            </a>
+            <div class="header-actions">
+                <span class="connection-status" id="connection-status" role="status" data-state="checking">
+                    <span class="status-dot" aria-hidden="true"></span><span id="connection-label">Đang kết nối</span>
+                </span>
+                <button class="ghost-button" id="help-button" type="button" aria-haspopup="dialog">
+                    <span aria-hidden="true">?</span> Hướng dẫn
+                </button>
+            </div>
         </div>
     </header>
+
     <main class="page-width workspace">
         <aside class="reader-sidebar" aria-label="Hồ sơ và lịch sử đọc">
-            <div class="sidebar-heading">
-                <h2>Người đọc</h2><span class="quiet-label">Hồ sơ mẫu</span>
-            </div>
-            <p class="sidebar-intro">Thử một hồ sơ để xem bảng tin thay đổi theo sở thích.</p>
-            <div id="reader-list" class="reader-list" aria-label="Chọn người đọc">
-                <p class="muted">Đang tải hồ sơ…</p>
-            </div>
-            <button class="text-button custom-reader-button" id="custom-reader-button" type="button"><span
-                    aria-hidden="true">+</span> Dùng hồ sơ khác</button>
-            <details class="reading-history" id="reading-history" aria-labelledby="history-heading" open>
-                <summary class="sidebar-heading">
-                    <h2 id="history-heading">Đã đọc gần đây</h2><span class="history-count"
-                        id="history-count">0</span><span class="history-chevron" aria-hidden="true">⌄</span>
+            <section class="panel" aria-labelledby="readers-heading">
+                <div class="panel-heading">
+                    <span class="step-badge" aria-hidden="true">1</span>
+                    <div>
+                        <h2 id="readers-heading">Bạn muốn đọc với tư cách ai?</h2>
+                        <p class="panel-hint">Mỗi người có một gu đọc khác nhau.</p>
+                    </div>
+                </div>
+                <div id="reader-list" class="reader-list" aria-label="Chọn người đọc">
+                    <p class="muted small">Đang tải hồ sơ…</p>
+                </div>
+                <button class="dashed-button" id="custom-reader-button" type="button">
+                    <span aria-hidden="true">＋</span> Tự nhập hồ sơ của bạn
+                </button>
+            </section>
+
+            <details class="panel reading-history" id="reading-history" open>
+                <summary class="panel-heading">
+                    <span class="step-badge soft" aria-hidden="true">📚</span>
+                    <div>
+                        <h2 id="history-heading">Đã đọc gần đây <span class="count-pill" id="history-count">0</span>
+                        </h2>
+                        <p class="panel-hint" id="history-context">Chọn người đọc để xem lịch sử.</p>
+                    </div>
+                    <span class="history-chevron" aria-hidden="true">⌄</span>
                 </summary>
-                <p class="history-context" id="history-context">Chọn người đọc để xem lịch sử.</p>
                 <ol class="history-list" id="history-list"></ol>
-                <button class="text-button muted-button" id="clear-history-button" type="button" hidden>Bỏ lịch sử hiện
-                    tại</button>
-            </details>
-            <details class="sidebar-note">
-                <summary>Bảng tin này hoạt động thế nào?</summary>
-                <p>Những bài đã đọc giúp hệ thống chọn nội dung có liên quan. Bạn có thể thêm bài vào lịch sử hoặc đổi
-                    hồ sơ để thử lại.</p>
-                <p>Đây là bản trải nghiệm với dữ liệu tin tức MIND, không phải bản tin thời gian thực.</p>
+                <button class="text-button danger" id="clear-history-button" type="button" hidden>Xóa toàn bộ lịch
+                    sử</button>
             </details>
         </aside>
+
         <section class="feed-column" id="news-feed" aria-labelledby="feed-heading">
-            <div class="feed-heading-row">
-                <div>
-                    <p class="eyebrow">GÓC ĐỌC CỦA BẠN</p>
-                    <h1 id="feed-heading">Bản tin của bạn<span class="heading-dot">.</span></h1>
-                    <p class="feed-description" id="feed-description">Một vài bài viết, bắt đầu từ những điều bạn quan
-                        tâm.</p>
+            <div class="hero">
+                <div class="hero-copy">
+                    <p class="hero-date" id="hero-date"></p>
+                    <h1 id="feed-heading">Chào bạn 👋</h1>
+                    <p class="feed-description" id="feed-description">Đây là những bài viết được chọn riêng cho bạn.</p>
+                    <div class="interest-row" id="interest-row" hidden>
+                        <span class="interest-label">Bạn hay đọc</span>
+                        <span class="interest-chips" id="interest-chips"></span>
+                    </div>
                 </div>
-                <span class="edition-label">RecSys HUST<br><span>Bản trải nghiệm</span></span>
+                <div class="hero-avatar" id="hero-avatar" aria-hidden="true">👋</div>
             </div>
+
             <div class="feed-toolbar" aria-label="Tùy chọn gợi ý">
-                <div class="toolbar-options">
-                    <label class="select-label" for="article-count">Hiển thị <select id="article-count">
-                            <option value="5">5 bài</option>
-                            <option value="10" selected>10 bài</option>
-                            <option value="15">15 bài</option>
-                            <option value="20">20 bài</option>
-                        </select></label>
-                    <label class="checkbox-label" for="filter-seen"><input type="checkbox" id="filter-seen" checked>Ẩn
-                        bài đã đọc</label>
+                <div class="toolbar-group">
+                    <span class="toolbar-label" id="count-label">Số bài</span>
+                    <div class="segmented" id="article-count" role="radiogroup" aria-labelledby="count-label">
+                        <button type="button" role="radio" data-count="5" aria-checked="false">5</button>
+                        <button type="button" role="radio" data-count="10" aria-checked="true">10</button>
+                        <button type="button" role="radio" data-count="15" aria-checked="false">15</button>
+                        <button type="button" role="radio" data-count="20" aria-checked="false">20</button>
+                    </div>
                 </div>
-                <button class="primary-button" id="recommend-button" type="button" disabled><span
-                        id="recommend-button-label">Lấy gợi ý</span><span class="button-arrow"
-                        aria-hidden="true">↗</span></button>
+                <label class="switch" for="filter-seen">
+                    <input type="checkbox" id="filter-seen" role="switch" checked>
+                    <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+                    <span>Ẩn bài đã đọc</span>
+                </label>
+                <button class="primary-button" id="recommend-button" type="button" disabled>
+                    <span class="button-icon" aria-hidden="true">↻</span><span id="recommend-button-label">Làm mới gợi
+                        ý</span>
+                </button>
             </div>
-            <p class="feed-notice" id="feed-notice" role="status" hidden></p>
-            <div class="feed-meta-row"><span class="feed-caption" id="feed-caption" role="status">Đang chuẩn bị bảng
-                    tin</span><button class="text-button details-button" id="details-button" type="button"
-                    aria-haspopup="dialog">Chi tiết lượt gợi ý <span aria-hidden="true">↗</span></button></div>
-            <nav class="category-nav" id="category-nav" aria-label="Lọc chuyên mục" hidden></nav>
+
+            <div class="feed-notice" id="feed-notice" role="status" hidden>
+                <span class="notice-icon" id="feed-notice-icon" aria-hidden="true">💡</span>
+                <span class="notice-text" id="feed-notice-text"></span>
+                <button class="notice-action" id="notice-refresh" type="button" hidden>Cập nhật ngay</button>
+            </div>
+
+            <div class="feed-meta-row">
+                <nav class="category-nav" id="category-nav" aria-label="Lọc chuyên mục" hidden></nav>
+                <span class="feed-caption" id="feed-caption" role="status">Đang chuẩn bị bảng tin</span>
+            </div>
+
             <div class="article-list" id="article-list" aria-busy="true">
-                <div class="empty-state"><span class="empty-state-mark" aria-hidden="true">r.</span>
+                <div class="empty-state"><span class="empty-state-mark" aria-hidden="true">🗞️</span>
                     <h2>Đang mở bảng tin</h2>
                     <p>Đang tải các hồ sơ người đọc.</p>
                 </div>
             </div>
         </section>
     </main>
-    <footer class="site-footer page-width"><span>RecSys HUST <span class="footer-dot" aria-hidden="true">·</span> Đọc
-            thêm một góc nhìn.</span>
-        <div><span>Dữ liệu Microsoft MIND</span><a href="/docs" target="_blank" rel="noopener noreferrer">Tài liệu API
-                <span aria-hidden="true">↗</span></a></div>
+
+    <footer class="site-footer page-width">
+        <span>RecSys HUST · Dữ liệu Microsoft MIND, bản trải nghiệm</span>
+        <div>
+            <button class="text-button muted-link" id="details-button" type="button" aria-haspopup="dialog">Thông số kỹ
+                thuật</button>
+            <a href="/docs" target="_blank" rel="noopener noreferrer">Tài liệu API ↗</a>
+        </div>
     </footer>
 
     <dialog class="article-dialog" id="article-dialog" aria-labelledby="article-dialog-title">
         <button class="close-button" type="button" data-close-dialog aria-label="Đóng bài viết">×</button>
-        <p class="eyebrow" id="article-dialog-category"></p>
+        <div class="dialog-category" id="article-dialog-category"></div>
         <h2 id="article-dialog-title"></h2>
-        <p class="dialog-reason" id="article-dialog-reason"></p>
+        <p class="reason-pill" id="article-dialog-reason"></p>
         <p class="article-dialog-abstract" id="article-dialog-abstract"></p>
         <p class="dialog-note">Nội dung tóm tắt từ bộ dữ liệu MIND. Bài gốc có thể đã được chuyển hoặc lưu trữ.</p>
-        <div class="dialog-actions"><button class="secondary-button" id="mark-read-button" type="button">Thêm vào lịch
-                sử đọc</button><a class="primary-button" id="original-article-link" target="_blank"
-                rel="noopener noreferrer">Mở bài gốc <span aria-hidden="true">↗</span></a></div>
+        <div class="dialog-actions">
+            <a class="secondary-button" id="original-article-link" target="_blank" rel="noopener noreferrer">Mở bài
+                gốc ↗</a>
+            <button class="primary-button" id="mark-read-button" type="button">Đánh dấu đã đọc</button>
+        </div>
     </dialog>
+
     <dialog class="custom-dialog" id="custom-dialog" aria-labelledby="custom-dialog-title">
         <button class="close-button" type="button" data-close-dialog aria-label="Đóng hồ sơ tùy chọn">×</button>
-        <p class="eyebrow">HỒ SƠ NGƯỜI ĐỌC</p>
+        <p class="eyebrow">Hồ sơ của riêng bạn</p>
         <h2 id="custom-dialog-title">Thử với lịch sử của bạn</h2>
-        <p class="dialog-description">Nhập mã người đọc trong dữ liệu, hoặc để trống nếu bạn là người đọc mới.</p>
+        <p class="dialog-description">Nhập mã người đọc có trong dữ liệu, hoặc để trống nếu bạn muốn bắt đầu như một
+            người đọc mới.</p>
         <form id="custom-reader-form">
-            <label class="field-label" for="custom-user-id">Mã người đọc <span>không bắt buộc</span></label><input
-                class="text-input" id="custom-user-id" name="user-id" placeholder="Ví dụ: U134050" autocomplete="off"
+            <label class="field-label" for="custom-user-id">Mã người đọc <span>không bắt buộc</span></label>
+            <input class="text-input" id="custom-user-id" name="user-id" placeholder="Ví dụ: U134050" autocomplete="off"
                 maxlength="120">
-            <label class="field-label" for="custom-history">Các bài đã đọc</label><textarea class="text-input"
-                id="custom-history" name="history" rows="4" placeholder="N98178, N88753, N23144"
-                aria-describedby="custom-history-hint"></textarea>
-            <p class="field-hint" id="custom-history-hint">Các mã bài cách nhau bằng dấu phẩy, dấu cách hoặc xuống dòng.
-                Tối đa 500 bài.</p>
+            <label class="field-label" for="custom-history">Các bài đã đọc <span>không bắt buộc</span></label>
+            <textarea class="text-input" id="custom-history" name="history" rows="4"
+                placeholder="N98178, N88753, N23144" aria-describedby="custom-history-hint"></textarea>
+            <p class="field-hint" id="custom-history-hint">Cách nhau bằng dấu phẩy, dấu cách hoặc xuống dòng. Tối đa
+                500 bài.</p>
             <p class="form-error" id="custom-form-error" role="alert" hidden></p>
-            <div class="dialog-actions"><button class="secondary-button" type="button"
-                    data-close-dialog>Hủy</button><button class="primary-button" type="submit">Xem bảng tin <span
-                        aria-hidden="true">→</span></button></div>
+            <div class="dialog-actions">
+                <button class="secondary-button" type="button" data-close-dialog>Hủy</button>
+                <button class="primary-button" type="submit">Xem bảng tin →</button>
+            </div>
         </form>
     </dialog>
+
+    <dialog class="help-dialog" id="help-dialog" aria-labelledby="help-dialog-title">
+        <button class="close-button" type="button" data-close-dialog aria-label="Đóng hướng dẫn">×</button>
+        <p class="eyebrow">Bắt đầu trong 3 bước</p>
+        <h2 id="help-dialog-title">Bảng tin này hoạt động thế nào?</h2>
+        <ol class="help-steps">
+            <li><span class="step-badge">1</span>
+                <div><strong>Chọn một người đọc</strong>
+                    <p>Mỗi hồ sơ là lịch sử đọc thật từ dữ liệu MIND. Chọn “Người đọc mới” để xem gợi ý cho người chưa
+                        đọc bài nào.</p>
+                </div>
+            </li>
+            <li><span class="step-badge">2</span>
+                <div><strong>Xem các bài được gợi ý</strong>
+                    <p>Mỗi bài có một dòng nhỏ giải thích vì sao nó được chọn. Lọc theo chuyên mục để xem nhanh hơn.</p>
+                </div>
+            </li>
+            <li><span class="step-badge">3</span>
+                <div><strong>Đánh dấu bài đã đọc</strong>
+                    <p>Bài được thêm vào lịch sử, rồi bấm “Cập nhật ngay” để thấy bảng tin thay đổi theo sở thích mới.
+                    </p>
+                </div>
+            </li>
+        </ol>
+        <div class="dialog-actions"><button class="primary-button" type="button" data-close-dialog autofocus>Đã
+                hiểu</button>
+        </div>
+    </dialog>
+
     <dialog class="details-dialog" id="details-dialog" aria-labelledby="details-dialog-title">
-        <button class="close-button" type="button" data-close-dialog aria-label="Đóng chi tiết lượt gợi ý">×</button>
-        <p class="eyebrow">DÀNH CHO VIỆC KIỂM TRA</p>
-        <h2 id="details-dialog-title">Chi tiết lượt gợi ý</h2>
+        <button class="close-button" type="button" data-close-dialog aria-label="Đóng thông số">×</button>
+        <p class="eyebrow">Dành cho việc kiểm tra</p>
+        <h2 id="details-dialog-title">Thông số lượt gợi ý</h2>
         <p class="dialog-description">Thông tin của lần gọi gần nhất. Thời gian HTTP bao gồm phần truyền và nhận dữ
             liệu.</p>
         <dl class="request-details" id="request-details">
@@ -137,10 +211,11 @@
             <dd>Chưa có kết quả</dd>
         </dl>
         <details class="raw-response">
-            <summary>Phản hồi API</summary>
+            <summary>Xem phản hồi API (JSON)</summary>
             <pre id="response-json">Chưa có phản hồi.</pre>
         </details>
     </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <noscript>
         <p class="noscript-message">Hãy bật JavaScript để chọn hồ sơ và xem gợi ý tin tức.</p>

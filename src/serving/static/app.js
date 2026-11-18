@@ -3,68 +3,90 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
+    // label, emoji, hue (for the colored category tag)
     const categories = {
-        sports: 'Thể thao', news: 'Thời sự', finance: 'Tài chính', health: 'Sức khỏe',
-        lifestyle: 'Đời sống', foodanddrink: 'Ẩm thực', travel: 'Du lịch', tv: 'Truyền hình',
-        entertainment: 'Giải trí', movies: 'Điện ảnh', music: 'Âm nhạc', autos: 'Xe',
-        weather: 'Thời tiết', video: 'Video', kids: 'Gia đình', general: 'Tổng hợp',
+        sports: ['Thể thao', '⚽', 140], news: ['Thời sự', '📰', 215], finance: ['Tài chính', '💹', 170],
+        health: ['Sức khỏe', '🩺', 350], lifestyle: ['Đời sống', '🌿', 95], foodanddrink: ['Ẩm thực', '🍜', 25],
+        travel: ['Du lịch', '✈️', 195], tv: ['Truyền hình', '📺', 265], entertainment: ['Giải trí', '🎭', 300],
+        movies: ['Điện ảnh', '🎬', 280], music: ['Âm nhạc', '🎵', 320], autos: ['Xe', '🚗', 230],
+        weather: ['Thời tiết', '🌦️', 200], video: ['Video', '▶️', 5], kids: ['Gia đình', '🧸', 45],
+        northamerica: ['Bắc Mỹ', '🌎', 180], middleeast: ['Trung Đông', '🌍', 35], general: ['Tổng hợp', '🗞️', 40],
     };
     const reasons = {
-        MATCHES_YOUR_TASTE: 'Phù hợp với sở thích của bạn',
-        SIMILAR_TO_RECENT_HISTORY: 'Gần với những bài bạn đã đọc',
-        CONTINUES_RECENT_INTEREST: 'Tiếp nối chủ đề bạn quan tâm',
-        TRENDING_IN_CATEGORY: 'Được quan tâm trong chuyên mục',
-        POPULAR_NOW: 'Được nhiều người đọc lựa chọn',
+        MATCHES_YOUR_TASTE: ['✨', 'Hợp với sở thích của bạn'],
+        SIMILAR_TO_RECENT_HISTORY: ['🔁', 'Giống những bài bạn vừa đọc'],
+        CONTINUES_RECENT_INTEREST: ['📌', 'Tiếp nối chủ đề bạn đang theo dõi'],
+        TRENDING_IN_CATEGORY: ['📈', 'Đang nổi trong chuyên mục'],
+        POPULAR_NOW: ['🔥', 'Nhiều người đang đọc'],
     };
+    const avatarHues = [140, 25, 215, 350, 265, 45, 195, 300, 95, 5, 170, 230];
     const state = {
         personas: [], selected: null, history: [], articles: new Map(), recommendations: [],
         category: 'all', response: null, httpMs: null, controller: null, requestId: 0,
-        updatedAt: null, modalArticle: null,
+        updatedAt: null, modalArticle: null, topK: 10,
     };
     let toastTimer;
+    let optionTimer;
     const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
     }[char]));
-    const categoryName = (category) => categories[category] || category || 'Tổng hợp';
-    const reasonLabel = (code) => reasons[code] || 'Một gợi ý dành cho bạn';
+    const categoryInfo = (key) => {
+        const [label, emoji, hue] = categories[key] || [key || 'Tổng hợp', '🗞️', 40];
+        return { label, emoji, hue };
+    };
+    const categoryName = (key) => categoryInfo(key).label;
+    const categoryTag = (key) => {
+        const { label, emoji, hue } = categoryInfo(key);
+        return `<span class="category-tag" style="--h:${hue}"><span class="cat-emoji" aria-hidden="true">${emoji}</span>${escape(label)}</span>`;
+    };
+    const reasonInfo = (code) => reasons[code] || ['💡', 'Một gợi ý dành cho bạn'];
+    const reasonPill = (code) => {
+        const [icon, label] = reasonInfo(code);
+        return `<span class="reason-icon" aria-hidden="true">${icon}</span>${escape(label)}`;
+    };
     const isGuest = (persona) => !persona?.id || persona.id === 'NEW_USER_COLD';
-    const readerName = (persona) => isGuest(persona) ? 'Người đọc mới' : persona.name;
-    const narrowScreen = window.matchMedia('(max-width: 760px)');
-    $('reading-history').open = !narrowScreen.matches;
-    narrowScreen.addEventListener('change', (event) => { $('reading-history').open = !event.matches; });
+    const readerName = (persona) => isGuest(persona) && !persona?.custom ? 'Người đọc mới' : persona.name;
+    const firstName = (persona) => {
+        if (persona.custom || isGuest(persona)) return 'bạn';
+        return readerName(persona).trim().split(/\s+/).slice(-2).join(' ');
+    };
+    const avatarOf = (persona) => persona.avatar || (persona.custom ? '🙂' : '👤');
+    const narrowScreen = window.matchMedia('(max-width: 820px)');
+
+    const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('hero-date').textContent = today;
 
     function toast(message) {
         clearTimeout(toastTimer);
         $('toast').textContent = message;
         $('toast').dataset.visible = 'true';
-        toastTimer = setTimeout(() => { $('toast').dataset.visible = 'false'; }, 3500);
+        toastTimer = setTimeout(() => { $('toast').dataset.visible = 'false'; }, 3200);
     }
 
     function setConnection(status, label) {
         $('connection-status').dataset.state = status;
         $('connection-label').textContent = label;
+        $('connection-status').title = label;
     }
 
     async function checkReady() {
         try {
             const response = await fetch('/ready');
-            setConnection(response.ok ? 'ready' : 'offline', response.ok ? 'Đã kết nối' : 'Chưa sẵn sàng');
+            setConnection(response.ok ? 'ready' : 'offline', response.ok ? 'Hệ thống sẵn sàng' : 'Đang khởi động');
         } catch {
             setConnection('offline', 'Mất kết nối');
         }
     }
 
-    function initials(persona) {
-        if (isGuest(persona)) return 'Mới';
-        return readerName(persona).trim().split(/\s+/).slice(-2).map((word) => word[0]).join('').toUpperCase();
-    }
-
     function renderReaders() {
         $('reader-list').innerHTML = state.personas.map((persona, index) => {
             const active = state.selected === persona;
-            const interest = isGuest(persona) ? 'Bắt đầu với một bảng tin mới' : persona.category_pref || 'Hồ sơ tùy chọn';
+            const interest = isGuest(persona) && !persona.custom
+                ? 'Chưa đọc bài nào'
+                : persona.custom ? `${persona.history_news_ids.length} bài tự nhập` : persona.category_pref || 'Hồ sơ tùy chọn';
+            const hue = avatarHues[index % avatarHues.length];
             return `<button class="reader-option" type="button" data-reader="${index}" aria-pressed="${active}">
-                <span class="reader-initials" aria-hidden="true">${escape(initials(persona))}</span>
+                <span class="reader-avatar" style="--h:${hue}" aria-hidden="true">${escape(avatarOf(persona))}</span>
                 <span class="reader-option-copy"><span class="reader-name">${escape(readerName(persona))}</span><span class="reader-interest">${escape(interest)}</span></span>
                 ${active ? '<span class="reader-check" aria-hidden="true">✓</span>' : ''}
             </button>`;
@@ -77,6 +99,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function renderHero() {
+        const persona = state.selected;
+        if (!persona) return;
+        $('feed-heading').textContent = `Chào ${firstName(persona)} 👋`;
+        $('hero-avatar').textContent = avatarOf(persona);
+        $('feed-description').textContent = !state.history.length
+            ? 'Bạn chưa đọc bài nào, nên mình bắt đầu với những bài đang được nhiều người quan tâm nhé.'
+            : `Dựa trên ${state.history.length} bài bạn đã đọc, đây là những bài mình nghĩ bạn sẽ thích.`;
+        const counts = new Map();
+        for (const id of state.history) {
+            const category = state.articles.get(id)?.category;
+            if (category && category !== 'general') counts.set(category, (counts.get(category) || 0) + 1);
+        }
+        const top = [...counts].sort((a, b) => b[1] - a[1]).slice(0, 4);
+        $('interest-row').hidden = !top.length;
+        $('interest-chips').innerHTML = top.map(([key]) => {
+            const { label, emoji } = categoryInfo(key);
+            return `<span class="interest-chip"><span aria-hidden="true">${emoji}</span>${escape(label)}</span>`;
+        }).join('');
+    }
+
     function selectReader(persona) {
         state.selected = persona;
         state.history = [...(persona.history_news_ids || [])].slice(-500);
@@ -84,11 +127,9 @@ document.addEventListener('DOMContentLoaded', () => {
         state.category = 'all';
         state.recommendations = [];
         state.response = null;
-        $('feed-description').textContent = isGuest(persona)
-            ? 'Bắt đầu với những bài được nhiều người đọc lựa chọn.'
-            : `Một vài bài viết dành cho ${readerName(persona)}.`;
         renderReaders();
         renderHistory();
+        renderHero();
         renderDetails();
         fetchRecommendations();
     }
@@ -96,30 +137,46 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderHistory() {
         $('history-count').textContent = state.history.length;
         $('history-context').textContent = state.selected
-            ? `Lịch sử của ${readerName(state.selected)}` : 'Chọn người đọc để xem lịch sử.';
+            ? (state.history.length ? 'Những bài này giúp hệ thống hiểu gu của bạn.' : 'Lịch sử đang trống.')
+            : 'Chọn người đọc để xem lịch sử.';
         $('clear-history-button').hidden = state.history.length === 0;
         if (!state.history.length) {
-            $('history-list').innerHTML = '<li class="history-empty">Chưa có bài nào trong lịch sử. Thêm một bài từ bảng tin để thử những gợi ý khác.</li>';
+            $('history-list').innerHTML = '<li class="history-empty">Chưa có bài nào.<br>Bấm “Đánh dấu đã đọc” ở một bài bất kỳ để bắt đầu.</li>';
             return;
         }
         // Show the eight most recent articles; send the entire history to the API.
-        $('history-list').innerHTML = state.history.slice(-8).reverse().map((id, index) => {
-            const title = state.articles.get(id)?.title || `Bài viết ${id}`;
-            return `<li class="history-item"><span class="history-item-number">${index + 1}</span><p class="history-item-title" title="${escape(title)}">${escape(title)}</p><button class="remove-history" type="button" data-remove-history="${escape(id)}" aria-label="Bỏ ${escape(title)} khỏi lịch sử">×</button></li>`;
-        }).join('');
+        const shown = state.history.slice(-8).reverse();
+        const rows = shown.map((id) => {
+            const article = state.articles.get(id);
+            const title = article?.title || `Bài viết ${id}`;
+            const { label, emoji, hue } = categoryInfo(article?.category);
+            return `<li class="history-item"><span class="history-item-icon" style="--h:${hue}" aria-hidden="true">${emoji}</span>
+                <div class="history-item-copy"><p class="history-item-title" title="${escape(title)}">${escape(title)}</p><span class="history-item-cat">${escape(label)}</span></div>
+                <button class="remove-history" type="button" data-remove-history="${escape(id)}" aria-label="Bỏ ${escape(title)} khỏi lịch sử" title="Bỏ khỏi lịch sử">×</button></li>`;
+        });
+        const more = state.history.length - shown.length;
+        if (more > 0) rows.push(`<li class="history-more">và ${more} bài khác</li>`);
+        $('history-list').innerHTML = rows.join('');
+    }
+
+    function showNotice(kind, icon, text, action = false) {
+        $('feed-notice').dataset.kind = kind;
+        $('feed-notice-icon').textContent = icon;
+        $('feed-notice-text').textContent = text;
+        $('notice-refresh').hidden = !action;
+        $('feed-notice').hidden = false;
     }
 
     function markStale() {
-        $('feed-notice').hidden = false;
-        $('feed-notice').dataset.kind = 'info';
-        $('feed-notice').textContent = 'Bạn đã thay đổi lựa chọn. Bấm “Lấy gợi ý” để cập nhật bảng tin.';
+        showNotice('stale', '✏️', 'Lịch sử đọc vừa thay đổi. Cập nhật để xem gợi ý mới theo sở thích hiện tại.', true);
     }
 
     function invalidateRequest() {
         state.requestId += 1;
         state.controller?.abort();
         $('recommend-button').disabled = !state.selected;
-        $('recommend-button-label').textContent = 'Lấy gợi ý';
+        $('recommend-button').removeAttribute('aria-busy');
+        $('recommend-button-label').textContent = 'Làm mới gợi ý';
         $('article-list').setAttribute('aria-busy', 'false');
     }
 
@@ -127,18 +184,19 @@ document.addEventListener('DOMContentLoaded', () => {
         invalidateRequest();
         state.history = nextHistory;
         renderHistory();
+        renderHero();
         renderNews();
         markStale();
     }
 
     function addToHistory(item) {
         if (state.history.includes(item.news_id)) {
-            toast('Bài này đã có trong lịch sử đọc.');
+            toast('Bài này đã có trong lịch sử đọc rồi.');
             return;
         }
         rememberArticles([{ ...item.article, news_id: item.news_id }]);
         updateHistory([...state.history, item.news_id].slice(-500));
-        toast('Đã thêm bài vào lịch sử. Bấm “Lấy gợi ý” để cập nhật.');
+        toast('✓ Đã đánh dấu là đã đọc');
     }
 
     function loadingState() {
@@ -146,44 +204,42 @@ document.addEventListener('DOMContentLoaded', () => {
         $('article-list').setAttribute('aria-busy', 'true');
     }
 
-    function emptyState(title, description, retry = false) {
-        $('article-list').innerHTML = `<div class="empty-state"><span class="empty-state-mark" aria-hidden="true">r.</span><h2>${escape(title)}</h2><p>${escape(description)}</p>${retry ? '<button class="secondary-button" type="button" id="retry-button">Thử lại</button>' : ''}</div>`;
+    function emptyState(icon, title, description, retry = false) {
+        $('article-list').innerHTML = `<div class="empty-state"><span class="empty-state-mark" aria-hidden="true">${icon}</span><h2>${escape(title)}</h2><p>${escape(description)}</p>${retry ? '<button class="primary-button" type="button" id="retry-button">Thử lại</button>' : ''}</div>`;
         $('retry-button')?.addEventListener('click', fetchRecommendations);
     }
 
     function renderNotice() {
         const result = state.response;
-        const notice = $('feed-notice');
-        notice.hidden = true;
+        $('feed-notice').hidden = true;
         if (!result) return;
         if (result.fallback_reason === 'COLD_USER') {
-            notice.dataset.kind = 'info';
-            notice.textContent = 'Hồ sơ này chưa được nhận diện. Gợi ý hiện tại dựa trên các nguồn có sẵn, bao gồm lịch sử bạn cung cấp.';
+            showNotice('info', '👋', 'Hệ thống chưa biết nhiều về hồ sơ này, nên đang gợi ý dựa trên các bài phổ biến và lịch sử bạn cung cấp.');
         } else if (result.degraded) {
-            notice.dataset.kind = 'warning';
-            notice.textContent = 'Một phần hệ thống phản hồi chậm hoặc chưa sẵn sàng. Bảng tin đang dùng kết quả dự phòng; bạn có thể thử lấy gợi ý lại.';
-        } else return;
-        notice.hidden = false;
+            showNotice('warning', '⚠️', 'Một phần hệ thống đang phản hồi chậm, bảng tin dùng kết quả dự phòng. Bạn có thể thử làm mới lại.', true);
+        }
     }
 
     async function fetchRecommendations() {
         if (!state.selected) return;
+        clearTimeout(optionTimer);
         state.controller?.abort();
         const controller = new AbortController();
         state.controller = controller;
         const requestId = ++state.requestId;
         $('recommend-button').disabled = true;
-        $('recommend-button-label').textContent = 'Đang lấy tin…';
+        $('recommend-button').setAttribute('aria-busy', 'true');
+        $('recommend-button-label').textContent = 'Đang tìm bài…';
         $('feed-notice').hidden = true;
         $('category-nav').hidden = true;
-        $('feed-caption').textContent = 'Đang tìm những bài phù hợp…';
+        $('feed-caption').textContent = 'Đang chọn những bài hợp với bạn…';
         loadingState();
         const started = performance.now();
         try {
             const response = await fetch('/api/recommend-rich', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal,
                 body: JSON.stringify({ user_id: isGuest(state.selected) ? null : state.selected.id,
-                    history_news_ids: [...state.history], top_k: Number($('article-count').value),
+                    history_news_ids: [...state.history], top_k: state.topK,
                     filter_seen: $('filter-seen').checked, context: {} }),
             });
             if (!response.ok) throw new Error(response.status === 503 ? 'not-ready' : `http-${response.status}`);
@@ -196,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.recommendations = result.recommendations;
             rememberArticles(state.recommendations.map((item) => ({ ...item.article, news_id: item.news_id })));
             state.category = 'all';
-            setConnection('ready', 'Đã kết nối');
+            setConnection('ready', 'Hệ thống sẵn sàng');
             renderCategories();
             renderNews();
             renderNotice();
@@ -207,15 +263,16 @@ document.addEventListener('DOMContentLoaded', () => {
             state.recommendations = [];
             $('feed-caption').textContent = 'Bảng tin chưa được cập nhật';
             const description = error.message === 'not-ready'
-                ? 'Hệ thống chưa nạp xong dữ liệu gợi ý. Bạn thử lại sau một chút nhé.'
-                : 'Chưa kết nối được với hệ thống gợi ý. Kiểm tra server rồi thử lại nhé.';
-            emptyState('Chưa lấy được bảng tin', description, true);
+                ? 'Hệ thống vẫn đang nạp dữ liệu gợi ý. Bạn đợi một chút rồi thử lại nhé.'
+                : 'Chưa kết nối được tới máy chủ gợi ý. Hãy kiểm tra server rồi thử lại.';
+            emptyState('🔌', 'Chưa lấy được bảng tin', description, true);
             renderDetails();
             checkReady();
         } finally {
             if (requestId === state.requestId) {
                 $('recommend-button').disabled = false;
-                $('recommend-button-label').textContent = 'Lấy gợi ý';
+                $('recommend-button').removeAttribute('aria-busy');
+                $('recommend-button-label').textContent = 'Làm mới gợi ý';
                 $('article-list').setAttribute('aria-busy', 'false');
             }
         }
@@ -227,32 +284,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const category = item.article?.category || 'general';
             counts.set(category, (counts.get(category) || 0) + 1);
         }
-        const buttons = [['all', 'Tất cả', state.recommendations.length],
-            ...Array.from(counts, ([key, count]) => [key, categoryName(key), count])];
-        $('category-nav').innerHTML = buttons.map(([key, label, count]) => `<button class="category-button" type="button" data-category="${escape(key)}" aria-pressed="${state.category === key}">${escape(label)}<span>${count}</span></button>`).join('');
-        $('category-nav').hidden = !state.recommendations.length;
+        const buttons = [['all', 'Tất cả', '', state.recommendations.length],
+            ...[...counts].sort((a, b) => b[1] - a[1]).map(([key, count]) => [key, categoryName(key), categoryInfo(key).emoji, count])];
+        $('category-nav').innerHTML = buttons.map(([key, label, emoji, count]) => `<button class="category-button" type="button" data-category="${escape(key)}" aria-pressed="${state.category === key}">${emoji ? `<span aria-hidden="true">${emoji}</span>` : ''}${escape(label)}<span class="cat-count">${count}</span></button>`).join('');
+        $('category-nav').hidden = counts.size < 2;
     }
 
     function renderNews() {
         const items = state.recommendations.filter((item) => state.category === 'all' || (item.article?.category || 'general') === state.category);
         const time = state.updatedAt?.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
         $('feed-caption').textContent = state.response
-            ? `${items.length} bài${state.category !== 'all' ? ` · ${categoryName(state.category)}` : ' dành cho bạn'}${time ? ` · Cập nhật ${time}` : ''}`
+            ? `${items.length} bài${state.category !== 'all' ? ` · ${categoryName(state.category)}` : ''}${time ? ` · cập nhật lúc ${time}` : ''}`
             : 'Chưa có lượt gợi ý';
         if (!items.length) {
-            emptyState('Chưa có bài phù hợp', 'Thử đổi chuyên mục, thêm lịch sử đọc hoặc lấy gợi ý lại.');
+            if (state.response) emptyState('🔍', 'Chưa có bài phù hợp', 'Thử chọn chuyên mục khác, đánh dấu thêm vài bài đã đọc hoặc làm mới gợi ý.');
+            else emptyState('🗞️', 'Bảng tin đang chờ', 'Bấm “Làm mới gợi ý” để xem những bài dành cho bạn.');
             return;
         }
-        $('article-list').innerHTML = items.map((item) => {
+        $('article-list').innerHTML = items.map((item, index) => {
             const article = item.article || {};
             const saved = state.history.includes(item.news_id);
-            return `<article class="news-article">
-                <div class="article-meta"><span class="article-category">${escape(categoryName(article.category))}</span><span class="article-rank">${String(item.rank).padStart(2, '0')}</span></div>
+            const featured = index === 0 && state.category === 'all';
+            const sub = article.subcategory && article.subcategory !== article.category ? `<span class="article-sub">${escape(article.subcategory)}</span>` : '';
+            return `<article class="news-article" style="animation-delay:${Math.min(index, 8) * 35}ms">
+                <div class="article-meta">${categoryTag(article.category)}${sub}${featured ? '<span class="featured-label">⭐ Hợp nhất với bạn</span>' : ''}<span class="article-rank" title="Thứ hạng gợi ý">#${item.rank}</span></div>
                 <h2 class="article-title"><button class="article-title-button" type="button" data-open-article="${escape(item.news_id)}">${escape(article.title || `Bài viết ${item.news_id}`)}</button></h2>
                 <p class="article-abstract">${escape(article.abstract || 'Bài viết này chưa có nội dung tóm tắt.')}</p>
-                <div class="article-bottom"><p class="article-reason">${escape(reasonLabel(item.reason_code))}</p>
-                    <div class="article-actions"><button class="read-article-button" type="button" data-open-article="${escape(item.news_id)}">Đọc tóm tắt <span aria-hidden="true">→</span></button>
-                        <button class="save-history-button" type="button" data-save-article="${escape(item.news_id)}" data-saved="${saved}">${saved ? '✓ Đã thêm' : '+ Thêm vào lịch sử'}</button></div>
+                <div class="article-bottom"><p class="reason-pill">${reasonPill(item.reason_code)}</p>
+                    <button class="save-history-button" type="button" data-save-article="${escape(item.news_id)}" data-saved="${saved}">${saved ? '✓ Đã đọc' : '＋ Đánh dấu đã đọc'}</button>
                 </div></article>`;
         }).join('');
     }
@@ -272,14 +331,21 @@ document.addEventListener('DOMContentLoaded', () => {
         $('response-json').textContent = result ? JSON.stringify(result, null, 2) : 'Chưa có phản hồi.';
     }
 
+    function syncMarkReadButton() {
+        const saved = state.modalArticle && state.history.includes(state.modalArticle.news_id);
+        $('mark-read-button').textContent = saved ? '✓ Đã có trong lịch sử' : 'Đánh dấu đã đọc';
+        $('mark-read-button').disabled = Boolean(saved);
+    }
+
     function openArticle(item) {
         state.modalArticle = item;
         const article = item.article || {};
         $('article-dialog-title').textContent = article.title || `Bài viết ${item.news_id}`;
-        $('article-dialog-category').textContent = categoryName(article.category);
-        $('article-dialog-reason').textContent = reasonLabel(item.reason_code);
+        $('article-dialog-category').innerHTML = categoryTag(article.category)
+            + (article.subcategory ? `<span class="article-sub">${escape(article.subcategory)}</span>` : '');
+        $('article-dialog-reason').innerHTML = reasonPill(item.reason_code);
         $('article-dialog-abstract').textContent = article.abstract || 'Bài viết này chưa có nội dung tóm tắt.';
-        $('mark-read-button').textContent = state.history.includes(item.news_id) ? 'Đã có trong lịch sử' : 'Thêm vào lịch sử đọc';
+        syncMarkReadButton();
         const link = $('original-article-link');
         let url;
         try {
@@ -292,9 +358,19 @@ document.addEventListener('DOMContentLoaded', () => {
         $('article-dialog').showModal();
     }
 
+    function scheduleOptionRefresh() {
+        if (!state.selected) return;
+        clearTimeout(optionTimer);
+        optionTimer = setTimeout(fetchRecommendations, 250);
+    }
+
     $('reader-list').addEventListener('click', (event) => {
         const button = event.target.closest('[data-reader]');
-        if (button) selectReader(state.personas[Number(button.dataset.reader)]);
+        if (!button) return;
+        const persona = state.personas[Number(button.dataset.reader)];
+        if (persona === state.selected) return;
+        selectReader(persona);
+        if (narrowScreen.matches) $('news-feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     $('history-list').addEventListener('click', (event) => {
         const button = event.target.closest('[data-remove-history]');
@@ -302,14 +378,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     $('clear-history-button').addEventListener('click', () => {
         updateHistory([]);
-        toast('Đã bỏ lịch sử của lượt trải nghiệm này.');
+        toast('Đã xóa lịch sử của lượt trải nghiệm này.');
     });
     $('recommend-button').addEventListener('click', fetchRecommendations);
-    for (const id of ['article-count', 'filter-seen']) {
-        $(id).addEventListener('change', () => {
-            if (state.selected) { invalidateRequest(); renderNews(); markStale(); }
-        });
-    }
+    $('notice-refresh').addEventListener('click', fetchRecommendations);
+    $('article-count').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-count]');
+        if (!button) return;
+        state.topK = Number(button.dataset.count);
+        for (const option of $('article-count').querySelectorAll('[data-count]')) {
+            option.setAttribute('aria-checked', String(option === button));
+        }
+        scheduleOptionRefresh();
+    });
+    $('article-count').addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        const options = [...$('article-count').querySelectorAll('[data-count]')];
+        const current = options.findIndex((option) => option.getAttribute('aria-checked') === 'true');
+        const next = options[(current + (event.key === 'ArrowRight' ? 1 : options.length - 1)) % options.length];
+        next.focus();
+        next.click();
+        event.preventDefault();
+    });
+    $('filter-seen').addEventListener('change', scheduleOptionRefresh);
     $('category-nav').addEventListener('click', (event) => {
         const button = event.target.closest('[data-category]');
         if (!button) return;
@@ -344,19 +435,28 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const id = $('custom-user-id').value.trim();
-        const persona = { id: id || null, name: 'Hồ sơ của bạn', category_pref: 'Lịch sử tự chọn', history_news_ids: history, history: [], custom: true };
+        const persona = { id: id || null, name: 'Hồ sơ của bạn', avatar: '🙂', history_news_ids: history, history: [], custom: true };
         state.personas = state.personas.filter((entry) => !entry.custom);
         state.personas.push(persona);
         $('custom-dialog').close();
         selectReader(persona);
     });
     $('details-button').addEventListener('click', () => $('details-dialog').showModal());
+    $('help-button').addEventListener('click', () => $('help-dialog').showModal());
     for (const dialog of document.querySelectorAll('dialog')) {
         dialog.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => dialog.close()));
         dialog.addEventListener('click', (event) => {
             const bounds = dialog.getBoundingClientRect();
             if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) dialog.close();
         });
+    }
+
+    function showHelpOnFirstVisit() {
+        try {
+            if (localStorage.getItem('recsys-help-seen')) return;
+            localStorage.setItem('recsys-help-seen', '1');
+        } catch { return; }
+        $('help-dialog').showModal();
     }
 
     async function initialize() {
@@ -370,11 +470,12 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const persona of personas) rememberArticles(persona.history);
             selectReader(personas[0]);
         } catch {
-            $('reader-list').innerHTML = '<p class="history-empty">Chưa tải được hồ sơ mẫu. Bạn vẫn có thể chọn “Dùng hồ sơ khác”.</p>';
+            $('reader-list').innerHTML = '<p class="history-empty">Chưa tải được hồ sơ mẫu. Bạn vẫn có thể “Tự nhập hồ sơ của bạn”.</p>';
             $('feed-caption').textContent = 'Chưa tải được hồ sơ';
             $('article-list').setAttribute('aria-busy', 'false');
-            emptyState('Chọn cách bắt đầu', 'Dùng hồ sơ khác để nhập mã người đọc hoặc thử với lịch sử trống.');
+            emptyState('🧭', 'Chọn cách bắt đầu', 'Tự nhập mã người đọc, hoặc để trống để thử như một người đọc mới.');
         }
+        showHelpOnFirstVisit();
     }
     initialize();
 });
